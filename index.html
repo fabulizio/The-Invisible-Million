@@ -1,91 +1,150 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>Donate to Color a Pixel</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>The Invisible Million</title>
   <style>
-    body { font-family: sans-serif; }
-    #viewport {
-      width: 1000px;
-      height: 1000px;
-      overflow: scroll;
-      border: 2px solid #000;
-      position: relative;
+    html, body {
+      margin: 0;
+      height: 100%;
+      overflow: hidden;
     }
-    #grid {
-      width: 10000px;
-      height: 10000px;
-      display: grid;
-      grid-template-columns: repeat(1000, 10px);
-      grid-template-rows: repeat(1000, 10px);
-    }
-    .square {
-      width: 10px;
-      height: 10px;
-      background-color: #ccc;
-      border: 0.2px solid #eee;
+    canvas {
+      display: block;
+      background: #ffffff;
+      cursor: crosshair;
     }
   </style>
 </head>
 <body>
-  <h1>Pixel Grid (Zoomable 1000x1000)</h1>
+<canvas id="gridCanvas"></canvas>
 
-  <!-- PAYPAL BUTTON AREA -->
-  <div id="paypal-button-container"></div>
+<script>
+  const canvas = document.getElementById("gridCanvas");
+  const ctx = canvas.getContext("2d");
 
-  <p id="status">Donate with PayPal, then click a square.</p>
-  <div id="viewport">
-    <div id="grid"></div>
-  </div>
+  let gridSize = 1000;
+  let cellSize = 10;
+  let scale = 1;
+  let offsetX = 0;
+  let offsetY = 0;
+  let isDragging = false;
+  let dragStart = { x: 0, y: 0 };
+  let paintedSquares = {};
 
-  <script>
-    const backendUrl = 'https://155ca338-0e90-4f5a-88ec-b6163921baae-00-181dgn4pq10j7.janeway.replit.dev';
-    const grid = document.getElementById("grid");
-    let donationUnlocked = false;
+  // 🔁 Replace this with your actual Replit backend URL
+  const backendUrl = "https://your-replit-backend-url.repl.co";
 
-    fetch(`${backendUrl}/painted`)
-      .then(res => res.json())
-      .then(data => {
-        for (let y = 0; y < 1000; y++) {
-          for (let x = 0; x < 1000; x++) {
-            const div = document.createElement("div");
-            div.className = "square";
-            const key = `${x},${y}`;
-            if (data[key]) {
-              div.style.backgroundColor = data[key];
-            }
-            div.onclick = () => {
-              if (!donationUnlocked) return alert("Please donate first!");
-              const color = prompt("Enter a color (e.g. red or #ff0000):");
-              div.style.backgroundColor = color;
-              fetch(`${backendUrl}/paint`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ x, y, color })
-              });
-            };
-            grid.appendChild(div);
-          }
+  function resizeCanvas() {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    drawGrid();
+  }
+
+  window.addEventListener("resize", resizeCanvas);
+
+  async function fetchPaintedSquares() {
+    try {
+      const res = await fetch(`${backendUrl}/painted`);
+      paintedSquares = await res.json();
+      drawGrid();
+    } catch (err) {
+      console.error("Failed to fetch painted squares:", err);
+    }
+  }
+
+  function drawGrid() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    for (let x = 0; x < gridSize; x++) {
+      for (let y = 0; y < gridSize; y++) {
+        const px = x * cellSize * scale + offsetX;
+        const py = y * cellSize * scale + offsetY;
+
+        if (px + cellSize * scale < 0 || px > canvas.width ||
+            py + cellSize * scale < 0 || py > canvas.height) {
+          continue;
         }
+
+        const key = `${x},${y}`;
+        if (paintedSquares[key]) {
+          ctx.fillStyle = paintedSquares[key].color;
+          ctx.fillRect(px, py, cellSize * scale, cellSize * scale);
+        } else {
+          ctx.fillStyle = "#e0e0e0";
+          ctx.fillRect(px, py, cellSize * scale, cellSize * scale);
+        }
+
+        ctx.strokeStyle = "#ccc";
+        ctx.strokeRect(px, py, cellSize * scale, cellSize * scale);
+      }
+    }
+  }
+
+  canvas.addEventListener("mousedown", e => {
+    isDragging = true;
+    dragStart.x = e.clientX;
+    dragStart.y = e.clientY;
+  });
+
+  canvas.addEventListener("mouseup", () => isDragging = false);
+
+  canvas.addEventListener("mousemove", e => {
+    if (isDragging) {
+      offsetX += e.clientX - dragStart.x;
+      offsetY += e.clientY - dragStart.y;
+      dragStart.x = e.clientX;
+      dragStart.y = e.clientY;
+      drawGrid();
+    }
+  });
+
+  canvas.addEventListener("wheel", e => {
+    e.preventDefault();
+    const zoom = e.deltaY < 0 ? 1.1 : 0.9;
+    scale *= zoom;
+    offsetX = e.clientX - (e.clientX - offsetX) * zoom;
+    offsetY = e.clientY - (e.clientY - offsetY) * zoom;
+    drawGrid();
+  });
+
+  canvas.addEventListener("click", async (e) => {
+    const gridX = Math.floor((e.clientX - offsetX) / (cellSize * scale));
+    const gridY = Math.floor((e.clientY - offsetY) / (cellSize * scale));
+    const key = `${gridX},${gridY}`;
+
+    if (paintedSquares[key]) {
+      alert("This square is already painted.");
+      return;
+    }
+
+    const color = prompt("Enter hex color (e.g., #FF0000):");
+    const tx = prompt("Enter your PayPal transaction ID:");
+
+    if (!color || !tx) return;
+
+    try {
+      const res = await fetch(`${backendUrl}/paint`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ x: gridX, y: gridY, color, tx })
       });
 
-    // PAYPAL SETUP (SANDBOX TEST)
-    const status = document.getElementById("status");
+      if (res.ok) {
+        paintedSquares[key] = { color };
+        drawGrid();
+      } else {
+        const error = await res.json();
+        alert(error.error || "Error painting square.");
+      }
+    } catch (err) {
+      alert("Network error.");
+    }
+  });
 
-    // Load PayPal script
-    const script = document.createElement("script");
-    script.src = "https://www.paypal.com/sdk/js?client-id=sb"; // Replace with real client ID in production
-    script.onload = () => {
-      paypal.Buttons({
-        createOrder: (data, actions) => actions.order.create({
-          purchase_units: [{ amount: { value: '1.00' } }]
-        }),
-        onApprove: (data, actions) => actions.order.capture().then(() => {
-          donationUnlocked = true;
-          status.textContent = "Donation received! You can now color one square.";
-        })
-      }).render('#paypal-button-container');
-    };
-    document.head.appendChild(script);
-  </script>
+  resizeCanvas();
+  fetchPaintedSquares();
+</script>
 </body>
 </html>
