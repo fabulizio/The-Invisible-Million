@@ -3,71 +3,89 @@
 <head>
   <title>Donate to Color a Pixel</title>
   <style>
+    body { font-family: sans-serif; }
+    #viewport {
+      width: 1000px;
+      height: 1000px;
+      overflow: scroll;
+      border: 2px solid #000;
+      position: relative;
+    }
     #grid {
+      width: 10000px;
+      height: 10000px;
       display: grid;
-      grid-template-columns: repeat(100, 10px); /* showing only 100x100 for performance */
-      grid-template-rows: repeat(100, 10px);
+      grid-template-columns: repeat(1000, 10px);
+      grid-template-rows: repeat(1000, 10px);
     }
     .square {
       width: 10px;
       height: 10px;
       background-color: #ccc;
-      border: 1px solid #eee;
+      border: 0.2px solid #eee;
     }
   </style>
 </head>
 <body>
-  <h1>Pixel Grid (1000x1000 virtual, 100x100 visible)</h1>
-  <button onclick="donate()">Donate & Color</button>
-  <div id="grid"></div>
+  <h1>Pixel Grid (Zoomable 1000x1000)</h1>
+
+  <!-- PAYPAL BUTTON AREA -->
+  <div id="paypal-button-container"></div>
+
+  <p id="status">Donate with PayPal, then click a square.</p>
+  <div id="viewport">
+    <div id="grid"></div>
+  </div>
 
   <script>
-    const grid = document.getElementById("grid");
-    const VISIBLE_SIZE = 100; // what we render
-    const TOTAL_SIZE = 1000; // logic grid
     const backendUrl = 'https://155ca338-0e90-4f5a-88ec-b6163921baae-00-181dgn4pq10j7.janeway.replit.dev';
+    const grid = document.getElementById("grid");
+    let donationUnlocked = false;
 
-    // Load painted squares
     fetch(`${backendUrl}/painted`)
       .then(res => res.json())
       .then(data => {
-        for (let y = 0; y < VISIBLE_SIZE; y++) {
-          for (let x = 0; x < VISIBLE_SIZE; x++) {
+        for (let y = 0; y < 1000; y++) {
+          for (let x = 0; x < 1000; x++) {
             const div = document.createElement("div");
             div.className = "square";
             const key = `${x},${y}`;
             if (data[key]) {
               div.style.backgroundColor = data[key];
             }
-            div.onclick = () => colorSquare(x, y);
+            div.onclick = () => {
+              if (!donationUnlocked) return alert("Please donate first!");
+              const color = prompt("Enter a color (e.g. red or #ff0000):");
+              div.style.backgroundColor = color;
+              fetch(`${backendUrl}/paint`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ x, y, color })
+              });
+            };
             grid.appendChild(div);
           }
         }
       });
 
-    function donate() {
-      const color = prompt("Enter a color (e.g. red or #ff0000):");
-      const x = parseInt(prompt("Enter X coordinate (0-999):"));
-      const y = parseInt(prompt("Enter Y coordinate (0-999):"));
+    // PAYPAL SETUP (SANDBOX TEST)
+    const status = document.getElementById("status");
 
-      if (isNaN(x) || isNaN(y) || x < 0 || x >= TOTAL_SIZE || y < 0 || y >= TOTAL_SIZE) {
-        alert("Invalid coordinates!");
-        return;
-      }
-
-      fetch(`${backendUrl}/paint`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ x, y, color })
-      }).then(() => {
-        alert(`Square at (${x},${y}) colored!`);
-        location.reload();
-      });
-    }
-
-    function colorSquare(x, y) {
-      alert(`Square at (${x},${y})`);
-    }
+    // Load PayPal script
+    const script = document.createElement("script");
+    script.src = "https://www.paypal.com/sdk/js?client-id=sb"; // Replace with real client ID in production
+    script.onload = () => {
+      paypal.Buttons({
+        createOrder: (data, actions) => actions.order.create({
+          purchase_units: [{ amount: { value: '1.00' } }]
+        }),
+        onApprove: (data, actions) => actions.order.capture().then(() => {
+          donationUnlocked = true;
+          status.textContent = "Donation received! You can now color one square.";
+        })
+      }).render('#paypal-button-container');
+    };
+    document.head.appendChild(script);
   </script>
 </body>
 </html>
