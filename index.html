@@ -119,11 +119,12 @@
       return;
     }
 
-    const color = prompt("Enter hex color (e.g., #FF0000):");
-    const tx = prompt("Enter your PayPal transaction ID:");
+const color = prompt("Enter hex color (e.g., #FF0000):");
+// Skip PayPal transaction for now (testing mode)
+const tx = "test-tx-id";
 
-    if (!color || !tx) return;
-
+if (!color) return;
+    
     try {
       const res = await fetch(`${backendUrl}/paint`, {
         method: "POST",
