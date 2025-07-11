@@ -57,6 +57,7 @@
       left: 0;
       background-color: #333;
       cursor: grab;
+      image-rendering: pixelated;
     }
   </style>
 </head>
@@ -79,8 +80,10 @@
 <script>
 const canvas = document.getElementById('mainCanvas');
 const ctx = canvas.getContext('2d');
+ctx.imageSmoothingEnabled = false;
 const minimap = document.getElementById('minimap');
 const miniCtx = minimap.getContext('2d');
+miniCtx.imageSmoothingEnabled = false;
 const viewportBox = document.getElementById('viewport-box');
 
 const GRID_SIZE = 1000;
