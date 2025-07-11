@@ -80,6 +80,16 @@
         ctx.strokeRect(px, py, cellSize * scale, cellSize * scale);
       }
     }
+
+    // 🔲 Draw fixed outer bold outline
+    const outlineX = offsetX;
+    const outlineY = offsetY;
+    const outlineW = gridSize * cellSize * scale;
+    const outlineH = gridSize * cellSize * scale;
+
+    ctx.strokeStyle = "#000000"; // black
+    ctx.lineWidth = 4;
+    ctx.strokeRect(outlineX, outlineY, outlineW, outlineH);
   }
 
   canvas.addEventListener("mousedown", e => {
@@ -119,12 +129,11 @@
       return;
     }
 
-const color = prompt("Enter hex color (e.g., #FF0000):");
-// Skip PayPal transaction for now (testing mode)
-const tx = "test-tx-id";
+    const color = prompt("Enter hex color (e.g., #FF0000):");
+    const tx = "test-tx-id"; // ⚠️ TEMP: Skipping PayPal for testing
 
-if (!color) return;
-    
+    if (!color) return;
+
     try {
       const res = await fetch(`${backendUrl}/paint`, {
         method: "POST",
