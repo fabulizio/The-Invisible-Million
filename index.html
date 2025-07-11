@@ -129,10 +129,40 @@
       return;
     }
 
-    const color = prompt("Enter hex color (e.g., #FF0000):");
-    const tx = "test-tx-id"; // ⚠️ TEMP: Skipping PayPal for testing
+const colorInput = document.createElement("input");
+colorInput.type = "color";
+colorInput.style.position = "fixed";
+colorInput.style.left = "-100px"; // Hide it off-screen
+document.body.appendChild(colorInput);
 
-    if (!color) return;
+colorInput.addEventListener("input", async () => {
+  const color = colorInput.value;
+  const tx = "test-tx-id"; // ⚠️ Skip PayPal for now
+
+  try {
+    const res = await fetch(`${backendUrl}/paint`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ x: gridX, y: gridY, color, tx })
+    });
+
+    if (res.ok) {
+      paintedSquares[key] = { color };
+      drawGrid();
+    } else {
+      const error = await res.json();
+      alert(error.error || "Error painting square.");
+    }
+  } catch (err) {
+    alert("Network error.");
+  }
+
+  document.body.removeChild(colorInput); // Clean up
+});
+
+// Trigger the native color picker
+colorInput.click();
+
 
     try {
       const res = await fetch(`${backendUrl}/paint`, {
