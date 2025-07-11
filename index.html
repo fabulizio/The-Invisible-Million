@@ -5,186 +5,272 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>The Invisible Million</title>
   <style>
-    html, body {
+    body {
       margin: 0;
-      height: 100%;
+      font-family: sans-serif;
+    }
+
+    #top {
+      padding: 20px;
+      background: #f5f5f5;
+    }
+
+    #top p {
+      margin: 0 0 10px;
+    }
+
+    #donateBtn {
+      padding: 10px 20px;
+      background-color: #0070ba;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+
+    #canvas-container {
+      position: relative;
+      width: 100%;
+      height: calc(100vh - 300px);
       overflow: hidden;
     }
+
     canvas {
-      display: block;
-      background: #ffffff;
-      cursor: crosshair;
+      position: absolute;
+      top: 0;
+      left: 0;
+    }
+
+    #minimap {
+      position: absolute;
+      bottom: 10px;
+      right: 10px;
+      width: 150px;
+      height: 150px;
+      border: 2px solid black;
+      background: white;
+      z-index: 10;
+      cursor: pointer;
     }
   </style>
 </head>
 <body>
-<canvas id="gridCanvas"></canvas>
+  <div id="top">
+    <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit.</p>
+    <p>Vestibulum imperdiet, risus nec fermentum ultricies, nulla leo bibendum sem.</p>
+    <p>Fusce at sapien eget justo laoreet cursus.</p>
+    <p>Aliquam erat volutpat. Integer in cursus augue.</p>
+    <p>Morbi dignissim ligula id purus sagittis, nec tincidunt erat iaculis.</p>
+    <p>Sed vulputate augue vel turpis suscipit tempor.</p>
+    <p>Ut efficitur metus at nunc feugiat dignissim.</p>
+    <p>Nam at diam a justo viverra elementum at ut nibh.</p>
+    <p>Praesent eget metus in turpis commodo ultrices.</p>
+    <p>Donec nec urna nec nunc volutpat fringilla.</p>
+    <button id="donateBtn">Donate (Mock)</button>
+  </div>
 
-<script>
-  const canvas = document.getElementById("gridCanvas");
-  const ctx = canvas.getContext("2d");
+  <div id="canvas-container">
+    <canvas id="gridCanvas"></canvas>
+    <canvas id="minimap"></canvas>
+  </div>
 
-  let gridSize = 1000;
-  let cellSize = 10;
-  let scale = 1;
-  let offsetX = 0;
-  let offsetY = 0;
-  let isDragging = false;
-  let dragStart = { x: 0, y: 0 };
-  let paintedSquares = {};
+  <script>
+    const canvas = document.getElementById("gridCanvas");
+    const ctx = canvas.getContext("2d");
+    const minimap = document.getElementById("minimap");
+    const mctx = minimap.getContext("2d");
 
-  // 🔁 Replace this with your actual Replit backend URL
-  const backendUrl = "https://your-replit-backend-url.repl.co";
+    const gridSize = 1000;
+    const cellSize = 10;
+    let scale = 1;
+    let offsetX = 0;
+    let offsetY = 0;
+    let isDragging = false;
+    let dragStart = { x: 0, y: 0 };
+    let paintedSquares = {};
 
-  function resizeCanvas() {
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
-    drawGrid();
-  }
+    const backendUrl = "https://your-replit-backend-url.repl.co"; // replace with your actual backend URL
 
-  window.addEventListener("resize", resizeCanvas);
+    function resizeCanvas() {
+      canvas.width = document.getElementById("canvas-container").clientWidth;
+      canvas.height = document.getElementById("canvas-container").clientHeight;
 
-  async function fetchPaintedSquares() {
-    try {
-      const res = await fetch(`${backendUrl}/painted`);
-      paintedSquares = await res.json();
+      // Center canvas
+      scale = 1;
+      offsetX = (canvas.width - gridSize * cellSize * scale) / 2;
+      offsetY = (canvas.height - gridSize * cellSize * scale) / 2;
+
       drawGrid();
-    } catch (err) {
-      console.error("Failed to fetch painted squares:", err);
     }
-  }
 
-  function drawGrid() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-    for (let x = 0; x < gridSize; x++) {
-      for (let y = 0; y < gridSize; y++) {
-        const px = x * cellSize * scale + offsetX;
-        const py = y * cellSize * scale + offsetY;
-
-        if (px + cellSize * scale < 0 || px > canvas.width ||
-            py + cellSize * scale < 0 || py > canvas.height) {
-          continue;
-        }
-
-        const key = `${x},${y}`;
-        if (paintedSquares[key]) {
-          ctx.fillStyle = paintedSquares[key].color;
-          ctx.fillRect(px, py, cellSize * scale, cellSize * scale);
-        } else {
-          ctx.fillStyle = "#e0e0e0";
-          ctx.fillRect(px, py, cellSize * scale, cellSize * scale);
-        }
-
-        ctx.strokeStyle = "#ccc";
-        ctx.strokeRect(px, py, cellSize * scale, cellSize * scale);
+    async function fetchPaintedSquares() {
+      try {
+        const res = await fetch(`${backendUrl}/painted`);
+        paintedSquares = await res.json();
+        drawGrid();
+      } catch (err) {
+        console.error("Failed to fetch painted squares:", err);
       }
     }
 
-    // 🔲 Draw fixed outer bold outline
-    const outlineX = offsetX;
-    const outlineY = offsetY;
-    const outlineW = gridSize * cellSize * scale;
-    const outlineH = gridSize * cellSize * scale;
+    function drawGrid() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    ctx.strokeStyle = "#000000"; // black
-    ctx.lineWidth = 4;
-    ctx.strokeRect(outlineX, outlineY, outlineW, outlineH);
-  }
+      for (let x = 0; x < gridSize; x++) {
+        for (let y = 0; y < gridSize; y++) {
+          const px = x * cellSize * scale + offsetX;
+          const py = y * cellSize * scale + offsetY;
 
-  canvas.addEventListener("mousedown", e => {
-    isDragging = true;
-    dragStart.x = e.clientX;
-    dragStart.y = e.clientY;
-  });
+          if (
+            px + cellSize * scale < 0 || px > canvas.width ||
+            py + cellSize * scale < 0 || py > canvas.height
+          ) {
+            continue;
+          }
 
-  canvas.addEventListener("mouseup", () => isDragging = false);
+          const key = `${x},${y}`;
+          ctx.fillStyle = paintedSquares[key]?.color || "#e0e0e0";
+          ctx.fillRect(px, py, cellSize * scale, cellSize * scale);
+          ctx.strokeStyle = "#ccc";
+          ctx.strokeRect(px, py, cellSize * scale, cellSize * scale);
+        }
+      }
 
-  canvas.addEventListener("mousemove", e => {
-    if (isDragging) {
-      offsetX += e.clientX - dragStart.x;
-      offsetY += e.clientY - dragStart.y;
-      dragStart.x = e.clientX;
-      dragStart.y = e.clientY;
+      ctx.strokeStyle = "#000";
+      ctx.lineWidth = 4;
+      ctx.strokeRect(offsetX, offsetY, gridSize * cellSize * scale, gridSize * cellSize * scale);
+
+      drawMinimap();
+    }
+
+    function drawMinimap() {
+      const mw = minimap.width;
+      const mh = minimap.height;
+      mctx.clearRect(0, 0, mw, mh);
+
+      mctx.fillStyle = "#e0e0e0";
+      mctx.fillRect(0, 0, mw, mh);
+
+      for (const key in paintedSquares) {
+        const [x, y] = key.split(",").map(Number);
+        const miniX = (x / gridSize) * mw;
+        const miniY = (y / gridSize) * mh;
+        mctx.fillStyle = paintedSquares[key].color;
+        mctx.fillRect(miniX, miniY, 1, 1);
+      }
+
+      const visibleWidth = canvas.width / (gridSize * cellSize * scale);
+      const visibleHeight = canvas.height / (gridSize * cellSize * scale);
+      const visibleX = -offsetX / (gridSize * cellSize * scale);
+      const visibleY = -offsetY / (gridSize * cellSize * scale);
+
+      mctx.strokeStyle = "red";
+      mctx.lineWidth = 2;
+      mctx.strokeRect(
+        visibleX * mw,
+        visibleY * mh,
+        visibleWidth * mw,
+        visibleHeight * mh
+      );
+    }
+
+    minimap.addEventListener("click", (e) => {
+      const rect = minimap.getBoundingClientRect();
+      const clickX = e.clientX - rect.left;
+      const clickY = e.clientY - rect.top;
+
+      const targetX = (clickX / minimap.width) * gridSize * cellSize * scale;
+      const targetY = (clickY / minimap.height) * gridSize * cellSize * scale;
+
+      offsetX = canvas.width / 2 - targetX;
+      offsetY = canvas.height / 2 - targetY;
       drawGrid();
-    }
-  });
-
-  canvas.addEventListener("wheel", e => {
-    e.preventDefault();
-    const zoom = e.deltaY < 0 ? 1.1 : 0.9;
-    scale *= zoom;
-    offsetX = e.clientX - (e.clientX - offsetX) * zoom;
-    offsetY = e.clientY - (e.clientY - offsetY) * zoom;
-    drawGrid();
-  });
-
-  canvas.addEventListener("click", async (e) => {
-    const gridX = Math.floor((e.clientX - offsetX) / (cellSize * scale));
-    const gridY = Math.floor((e.clientY - offsetY) / (cellSize * scale));
-    const key = `${gridX},${gridY}`;
-
-    if (paintedSquares[key]) {
-      alert("This square is already painted.");
-      return;
-    }
-
-const colorInput = document.createElement("input");
-colorInput.type = "color";
-colorInput.style.position = "fixed";
-colorInput.style.left = "-100px"; // Hide it off-screen
-document.body.appendChild(colorInput);
-
-colorInput.addEventListener("input", async () => {
-  const color = colorInput.value;
-  const tx = "test-tx-id"; // ⚠️ Skip PayPal for now
-
-  try {
-    const res = await fetch(`${backendUrl}/paint`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ x: gridX, y: gridY, color, tx })
     });
 
-    if (res.ok) {
-      paintedSquares[key] = { color };
+    canvas.addEventListener("mousedown", e => {
+      isDragging = true;
+      dragStart.x = e.clientX;
+      dragStart.y = e.clientY;
+    });
+
+    canvas.addEventListener("mouseup", () => isDragging = false);
+    canvas.addEventListener("mouseleave", () => isDragging = false);
+
+    canvas.addEventListener("mousemove", e => {
+      if (isDragging) {
+        offsetX += e.clientX - dragStart.x;
+        offsetY += e.clientY - dragStart.y;
+        dragStart.x = e.clientX;
+        dragStart.y = e.clientY;
+        drawGrid();
+      }
+    });
+
+    canvas.addEventListener("wheel", e => {
+      e.preventDefault();
+      const zoom = e.deltaY < 0 ? 1.1 : 0.9;
+      const mx = e.clientX;
+      const my = e.clientY;
+
+      const wx = (mx - offsetX) / scale;
+      const wy = (my - offsetY) / scale;
+
+      scale *= zoom;
+      offsetX = mx - wx * scale;
+      offsetY = my - wy * scale;
       drawGrid();
-    } else {
-      const error = await res.json();
-      alert(error.error || "Error painting square.");
-    }
-  } catch (err) {
-    alert("Network error.");
-  }
+    });
 
-  document.body.removeChild(colorInput); // Clean up
-});
+    canvas.addEventListener("click", (e) => {
+      const rect = canvas.getBoundingClientRect();
+      const gridX = Math.floor((e.clientX - rect.left - offsetX) / (cellSize * scale));
+      const gridY = Math.floor((e.clientY - rect.top - offsetY) / (cellSize * scale));
+      const key = `${gridX},${gridY}`;
 
-// Trigger the native color picker
-colorInput.click();
+      if (paintedSquares[key]) {
+        alert("This square is already painted.");
+        return;
+      }
 
+      const colorInput = document.createElement("input");
+      colorInput.type = "color";
+      colorInput.style.position = "fixed";
+      colorInput.style.left = "-100px";
+      document.body.appendChild(colorInput);
 
-    try {
-      const res = await fetch(`${backendUrl}/paint`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ x: gridX, y: gridY, color, tx })
+      colorInput.addEventListener("input", async () => {
+        const color = colorInput.value;
+        const tx = "test-tx-id";
+
+        try {
+          const res = await fetch(`${backendUrl}/paint`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ x: gridX, y: gridY, color, tx })
+          });
+
+          if (res.ok) {
+            paintedSquares[key] = { color };
+            drawGrid();
+          } else {
+            const error = await res.json();
+            alert(error.error || "Error painting square.");
+          }
+        } catch (err) {
+          alert("Network error.");
+        }
+
+        document.body.removeChild(colorInput);
       });
 
-      if (res.ok) {
-        paintedSquares[key] = { color };
-        drawGrid();
-      } else {
-        const error = await res.json();
-        alert(error.error || "Error painting square.");
-      }
-    } catch (err) {
-      alert("Network error.");
-    }
-  });
+      colorInput.click();
+    });
 
-  resizeCanvas();
-  fetchPaintedSquares();
-</script>
+    window.addEventListener("resize", resizeCanvas);
+
+    resizeCanvas();
+    fetchPaintedSquares();
+  </script>
 </body>
 </html>
