@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>The Invisible Million</title>
   <style>
     body {
@@ -13,12 +13,14 @@
       display: flex;
       flex-direction: column;
       align-items: center;
+      user-select: none;
     }
 
     header {
       max-width: 900px;
       padding: 2rem;
       text-align: center;
+      line-height: 1.4;
     }
 
     #minimap-container {
@@ -27,20 +29,25 @@
       height: 500px;
       border: 4px solid white;
       margin-bottom: 20px;
+      box-sizing: border-box;
     }
 
     #minimap {
       width: 100%;
       height: 100%;
       display: block;
-      background-color: #333;
+      background-color: transparent;
       image-rendering: pixelated;
+      cursor: pointer;
     }
 
     #viewport-box {
       position: absolute;
-      border: 2px solid red;
-      pointer-events: none;
+      border: 3px solid red;
+      background-color: rgba(255, 0, 0, 0.2);
+      pointer-events: auto;
+      cursor: move;
+      box-sizing: border-box;
     }
 
     #mainframe {
@@ -49,16 +56,30 @@
       height: 500px;
       overflow: hidden;
       border: 4px solid white;
-      background-color: #333;
+      box-sizing: border-box;
+      background-color: transparent;
     }
 
-    canvas {
+    canvas#mainCanvas {
       position: absolute;
       top: 0;
       left: 0;
-      background-color: #333;
       cursor: grab;
       image-rendering: pixelated;
+      background-color: transparent;
+    }
+
+    /* Palette color input styling */
+    input[type="color"] {
+      position: absolute;
+      z-index: 1000;
+      border: none;
+      padding: 0;
+      width: 32px;
+      height: 32px;
+      cursor: pointer;
+      box-shadow: 0 0 5px #000;
+      border-radius: 4px;
     }
   </style>
 </head>
@@ -66,164 +87,312 @@
 
 <header>
   <h1>The Invisible Million</h1>
-  <p>This is a placeholder narrative. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed sit amet facilisis urna. Praesent feugiat elit at nisl malesuada, nec pulvinar magna dapibus. Donec a lectus euismod, accumsan tortor ac, suscipit purus. Duis rutrum efficitur diam, et fermentum felis aliquam eu.</p>
+  <p>
+    This is a placeholder narrative. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed sit amet facilisis urna. Praesent feugiat elit at nisl malesuada, nec pulvinar magna dapibus. Donec a lectus euismod, accumsan tortor ac, suscipit purus. Duis rutrum efficitur diam, et fermentum felis aliquam eu.
+  </p>
 </header>
 
 <div id="minimap-container">
-  <canvas id="minimap"></canvas>
+  <canvas id="minimap" width="500" height="500"></canvas>
   <div id="viewport-box"></div>
 </div>
 
 <div id="mainframe">
-  <canvas id="mainCanvas"></canvas>
+  <canvas id="mainCanvas" width="1000" height="1000"></canvas>
 </div>
 
 <script>
-const canvas = document.getElementById('mainCanvas');
-const ctx = canvas.getContext('2d');
-ctx.imageSmoothingEnabled = false;
-const minimap = document.getElementById('minimap');
-const miniCtx = minimap.getContext('2d');
-miniCtx.imageSmoothingEnabled = false;
-const viewportBox = document.getElementById('viewport-box');
+  const GRID_SIZE = 1000;
+  const MAX_VISIBLE_SQUARES = 200;
+  const MIN_VISIBLE_SQUARES = 50;
 
-const GRID_SIZE = 1000;
-let zoom = 2.5;
-let offsetX = -250;
-let offsetY = -250;
-let isDragging = false;
-let dragStart = {x: 0, y: 0};
+  const minimap = document.getElementById('minimap');
+  const miniCtx = minimap.getContext('2d');
+  miniCtx.imageSmoothingEnabled = false;
 
-canvas.width = GRID_SIZE;
-canvas.height = GRID_SIZE;
-minimap.width = 500;
-minimap.height = 500;
+  const viewportBox = document.getElementById('viewport-box');
 
-function drawGrid() {
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-  for (const key in gridData) {
-    const [x, y] = key.split(',').map(Number);
-    ctx.fillStyle = gridData[key].color;
-    ctx.fillRect(x, y, 1, 1);
+  const mainCanvas = document.getElementById('mainCanvas');
+  const ctx = mainCanvas.getContext('2d');
+  ctx.imageSmoothingEnabled = false;
+
+  let zoom = 5;  // initial zoom to show 200x200 (1000/200=5 px per square)
+  let offsetX = 0; // pan offset in pixels (not scaled)
+  let offsetY = 0;
+  let isDraggingCanvas = false;
+  let dragStartCanvas = { x: 0, y: 0 };
+
+  let isDraggingViewport = false;
+  let dragStartViewport = { x: 0, y: 0 };
+
+  // Store grid squares as { "x,y": {color: "#hex", timestamp: "...", tx: "..." } }
+  let gridData = {};
+
+  // Convert zoom to size of one square in pixels
+  function squareSize() {
+    return zoom;
   }
-}
 
-function drawMinimap() {
-  miniCtx.clearRect(0, 0, minimap.width, minimap.height);
-  for (const key in gridData) {
-    const [x, y] = key.split(',').map(Number);
-    miniCtx.fillStyle = gridData[key].color;
-    miniCtx.fillRect(x / 2, y / 2, 0.5, 0.5);
+  // Limits zoom so that visible squares are between MIN and MAX
+  function clampZoom(z) {
+    const minZoom = 500 / MAX_VISIBLE_SQUARES; // max zoom to show 200 squares wide
+    const maxZoom = 500 / MIN_VISIBLE_SQUARES; // min zoom to show 50 squares wide
+    return Math.min(maxZoom, Math.max(minZoom, z));
   }
-  const scale = minimap.width / GRID_SIZE;
-  const visibleWidth = 500 / zoom;
-  const visibleHeight = 500 / zoom;
-  const boxWidth = visibleWidth * scale;
-  const boxHeight = visibleHeight * scale;
-  const boxLeft = Math.max(0, Math.min((-offsetX) * scale, minimap.width - boxWidth));
-  const boxTop = Math.max(0, Math.min((-offsetY) * scale, minimap.height - boxHeight));
-  viewportBox.style.width = `${boxWidth}px`;
-  viewportBox.style.height = `${boxHeight}px`;
-  viewportBox.style.left = `${boxLeft}px`;
-  viewportBox.style.top = `${boxTop}px`;
-}
 
-function applyTransform() {
-  canvas.style.transformOrigin = "top left";
-  canvas.style.transform = `scale(${zoom}) translate(${offsetX}px, ${offsetY}px)`;
-  drawMinimap();
-}
+  // Draw the zoomable grid inside mainCanvas
+  function drawGrid() {
+    ctx.clearRect(0, 0, mainCanvas.width, mainCanvas.height);
+    const s = squareSize();
+    const startX = Math.floor(-offsetX / s);
+    const startY = Math.floor(-offsetY / s);
+    const visibleSquaresX = Math.ceil(500 / s);
+    const visibleSquaresY = Math.ceil(500 / s);
 
-fetch("https://155ca338-0e90-4f5a-88ec-b6163921baae-00-181dgn4pq10j7.janeway.replit.dev/painted")
-  .then(res => res.json())
-  .then(data => {
-    gridData = data;
+    ctx.lineWidth = 1;
+    ctx.strokeStyle = "#222";
+
+    for(let x = startX; x < startX + visibleSquaresX; x++) {
+      for(let y = startY; y < startY + visibleSquaresY; y++) {
+        if (x < 0 || y < 0 || x >= GRID_SIZE || y >= GRID_SIZE) continue;
+
+        const key = `${x},${y}`;
+        const px = x * s + offsetX;
+        const py = y * s + offsetY;
+
+        // Draw filled color if present
+        if (gridData[key]) {
+          ctx.fillStyle = gridData[key].color;
+          ctx.fillRect(px, py, s, s);
+        } else {
+          ctx.fillStyle = "#111";
+          ctx.fillRect(px, py, s, s);
+        }
+        // Draw sharp border for each square
+        ctx.strokeRect(px + 0.5, py + 0.5, s - 1, s - 1);
+      }
+    }
+  }
+
+  // Draw minimap showing entire 1000x1000 grid at half scale
+  function drawMinimap() {
+    miniCtx.clearRect(0, 0, minimap.width, minimap.height);
+    miniCtx.fillStyle = "#111";
+    miniCtx.fillRect(0, 0, minimap.width, minimap.height);
+
+    // Draw painted squares in minimap
+    for (const key in gridData) {
+      const [x, y] = key.split(',').map(Number);
+      miniCtx.fillStyle = gridData[key].color;
+      miniCtx.fillRect(x / 2, y / 2, 0.5, 0.5);
+    }
+
+    // Draw viewport box (red translucent rectangle)
+    const s = squareSize();
+    const visibleSquaresX = 500 / s;
+    const visibleSquaresY = 500 / s;
+
+    const scale = minimap.width / GRID_SIZE;
+
+    let boxLeft = -offsetX * scale;
+    let boxTop = -offsetY * scale;
+    let boxWidth = visibleSquaresX * scale;
+    let boxHeight = visibleSquaresY * scale;
+
+    // Clamp the viewport box inside minimap
+    boxLeft = Math.min(Math.max(boxLeft, 0), minimap.width - boxWidth);
+    boxTop = Math.min(Math.max(boxTop, 0), minimap.height - boxHeight);
+
+    viewportBox.style.width = boxWidth + "px";
+    viewportBox.style.height = boxHeight + "px";
+    viewportBox.style.left = boxLeft + "px";
+    viewportBox.style.top = boxTop + "px";
+  }
+
+  function applyTransform() {
     drawGrid();
     drawMinimap();
+  }
+
+  // Fetch painted squares from backend
+  fetch("https://155ca338-0e90-4f5a-88ec-b6163921baae-00-181dgn4pq10j7.janeway.replit.dev/painted")
+    .then(res => res.json())
+    .then(data => {
+      gridData = data;
+      applyTransform();
+    });
+
+  // Handle dragging viewport box inside minimap
+  viewportBox.addEventListener('mousedown', (e) => {
+    isDraggingViewport = true;
+    dragStartViewport = { x: e.clientX, y: e.clientY };
+    e.preventDefault();
+  });
+  window.addEventListener('mouseup', () => {
+    isDraggingViewport = false;
+  });
+  window.addEventListener('mousemove', (e) => {
+    if (!isDraggingViewport) return;
+    const dx = e.clientX - dragStartViewport.x;
+    const dy = e.clientY - dragStartViewport.y;
+    dragStartViewport = { x: e.clientX, y: e.clientY };
+
+    const scale = minimap.width / GRID_SIZE;
+    const s = squareSize();
+    const visibleSquaresX = 500 / s;
+    const visibleSquaresY = 500 / s;
+    const boxWidth = visibleSquaresX * scale;
+    const boxHeight = visibleSquaresY * scale;
+
+    let newLeft = parseFloat(viewportBox.style.left) + dx;
+    let newTop = parseFloat(viewportBox.style.top) + dy;
+
+    newLeft = Math.min(Math.max(newLeft, 0), minimap.width - boxWidth);
+    newTop = Math.min(Math.max(newTop, 0), minimap.height - boxHeight);
+
+    viewportBox.style.left = newLeft + "px";
+    viewportBox.style.top = newTop + "px";
+
+    // Update main canvas offset
+    offsetX = -newLeft / scale;
+    offsetY = -newTop / scale;
+    applyTransform();
   });
 
-minimap.addEventListener('click', (e) => {
-  const rect = minimap.getBoundingClientRect();
-  const mx = e.clientX - rect.left;
-  const my = e.clientY - rect.top;
-  const targetX = Math.max(0, Math.min(mx, minimap.width));
-  const targetY = Math.max(0, Math.min(my, minimap.height));
-  offsetX = -(targetX * 2 - 250 / zoom);
-  offsetY = -(targetY * 2 - 250 / zoom);
-  applyTransform();
-});
+  // Clicking minimap recenters main canvas viewport
+  minimap.addEventListener('click', (e) => {
+    if (isDraggingViewport) return; // ignore if dragging viewport box
+    const rect = minimap.getBoundingClientRect();
+    const mx = e.clientX - rect.left;
+    const my = e.clientY - rect.top;
 
-document.getElementById('mainframe').addEventListener('wheel', (e) => {
-  e.preventDefault();
-  const delta = e.deltaY > 0 ? -0.1 : 0.1;
-  zoom = Math.max(2.5, Math.min(10, zoom + delta));
-  applyTransform();
-});
+    const scale = minimap.width / GRID_SIZE;
+    const s = squareSize();
+    const visibleSquaresX = 500 / s;
+    const visibleSquaresY = 500 / s;
+    const boxWidth = visibleSquaresX * scale;
+    const boxHeight = visibleSquaresY * scale;
 
-canvas.addEventListener('mousedown', (e) => {
-  isDragging = true;
-  dragStart = { x: e.clientX, y: e.clientY };
-  canvas.style.cursor = 'grabbing';
-});
+    let newLeft = mx - boxWidth / 2;
+    let newTop = my - boxHeight / 2;
 
-window.addEventListener('mouseup', () => {
-  isDragging = false;
-  canvas.style.cursor = 'grab';
-});
+    newLeft = Math.min(Math.max(newLeft, 0), minimap.width - boxWidth);
+    newTop = Math.min(Math.max(newTop, 0), minimap.height - boxHeight);
 
-window.addEventListener('mousemove', (e) => {
-  if (!isDragging) return;
-  const dx = e.clientX - dragStart.x;
-  const dy = e.clientY - dragStart.y;
-  dragStart = { x: e.clientX, y: e.clientY };
-  offsetX += dx / zoom;
-  offsetY += dy / zoom;
-  applyTransform();
-});
+    viewportBox.style.left = newLeft + "px";
+    viewportBox.style.top = newTop + "px";
 
-const colorInput = document.createElement("input");
-colorInput.type = "color";
-colorInput.style.position = "absolute";
-colorInput.style.display = "none";
-document.body.appendChild(colorInput);
+    offsetX = -newLeft / scale;
+    offsetY = -newTop / scale;
 
-canvas.addEventListener('click', (e) => {
-  if (isDragging) return;
-  const rect = canvas.getBoundingClientRect();
-  const cx = (e.clientX - rect.left) / zoom - offsetX;
-  const cy = (e.clientY - rect.top) / zoom - offsetY;
-  const gridX = Math.floor(cx);
-  const gridY = Math.floor(cy);
-  const key = `${gridX},${gridY}`;
-  if (gridX < 0 || gridY < 0 || gridX >= GRID_SIZE || gridY >= GRID_SIZE) return;
-  if (gridData[key]) {
-    alert("This square is already painted.");
-    return;
+    applyTransform();
+  });
+
+  // Handle zoom and pan on main canvas container
+  const mainframe = document.getElementById('mainframe');
+
+  mainframe.addEventListener('wheel', e => {
+    e.preventDefault();
+
+    const oldZoom = zoom;
+    const delta = e.deltaY > 0 ? -0.2 : 0.2;
+    zoom = clampZoom(zoom + delta);
+
+    // Adjust offset so zoom centers on mouse pointer
+    const rect = mainframe.getBoundingClientRect();
+    const mouseX = e.clientX - rect.left;
+    const mouseY = e.clientY - rect.top;
+
+    offsetX = offsetX - (mouseX / oldZoom) + (mouseX / zoom);
+    offsetY = offsetY - (mouseY / oldZoom) + (mouseY / zoom);
+
+    // Clamp pan offset so viewport doesn't show outside grid
+    clampOffset();
+
+    applyTransform();
+  }, { passive: false });
+
+  // Clamp offset so viewport doesn't go beyond grid edges
+  function clampOffset() {
+    const s = squareSize();
+    const visibleSquaresX = 500 / s;
+    const visibleSquaresY = 500 / s;
+    offsetX = Math.min(0, Math.max(offsetX, 500 - visibleSquaresX * s));
+    offsetY = Math.min(0, Math.max(offsetY, 500 - visibleSquaresY * s));
   }
-  colorInput.style.left = `${e.pageX}px`;
-  colorInput.style.top = `${e.pageY}px`;
-  colorInput.style.display = "block";
-  colorInput.oninput = () => {
-    const color = colorInput.value;
-    const tx = "test_tx_" + Date.now();
-    fetch("https://155ca338-0e90-4f5a-88ec-b6163921baae-00-181dgn4pq10j7.janeway.replit.dev/paint", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ x: gridX, y: gridY, color, tx })
-    }).then(res => {
-      if (res.ok) {
-        gridData[key] = { color, tx };
-        drawGrid();
-        drawMinimap();
-      } else {
-        res.json().then(d => alert(d.error));
-      }
-    });
-    colorInput.style.display = "none";
-  };
-  colorInput.click();
-});
+
+  // Dragging to pan main canvas
+  mainCanvas.addEventListener('mousedown', (e) => {
+    isDraggingCanvas = true;
+    dragStartCanvas = { x: e.clientX, y: e.clientY };
+    mainCanvas.style.cursor = 'grabbing';
+  });
+  window.addEventListener('mouseup', () => {
+    isDraggingCanvas = false;
+    mainCanvas.style.cursor = 'grab';
+  });
+  window.addEventListener('mousemove', (e) => {
+    if (!isDraggingCanvas) return;
+    const dx = e.clientX - dragStartCanvas.x;
+    const dy = e.clientY - dragStartCanvas.y;
+    dragStartCanvas = { x: e.clientX, y: e.clientY };
+
+    offsetX += dx;
+    offsetY += dy;
+
+    clampOffset();
+
+    applyTransform();
+  });
+
+  // Color picker logic on click inside mainCanvas
+  mainCanvas.addEventListener('click', (e) => {
+    const rect = mainCanvas.getBoundingClientRect();
+    const s = squareSize();
+
+    // Calculate grid square clicked
+    const x = Math.floor((e.clientX - rect.left - offsetX) / s);
+    const y = Math.floor((e.clientY - rect.top - offsetY) / s);
+
+    if (x < 0 || y < 0 || x >= GRID_SIZE || y >= GRID_SIZE) return;
+
+    // Show color input at cursor
+    let colorInput = document.getElementById('colorPicker');
+    if (!colorInput) {
+      colorInput = document.createElement('input');
+      colorInput.type = 'color';
+      colorInput.id = 'colorPicker';
+      document.body.appendChild(colorInput);
+      colorInput.addEventListener('input', () => {
+        // Paint square in gridData and redraw
+        const key = `${x},${y}`;
+        gridData[key] = { color: colorInput.value };
+        applyTransform();
+
+        // TODO: Send paint to backend if needed
+      });
+      colorInput.addEventListener('blur', () => {
+        colorInput.style.display = 'none';
+      });
+    }
+
+    colorInput.style.left = e.pageX + 'px';
+    colorInput.style.top = e.pageY + 'px';
+    colorInput.value = (gridData[`${x},${y}`]?.color) || '#ffffff';
+    colorInput.style.display = 'block';
+    colorInput.focus();
+  });
+
 </script>
+
+<!-- PayPal Donate Button -->
+<div style="margin-top: 20px;">
+  <form action="https://www.paypal.com/donate" method="post" target="_top">
+    <input type="hidden" name="hosted_button_id" value="YOUR_PAYPAL_BUTTON_ID_HERE" />
+    <input type="image" src="https://www.paypalobjects.com/en_US/i/btn/btn_donate_LG.gif" border="0" name="submit" title="PayPal - The safer, easier way to pay online!" alt="Donate with PayPal button" />
+    <img alt="" border="0" src="https://www.paypal.com/en_US/i/scr/pixel.gif" width="1" height="1" />
+  </form>
+</div>
 
 </body>
 </html>
