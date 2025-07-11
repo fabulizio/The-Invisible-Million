@@ -124,6 +124,8 @@ const CANVAS_SIZE = 400;  // dimensione canvas px
 const MINIMAP_SIZE = 400; // stessa dimensione minimap
 const SCALE_FACTOR = GRID_SIZE / MINIMAP_SIZE; // 2.5
 
+const BACKEND_URL = 'https://155ca338-0e90-4f5a-88ec-b6163921baae-00-181dgn4pq10j7.janeway.replit.dev';
+
 let zoom = parseFloat(localStorage.getItem("zoom")) || 5;
 let offsetX = parseFloat(localStorage.getItem("offsetX")) || 0;
 let offsetY = parseFloat(localStorage.getItem("offsetY")) || 0;
@@ -250,8 +252,7 @@ function closeColorModal() {
 }
 
 function paintSquare(x, y, color) {
-  // POST al backend senza tx
-  fetch('/paint', {
+  fetch(`${BACKEND_URL}/paint`, {
     method: 'POST',
     headers: {'Content-Type': 'application/json'},
     body: JSON.stringify({ x, y, color })
@@ -274,7 +275,7 @@ function paintSquare(x, y, color) {
   });
 }
 
-fetch("/painted")
+fetch(`${BACKEND_URL}/painted`)
   .then(res => res.json())
   .then(data => {
     gridData = data;
@@ -285,68 +286,91 @@ fetch("/painted")
     counter.textContent = "Errore nel caricamento dei dati.";
   });
 
-// Zoom con rotella
-document.getElementById('mainframe').addEventListener('wheel', (e) => {
+// Gestione eventi zoom con rotella mouse
+canvas.addEventListener('wheel', e => {
   e.preventDefault();
-  const rect = canvas.getBoundingClientRect();
-  const mx = e.clientX - rect.left;
-  const my = e.clientY - rect.top;
   const oldZoom = zoom;
-  const delta = e.deltaY > 0 ? -0.5 : 0.5;
-  zoom = Math.min(20, Math.max(1, zoom + delta));
-  offsetX += mx / oldZoom - mx / zoom;
-  offsetY += my / oldZoom - my / zoom;
+  if (e.deltaY < 0) {
+    zoom = Math.min(20, zoom * 1.2);
+  } else {
+    zoom = Math.max(2, zoom / 1.2);
+  }
+  // centratura zoom sul mouse
+  const rect = canvas.getBoundingClientRect();
+  const mouseX = e.clientX - rect.left;
+  const mouseY = e.clientY - rect.top;
+  const beforeX = offsetX + mouseX / oldZoom;
+  const beforeY = offsetY + mouseY / oldZoom;
+  offsetX = beforeX - mouseX / zoom;
+  offsetY = beforeY - mouseY / zoom;
+
+  clampOffsets();
   render();
 }, { passive: false });
 
-// Drag per muovere la vista
+// Drag per spostare la vista
 let isDragging = false;
-let dragStart = { x: 0, y: 0 };
-canvas.addEventListener('mousedown', (e) => {
+let dragStartX, dragStartY;
+canvas.addEventListener('mousedown', e => {
   isDragging = true;
-  dragStart = { x: e.clientX, y: e.clientY };
+  dragStartX = e.clientX;
+  dragStartY = e.clientY;
   canvas.style.cursor = 'grabbing';
 });
 window.addEventListener('mouseup', () => {
   isDragging = false;
   canvas.style.cursor = 'grab';
 });
-window.addEventListener('mousemove', (e) => {
-  if (!isDragging) return;
-  const dx = e.clientX - dragStart.x;
-  const dy = e.clientY - dragStart.y;
-  dragStart = { x: e.clientX, y: e.clientY };
-  offsetX -= dx / zoom;
-  offsetY -= dy / zoom;
-  render();
-});
-
-// Click sulla minimap per spostare la vista
-minimap.addEventListener('click', (e) => {
-  const rect = minimap.getBoundingClientRect();
-  const mx = e.clientX - rect.left;
-  const my = e.clientY - rect.top;
-  offsetX = mx * SCALE_FACTOR - (CANVAS_SIZE / (2 * zoom));
-  offsetY = my * SCALE_FACTOR - (CANVAS_SIZE / (2 * zoom));
-  render();
-});
-
-// Click sulla griglia per selezionare quadrato e aprire modal
-canvas.addEventListener('click', (e) => {
-  const rect = canvas.getBoundingClientRect();
-  const cx = e.clientX - rect.left;
-  const cy = e.clientY - rect.top;
-  const gridX = Math.floor(offsetX + cx / zoom);
-  const gridY = Math.floor(offsetY + cy / zoom);
-  if(gridX >= 0 && gridX < GRID_SIZE && gridY >= 0 && gridY < GRID_SIZE) {
-    // controlla se quadrato già dipinto
-    if(gridData[`${gridX},${gridY}`]) {
-      alert("Quadrato già dipinto, scegli un altro.");
-      return;
-    }
-    openColorModal(gridX, gridY);
+window.addEventListener('mousemove', e => {
+  if (isDragging) {
+    const dx = (dragStartX - e.clientX) / zoom;
+    const dy = (dragStartY - e.clientY) / zoom;
+    offsetX += dx;
+    offsetY += dy;
+    clampOffsets();
+    dragStartX = e.clientX;
+    dragStartY = e.clientY;
+    render();
   }
 });
+
+// Click su quadrato per aprire color picker
+canvas.addEventListener('click', e => {
+  const rect = canvas.getBoundingClientRect();
+  const clickX = e.clientX - rect.left;
+  const clickY = e.clientY - rect.top;
+  const gridX = Math.floor(offsetX + clickX / zoom);
+  const gridY = Math.floor(offsetY + clickY / zoom);
+  openColorModal(gridX, gridY);
+});
+
+// Drag sulla minimap per spostare vista
+let miniDragging = false;
+minimap.addEventListener('mousedown', e => {
+  miniDragging = true;
+  moveViewportToMini(e);
+});
+window.addEventListener('mouseup', () => {
+  miniDragging = false;
+});
+minimap.addEventListener('mousemove', e => {
+  if (miniDragging) {
+    moveViewportToMini(e);
+  }
+});
+
+function moveViewportToMini(e) {
+  const rect = minimap.getBoundingClientRect();
+  let x = e.clientX - rect.left;
+  let y = e.clientY - rect.top;
+  x = Math.min(Math.max(0, x), MINIMAP_SIZE);
+  y = Math.min(Math.max(0, y), MINIMAP_SIZE);
+  const visibleSquares = Math.floor(CANVAS_SIZE / zoom);
+  offsetX = x * SCALE_FACTOR - visibleSquares / 2;
+  offsetY = y * SCALE_FACTOR - visibleSquares / 2;
+  clampOffsets();
+  render();
+}
 
 // Modal gestione
 const colorModal = document.getElementById('colorModal');
@@ -354,20 +378,18 @@ const colorPicker = document.getElementById('colorPicker');
 const cancelBtn = document.getElementById('cancelBtn');
 const okBtn = document.getElementById('okBtn');
 
-cancelBtn.addEventListener('click', () => {
-  closeColorModal();
+cancelBtn.onclick = () => closeColorModal();
+colorModal.addEventListener('keydown', e => {
+  if(e.key === 'Escape') closeColorModal();
 });
-
-okBtn.addEventListener('click', () => {
-  if (!selectedSquare) return;
+okBtn.onclick = () => {
+  if(!selectedSquare) return closeColorModal();
   paintSquare(selectedSquare.x, selectedSquare.y, colorPicker.value);
-});
+};
 
-window.addEventListener('keydown', e => {
-  if (e.key === 'Escape' && colorModal.style.display === 'block') {
-    closeColorModal();
-  }
-});
+// Primo render e setup
+canvas.style.cursor = 'grab';
+render();
 </script>
 </body>
 </html>
