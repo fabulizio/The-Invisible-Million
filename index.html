@@ -1,225 +1,267 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>The Invisible Million</title>
-  <style>
-    body {
-      margin: 0;
-      font-family: sans-serif;
-    }
-
-    #top {
-      padding: 20px;
-      background: #f5f5f5;
-    }
-
-    #top p {
-      margin: 0 0 10px;
-    }
-
-    #donateBtn {
-      padding: 10px 20px;
-      background-color: #0070ba;
-      color: white;
-      border: none;
-      border-radius: 5px;
-      font-size: 16px;
-      cursor: pointer;
-    }
-
-    #minimap {
-      margin: 20px auto;
-      display: block;
-      border: 2px solid black;
-      background: white;
-    }
-
-    #frame {
-      position: relative;
-      width: 90vw;
-      max-width: 600px;
-      height: 90vw;
-      max-height: 600px;
-      border: 5px solid black;
-      margin: 0 auto;
-      overflow: hidden;
-    }
-
-    #gridCanvas {
-      position: absolute;
-      top: 0;
-      left: 0;
-    }
-
-    #colorPicker {
-      position: fixed;
-      left: -9999px;
-    }
-  </style>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>The Invisible Million - Grid</title>
+<style>
+  body {
+    margin: 20px;
+    font-family: Arial, sans-serif;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  #narrative {
+    max-width: 1000px;
+    margin-bottom: 15px;
+  }
+  #minimap-container, #mainframe {
+    position: relative;
+    width: 600px;
+    height: 600px;
+    margin-bottom: 15px;
+    border: 5px solid black;
+    box-sizing: border-box;
+  }
+  #minimap {
+    width: 100%;
+    height: 100%;
+    image-rendering: pixelated;
+    background: #eee;
+  }
+  #mainframe {
+    overflow: hidden;
+  }
+  #grid-canvas {
+    cursor: crosshair;
+    image-rendering: pixelated;
+    transform-origin: top left;
+  }
+  #palette {
+    position: fixed;
+    display: none;
+    background: white;
+    border: 1px solid black;
+    padding: 5px;
+    z-index: 10;
+  }
+  #palette input[type=color] {
+    width: 50px;
+    height: 30px;
+    border: none;
+    padding: 0;
+  }
+  #palette button {
+    margin-left: 5px;
+  }
+</style>
 </head>
 <body>
-  <div id="top">
-    <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit.</p>
-    <p>Vestibulum imperdiet, risus nec fermentum ultricies, nulla leo bibendum sem.</p>
-    <p>Fusce at sapien eget justo laoreet cursus.</p>
-    <p>Aliquam erat volutpat. Integer in cursus augue.</p>
-    <p>Morbi dignissim ligula id purus sagittis, nec tincidunt erat iaculis.</p>
-    <p>Sed vulputate augue vel turpis suscipit tempor.</p>
-    <p>Ut efficitur metus at nunc feugiat dignissim.</p>
-    <p>Nam at diam a justo viverra elementum at ut nibh.</p>
-    <p>Praesent eget metus in turpis commodo ultrices.</p>
-    <p>Donec nec urna nec nunc volutpat fringilla.</p>
-    <button id="donateBtn">Donate (Mock)</button>
-  </div>
 
-  <canvas id="minimap" width="150" height="150"></canvas>
+<div id="narrative">
+  <p>
+    Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla euismod, nisl nec vestibulum cursus, ligula odio viverra nunc, a dictum magna urna sed purus.
+  </p>
+  <p>
+    Phasellus maximus libero at erat pulvinar, at egestas velit commodo. Vivamus dignissim mi vitae erat gravida, nec gravida metus faucibus.
+  </p>
+  <p>
+    Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas. Proin imperdiet, nisl in fringilla faucibus, lorem massa porttitor dui, at condimentum sem erat at ex.
+  </p>
+  <!-- Add more nonsense lines as needed -->
+</div>
 
-  <div id="frame">
-    <canvas id="gridCanvas" width="2000" height="2000"></canvas>
-  </div>
+<div id="minimap-container">
+  <canvas id="minimap" width="1000" height="1000"></canvas>
+</div>
 
-  <input type="color" id="colorPicker" />
+<div id="mainframe">
+  <canvas id="grid-canvas" width="1000" height="1000"></canvas>
+</div>
 
-  <script>
-    const canvas = document.getElementById("gridCanvas");
-    const ctx = canvas.getContext("2d");
-    const minimap = document.getElementById("minimap");
-    const mctx = minimap.getContext("2d");
-    const frame = document.getElementById("frame");
-    const colorPicker = document.getElementById("colorPicker");
+<div id="palette">
+  <input type="color" id="color-picker" value="#ff0000" />
+  <button id="confirm-paint">Paint</button>
+  <button id="cancel-paint">Cancel</button>
+</div>
 
-    const gridSize = 1000;
-    const cellSize = 10;
+<script>
+  const backendUrl = "https://155ca338-0e90-4f5a-88ec-b6163921baae-00-181dgn4pq10j7.janeway.replit.dev";
 
-    let scale = 1;
-    let offsetX = 0;
-    let offsetY = 0;
-    let isDragging = false;
-    let dragStart = { x: 0, y: 0 };
-    let paintedSquares = {};
+  const canvas = document.getElementById('grid-canvas');
+  const ctx = canvas.getContext('2d');
+  const minimapCanvas = document.getElementById('minimap');
+  const minimapCtx = minimapCanvas.getContext('2d');
+  const palette = document.getElementById('palette');
+  const colorPicker = document.getElementById('color-picker');
+  const confirmBtn = document.getElementById('confirm-paint');
+  const cancelBtn = document.getElementById('cancel-paint');
+  const mainframe = document.getElementById('mainframe');
 
-    const backendUrl = "https://your-replit-backend-url.repl.co";
+  const GRID_SIZE = 1000;    // grid 1000 x 1000 squares
+  const SQUARE_SIZE = 10;    // base pixel size of squares (scaled by zoom)
+  let zoom = 1;
 
-    function drawGrid() {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      for (let x = 0; x < gridSize; x++) {
-        for (let y = 0; y < gridSize; y++) {
-          const key = `${x},${y}`;
-          const color = paintedSquares[key]?.color || "#e0e0e0";
+  // Zoom limits - visible squares between 50x50 and 200x200
+  const MIN_VISIBLE_SQUARES = 50;
+  const MAX_VISIBLE_SQUARES = 200;
 
-          const px = x * cellSize * scale + offsetX;
-          const py = y * cellSize * scale + offsetY;
-          const size = cellSize * scale;
+  let offsetX = 0;  // for panning, not used now
+  let offsetY = 0;
 
-          if (
-            px + size < 0 || px > frame.clientWidth ||
-            py + size < 0 || py > frame.clientHeight
-          ) continue;
+  let gridData = {};  // loaded from backend
 
-          ctx.fillStyle = color;
-          ctx.fillRect(px, py, size, size);
-          ctx.strokeStyle = "#ccc";
-          ctx.strokeRect(px, py, size, size);
-        }
-      }
+  // Selected square coords for painting
+  let selectedSquare = null;
+
+  // Adjust zoom so visible squares between min and max
+  function clampZoom(z) {
+    const maxZoom = GRID_SIZE / MIN_VISIBLE_SQUARES;
+    const minZoom = GRID_SIZE / MAX_VISIBLE_SQUARES;
+    return Math.min(Math.max(z, minZoom), maxZoom);
+  }
+
+  // Load painted squares from backend
+  async function loadGrid() {
+    try {
+      const res = await fetch(`${backendUrl}/painted`);
+      if (!res.ok) throw new Error("Failed to fetch painted squares");
+      gridData = await res.json();
+      drawGrid();
       drawMinimap();
+    } catch (e) {
+      console.error(e);
+    }
+  }
+
+  function drawGrid() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    ctx.save();
+    ctx.scale(zoom, zoom);
+
+    // Draw painted squares
+    for (const key in gridData) {
+      const [x, y] = key.split(',').map(Number);
+      const color = gridData[key].color;
+      ctx.fillStyle = color;
+      ctx.fillRect(x, y, 1, 1);
     }
 
-    function drawMinimap() {
-      const mw = minimap.width;
-      const mh = minimap.height;
+    // Draw grid lines if zoomed in enough
+    if (zoom > 0.7) {
+      ctx.strokeStyle = '#ccc';
+      ctx.lineWidth = 0.02;
+      for(let i = 0; i <= GRID_SIZE; i++) {
+        ctx.beginPath();
+        ctx.moveTo(i, 0);
+        ctx.lineTo(i, GRID_SIZE);
+        ctx.stroke();
 
-      mctx.clearRect(0, 0, mw, mh);
-      mctx.fillStyle = "#e0e0e0";
-      mctx.fillRect(0, 0, mw, mh);
-
-      for (const key in paintedSquares) {
-        const [x, y] = key.split(",").map(Number);
-        const miniX = (x / gridSize) * mw;
-        const miniY = (y / gridSize) * mh;
-        mctx.fillStyle = paintedSquares[key].color;
-        mctx.fillRect(miniX, miniY, 1, 1);
+        ctx.beginPath();
+        ctx.moveTo(0, i);
+        ctx.lineTo(GRID_SIZE, i);
+        ctx.stroke();
       }
     }
 
-    canvas.addEventListener("mousedown", (e) => {
-      isDragging = true;
-      dragStart.x = e.clientX;
-      dragStart.y = e.clientY;
-    });
+    ctx.restore();
+  }
 
-    canvas.addEventListener("mouseup", () => isDragging = false);
-    canvas.addEventListener("mouseleave", () => isDragging = false);
-    canvas.addEventListener("mousemove", (e) => {
-      if (!isDragging) return;
-      offsetX += e.clientX - dragStart.x;
-      offsetY += e.clientY - dragStart.y;
-      dragStart.x = e.clientX;
-      dragStart.y = e.clientY;
-      drawGrid();
-    });
+  function drawMinimap() {
+    minimapCtx.clearRect(0, 0, minimapCanvas.width, minimapCanvas.height);
 
-    canvas.addEventListener("wheel", (e) => {
-      e.preventDefault();
-      const zoom = e.deltaY < 0 ? 1.1 : 0.9;
-      const mx = e.clientX - frame.getBoundingClientRect().left;
-      const my = e.clientY - frame.getBoundingClientRect().top;
+    for (const key in gridData) {
+      const [x, y] = key.split(',').map(Number);
+      const color = gridData[key].color;
+      minimapCtx.fillStyle = color;
+      minimapCtx.fillRect(x, y, 1, 1);
+    }
+  }
 
-      const wx = (mx - offsetX) / scale;
-      const wy = (my - offsetY) / scale;
+  // Map click coords on canvas to grid coords
+  function getGridCoords(clientX, clientY) {
+    const rect = canvas.getBoundingClientRect();
+    const x = Math.floor((clientX - rect.left) / (zoom));
+    const y = Math.floor((clientY - rect.top) / (zoom));
+    return {x, y};
+  }
 
-      scale *= zoom;
-      offsetX = mx - wx * scale;
-      offsetY = my - wy * scale;
-      drawGrid();
-    });
+  canvas.addEventListener('click', (e) => {
+    const {x, y} = getGridCoords(e.clientX, e.clientY);
+    const key = `${x},${y}`;
+    if (gridData[key]) {
+      alert("This square is already painted!");
+      return;
+    }
+    selectedSquare = {x, y};
+    showPalette(e.clientX, e.clientY);
+  });
 
-    canvas.addEventListener("click", async (e) => {
-      const rect = frame.getBoundingClientRect();
-      const mouseX = e.clientX - rect.left;
-      const mouseY = e.clientY - rect.top;
+  function showPalette(pageX, pageY) {
+    palette.style.left = pageX + "px";
+    palette.style.top = pageY + "px";
+    palette.style.display = "block";
+  }
 
-      const gridX = Math.floor((mouseX - offsetX) / (cellSize * scale));
-      const gridY = Math.floor((mouseY - offsetY) / (cellSize * scale));
-      const key = `${gridX},${gridY}`;
+  function hidePalette() {
+    palette.style.display = "none";
+    selectedSquare = null;
+  }
 
-      if (paintedSquares[key]) {
-        alert("This square is already painted.");
-        return;
-      }
-
-      colorPicker.oninput = async () => {
-        const color = colorPicker.value;
-
-        const res = await fetch(`${backendUrl}/paint`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ x: gridX, y: gridY, color, tx: "mock" })
-        });
-
-        if (res.ok) {
-          paintedSquares[key] = { color };
-          drawGrid();
-        } else {
-          alert("Error painting square");
-        }
-      };
-      colorPicker.click();
-    });
-
-    async function fetchPaintedSquares() {
-      try {
-        const res = await fetch(`${backendUrl}/painted`);
-        paintedSquares = await res.json();
+  confirmBtn.addEventListener('click', async () => {
+    if (!selectedSquare) return;
+    const color = colorPicker.value;
+    const payload = {
+      x: selectedSquare.x,
+      y: selectedSquare.y,
+      color,
+      tx: "mock_tx_id"
+    };
+    try {
+      const res = await fetch(`${backendUrl}/paint`, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify(payload)
+      });
+      if (res.status === 403) {
+        alert("Square already painted by someone else!");
+      } else if (!res.ok) {
+        const err = await res.json();
+        alert("Error: " + (err.error || "Unknown error"));
+      } else {
+        gridData[`${selectedSquare.x},${selectedSquare.y}`] = {
+          color,
+          timestamp: new Date().toISOString(),
+          tx: "mock_tx_id"
+        };
         drawGrid();
-      } catch (err) {
-        console.error("Failed to fetch squares", err);
+        drawMinimap();
       }
+    } catch (e) {
+      alert("Network error");
+      console.error(e);
     }
+    hidePalette();
+  });
 
-    fetchPaintedSquares();
-  </script>
+  cancelBtn.addEventListener('click', () => {
+    hidePalette();
+  });
+
+  // Zoom with mouse wheel (centered)
+  mainframe.addEventListener('wheel', (e) => {
+    e.preventDefault();
+    let newZoom = clampZoom(zoom - e.deltaY * 0.001);
+    if (newZoom !== zoom) {
+      zoom = newZoom;
+      drawGrid();
+    }
+  });
+
+  // Initial load
+  loadGrid();
+</script>
 </body>
 </html>
