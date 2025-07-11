@@ -91,27 +91,13 @@ const GRID_SIZE = 1000;
 let zoom = 2.5;
 let offsetX = -250;
 let offsetY = -250;
-const squareSize = 1;
 let isDragging = false;
 let dragStart = {x: 0, y: 0};
 
-canvas.width = 1000;
-canvas.height = 1000;
+canvas.width = GRID_SIZE;
+canvas.height = GRID_SIZE;
 minimap.width = 500;
 minimap.height = 500;
-
-canvas.style.transformOrigin = "top left";
-canvas.style.transform = `scale(${zoom}) translate(${offsetX}px, ${offsetY}px)`;
-
-let gridData = {};
-
-fetch("https://155ca338-0e90-4f5a-88ec-b6163921baae-00-181dgn4pq10j7.janeway.replit.dev/painted")
-  .then(res => res.json())
-  .then(data => {
-    gridData = data;
-    drawGrid();
-    drawMinimap();
-  });
 
 function drawGrid() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -132,31 +118,45 @@ function drawMinimap() {
   const scale = minimap.width / GRID_SIZE;
   const visibleWidth = 500 / zoom;
   const visibleHeight = 500 / zoom;
-  viewportBox.style.width = `${visibleWidth * scale}px`;
-  viewportBox.style.height = `${visibleHeight * scale}px`;
-  viewportBox.style.left = `${(offsetX * -1) * scale}px`;
-  viewportBox.style.top = `${(offsetY * -1) * scale}px`;
+  const boxWidth = visibleWidth * scale;
+  const boxHeight = visibleHeight * scale;
+  const boxLeft = Math.max(0, Math.min((-offsetX) * scale, minimap.width - boxWidth));
+  const boxTop = Math.max(0, Math.min((-offsetY) * scale, minimap.height - boxHeight));
+  viewportBox.style.width = `${boxWidth}px`;
+  viewportBox.style.height = `${boxHeight}px`;
+  viewportBox.style.left = `${boxLeft}px`;
+  viewportBox.style.top = `${boxTop}px`;
 }
 
 function applyTransform() {
+  canvas.style.transformOrigin = "top left";
   canvas.style.transform = `scale(${zoom}) translate(${offsetX}px, ${offsetY}px)`;
   drawMinimap();
 }
+
+fetch("https://155ca338-0e90-4f5a-88ec-b6163921baae-00-181dgn4pq10j7.janeway.replit.dev/painted")
+  .then(res => res.json())
+  .then(data => {
+    gridData = data;
+    drawGrid();
+    drawMinimap();
+  });
 
 minimap.addEventListener('click', (e) => {
   const rect = minimap.getBoundingClientRect();
   const mx = e.clientX - rect.left;
   const my = e.clientY - rect.top;
-  offsetX = -(mx * 2 - 250 / zoom);
-  offsetY = -(my * 2 - 250 / zoom);
+  const targetX = Math.max(0, Math.min(mx, minimap.width));
+  const targetY = Math.max(0, Math.min(my, minimap.height));
+  offsetX = -(targetX * 2 - 250 / zoom);
+  offsetY = -(targetY * 2 - 250 / zoom);
   applyTransform();
 });
 
 document.getElementById('mainframe').addEventListener('wheel', (e) => {
   e.preventDefault();
   const delta = e.deltaY > 0 ? -0.1 : 0.1;
-  zoom += delta;
-  zoom = Math.max(2.5, Math.min(10, zoom));
+  zoom = Math.max(2.5, Math.min(10, zoom + delta));
   applyTransform();
 });
 
@@ -195,6 +195,7 @@ canvas.addEventListener('click', (e) => {
   const gridX = Math.floor(cx);
   const gridY = Math.floor(cy);
   const key = `${gridX},${gridY}`;
+  if (gridX < 0 || gridY < 0 || gridX >= GRID_SIZE || gridY >= GRID_SIZE) return;
   if (gridData[key]) {
     alert("This square is already painted.");
     return;
