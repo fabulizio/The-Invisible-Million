@@ -68,7 +68,7 @@
     width: 100%;
     height: 40px;
     border: none;
-    cursor: pointer;
+    : pointer;
     background-color: transparent;
     margin-bottom: 15px;
   }
@@ -79,7 +79,7 @@
     color: white;
     font-weight: bold;
     border-radius: 5px;
-    cursor: pointer;
+    : pointer;
     margin: 0 10px;
     transition: background-color 0.2s ease;
   }
@@ -298,11 +298,11 @@ let dragStart = { x: 0, y: 0 };
 canvas.addEventListener('mousedown', (e) => {
   isDragging = true;
   dragStart = { x: e.clientX, y: e.clientY };
-  canvas.style.cursor = 'grabbing';
+  canvas.style.cursor = 'default';
 });
 window.addEventListener('mouseup', () => {
   isDragging = false;
-  canvas.style.cursor = 'grab';
+  canvas.style.cursor = 'default';
 });
 window.addEventListener('mousemove', (e) => {
   if (!isDragging) return;
