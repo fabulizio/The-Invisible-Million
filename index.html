@@ -57,20 +57,9 @@
       position: fixed;
       left: -9999px;
     }
-
-    #loadingCanvas {
-      position: fixed;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      background: white;
-      z-index: 999;
-    }
   </style>
 </head>
 <body>
-  <canvas id="loadingCanvas" width="100" height="100"></canvas>
-
   <div id="top">
     <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit.</p>
     <p>Vestibulum imperdiet, risus nec fermentum ultricies, nulla leo bibendum sem.</p>
@@ -100,8 +89,6 @@
     const mctx = minimap.getContext("2d");
     const frame = document.getElementById("frame");
     const colorPicker = document.getElementById("colorPicker");
-    const loadingCanvas = document.getElementById("loadingCanvas");
-    const lctx = loadingCanvas.getContext("2d");
 
     const gridSize = 1000;
     const cellSize = 10;
@@ -222,39 +209,10 @@
       colorPicker.click();
     });
 
-    function animateLoading() {
-      const size = 100;
-      let angle = 0;
-
-      function draw() {
-        lctx.clearRect(0, 0, size, size);
-        lctx.strokeStyle = "#0070ba";
-        lctx.lineWidth = 3;
-
-        lctx.beginPath();
-        const radius = 40;
-        const cx = size / 2;
-        const cy = size / 2;
-
-        const x = cx + radius * Math.cos(angle);
-        const y = cy + radius * Math.sin(angle);
-
-        lctx.moveTo(cx, cy);
-        lctx.lineTo(x, y);
-        lctx.stroke();
-
-        angle += 0.05;
-        requestAnimationFrame(draw);
-      }
-      draw();
-    }
-
     async function fetchPaintedSquares() {
       try {
-        animateLoading();
         const res = await fetch(`${backendUrl}/painted`);
         paintedSquares = await res.json();
-        loadingCanvas.style.display = "none";
         drawGrid();
       } catch (err) {
         console.error("Failed to fetch squares", err);
