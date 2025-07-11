@@ -139,7 +139,6 @@ function clamp(){
 }
 
 function draw(){
-  // main grid
   ctx.clearRect(0,0,canvasSize,canvasSize);
   const ps = zoom; const vs = Math.floor(canvasSize/ps);
   clamp();
@@ -169,7 +168,6 @@ function draw(){
     }
   }
 
-  // minimap
   miniCtx.clearRect(0,0,canvasSize,canvasSize);
   miniCtx.fillStyle="#ddd"; miniCtx.fillRect(0,0,canvasSize,canvasSize);
   for(const k in gridData){
@@ -212,7 +210,6 @@ function paint(x,y,c){
   }).catch(()=>alert("Errore rete"));
 }
 
-// inizializza
 fetch(`${BACKEND_URL}/painted`)
 .then(r=>r.json()).then(d=>{
   gridData = d;
@@ -221,7 +218,6 @@ fetch(`${BACKEND_URL}/painted`)
 })
 .catch(()=> counter.textContent="Errore caricamento");
 
-// zoom wheel
 mainCanvas.addEventListener('wheel',e=>{
   e.preventDefault();
   const mx = e.clientX-mainCanvas.getBoundingClientRect().left;
@@ -233,7 +229,6 @@ mainCanvas.addEventListener('wheel',e=>{
   render();
 },{passive:false});
 
-// drag grid
 let dragging=false, ds={x:0,y:0};
 mainCanvas.addEventListener('mousedown',e=>{dragging=true; ds={x:e.clientX,y:e.clientY}})
 window.addEventListener('mouseup',()=>dragging=false);
@@ -246,7 +241,6 @@ window.addEventListener('mousemove',e=>{
   }
 });
 
-// click to paint
 mainCanvas.addEventListener('click',e=>{
   const px=e.clientX-mainCanvas.getBoundingClientRect().left;
   const py=e.clientY-mainCanvas.getBoundingClientRect().top;
@@ -255,20 +249,16 @@ mainCanvas.addEventListener('click',e=>{
   if(!gridData[`${x},${y}`]) openModal(x,y);
 });
 
-// modal events
 okBtn.addEventListener('click',()=>{ if(selectedSquare) paint(selectedSquare.x,selectedSquare.y,colorPicker.value)});
 cancelBtn.addEventListener('click',closeModal);
 window.addEventListener('keydown', e=>{ if(e.key==="Escape") closeModal() });
 
-// pinch-to-zoom & double-tap fullscreen
-let pinching=false, lastDist=0, lastTap=0;
+let pinching=false, lastDist=0;
 
 mainframe.addEventListener('touchstart',e=>{
-  if(e.touches.length===2){ pinching=true; lastDist=Math.hypot(e.touches[0].clientX-e.touches[1].clientX, e.touches[0].clientY-e.touches[1].clientY); }
-  if(e.touches.length===1){
-    const now=Date.now();
-    if(now-lastTap<300) mainframe.requestFullscreen().catch(_=>{});
-    lastTap=now;
+  if(e.touches.length===2){
+    pinching=true;
+    lastDist=Math.hypot(e.touches[0].clientX-e.touches[1].clientX, e.touches[0].clientY-e.touches[1].clientY);
   }
 });
 mainframe.addEventListener('touchmove',e=>{
@@ -285,7 +275,8 @@ mainframe.addEventListener('touchmove',e=>{
 },{passive:false});
 mainframe.addEventListener('touchend',()=>pinching=false);
 
-// minimap click/drag to relocate viewport
+// RIMOSSO IL FULLSCREEN (niente doppio tap)
+
 let mvDrag=false;
 minimap.addEventListener('mousedown',e=>{ mvDrag=true; });
 window.addEventListener('mouseup',()=>mvDrag=false);
