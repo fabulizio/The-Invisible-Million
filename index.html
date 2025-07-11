@@ -39,8 +39,8 @@
 
   #minimap-container {
     position: relative;
-    width: 200px;
-    height: 200px;
+    width: 400px;
+    height: 400px;
     border: 2px solid white;
     margin: 15px 0 30px;
     background-color: #ddd;
@@ -61,7 +61,6 @@
     background: rgba(255, 0, 0, 0.15);
   }
 
-  /* Fancy modal for color picker */
   #colorModal {
     display: none;
     position: fixed;
@@ -107,7 +106,6 @@
   #colorModal button:hover {
     background-color: #cc0000;
   }
-
 </style>
 </head>
 <body>
@@ -117,7 +115,7 @@
 </header>
 
 <div id="minimap-container">
-  <canvas id="minimap" width="200" height="200"></canvas>
+  <canvas id="minimap" width="400" height="400"></canvas>
   <div id="viewport-box"></div>
 </div>
 
@@ -125,7 +123,6 @@
   <canvas id="mainCanvas" width="400" height="400"></canvas>
 </div>
 
-<!-- Color Picker Modal -->
 <div id="colorModal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
   <h2 id="modalTitle">Choose a color</h2>
   <input type="color" id="colorPicker" value="#ff0000" />
@@ -136,224 +133,132 @@
 </div>
 
 <script>
-  const GRID_SIZE = 1000;
-  const CANVAS_SIZE = 400;
-  const MINIMAP_SIZE = 200;
-  const SCALE_FACTOR = 2; // minimap scale down
+// Variabili canvas
+const canvas = document.getElementById("mainCanvas");
+const ctx = canvas.getContext("2d");
+const minimap = document.getElementById("minimap");
+const minimapCtx = minimap.getContext("2d");
+const viewportBox = document.getElementById("viewport-box");
+const modal = document.getElementById("colorModal");
+const picker = document.getElementById("colorPicker");
+const cancelBtn = document.getElementById("cancelBtn");
+const okBtn = document.getElementById("okBtn");
 
-  let zoom = 5; // smaller zoom so grid fits well
-  let offsetX = 0;
-  let offsetY = 0;
+// Dimensioni mappa
+const MAP_SIZE = 1000;
+const TILE_SIZE = 1;
+const VIEWPORT_SIZE = 400;
+let offsetX = 300, offsetY = 300;
+let isDragging = false;
+let dragStartX, dragStartY;
+let selectedTile = null;
 
-  const canvas = document.getElementById('mainCanvas');
-  const ctx = canvas.getContext('2d');
-  ctx.imageSmoothingEnabled = false;
+// Mappa iniziale
+let mapData = new Array(MAP_SIZE * MAP_SIZE).fill("#dddddd");
 
-  const minimap = document.getElementById('minimap');
-  const miniCtx = minimap.getContext('2d');
-  miniCtx.imageSmoothingEnabled = false;
-
-  const viewportBox = document.getElementById('viewport-box');
-
-  let gridData = {};
-
-  // Draw grid background + grid lines + colored squares
-  function drawGrid() {
-    ctx.clearRect(0, 0, CANVAS_SIZE, CANVAS_SIZE);
-
-    const pixelSize = zoom;
-    const visibleSquares = CANVAS_SIZE / pixelSize;
-    const startX = Math.floor(offsetX);
-    const startY = Math.floor(offsetY);
-    const endX = Math.min(GRID_SIZE, Math.ceil(offsetX + visibleSquares));
-    const endY = Math.min(GRID_SIZE, Math.ceil(offsetY + visibleSquares));
-
-    // Fill background grey
-    ctx.fillStyle = '#ddd';
-    ctx.fillRect(0, 0, CANVAS_SIZE, CANVAS_SIZE);
-
-    // Draw grid lines
-    ctx.strokeStyle = '#bbb';
-    ctx.lineWidth = 1;
-    ctx.beginPath();
-    for (let x = 0; x <= visibleSquares; x++) {
-      let px = x * pixelSize - (offsetX % 1) * pixelSize;
-      ctx.moveTo(px, 0);
-      ctx.lineTo(px, CANVAS_SIZE);
-    }
-    for (let y = 0; y <= visibleSquares; y++) {
-      let py = y * pixelSize - (offsetY % 1) * pixelSize;
-      ctx.moveTo(0, py);
-      ctx.lineTo(CANVAS_SIZE, py);
-    }
-    ctx.stroke();
-
-    // Draw colored squares with black border
-    for (let x = startX; x < endX; x++) {
-      for (let y = startY; y < endY; y++) {
-        const key = `${x},${y}`;
-        if (gridData[key]) {
-          ctx.fillStyle = gridData[key].color;
-          ctx.fillRect((x - offsetX) * pixelSize, (y - offsetY) * pixelSize, pixelSize, pixelSize);
-          ctx.strokeStyle = '#000';
-          ctx.lineWidth = 1;
-          ctx.strokeRect((x - offsetX) * pixelSize, (y - offsetY) * pixelSize, pixelSize, pixelSize);
-        }
+function drawMap() {
+  ctx.clearRect(0, 0, VIEWPORT_SIZE, VIEWPORT_SIZE);
+  for (let y = 0; y < VIEWPORT_SIZE; y++) {
+    for (let x = 0; x < VIEWPORT_SIZE; x++) {
+      const mapX = x + offsetX;
+      const mapY = y + offsetY;
+      if (mapX >= 0 && mapX < MAP_SIZE && mapY >= 0 && mapY < MAP_SIZE) {
+        const color = mapData[mapY * MAP_SIZE + mapX];
+        ctx.fillStyle = color;
+        ctx.fillRect(x, y, TILE_SIZE, TILE_SIZE);
       }
     }
   }
+}
 
-  // Draw minimap with colored dots and viewport box
-  function drawMinimap() {
-    miniCtx.clearRect(0, 0, MINIMAP_SIZE, MINIMAP_SIZE);
-
-    miniCtx.fillStyle = '#ddd';
-    miniCtx.fillRect(0, 0, MINIMAP_SIZE, MINIMAP_SIZE);
-
-    for (const key in gridData) {
-      const [x, y] = key.split(',').map(Number);
-      miniCtx.fillStyle = gridData[key].color;
-      miniCtx.fillRect(x / SCALE_FACTOR, y / SCALE_FACTOR, 0.5, 0.5);
-    }
-
-    const scale = MINIMAP_SIZE / GRID_SIZE;
-    const visibleWidth = CANVAS_SIZE / zoom;
-    const visibleHeight = CANVAS_SIZE / zoom;
-    const boxWidth = visibleWidth * scale;
-    const boxHeight = visibleHeight * scale;
-    const boxLeft = Math.min(Math.max(-offsetX * scale, 0), MINIMAP_SIZE - boxWidth);
-    const boxTop = Math.min(Math.max(-offsetY * scale, 0), MINIMAP_SIZE - boxHeight);
-
-    viewportBox.style.width = `${boxWidth}px`;
-    viewportBox.style.height = `${boxHeight}px`;
-    viewportBox.style.left = `${boxLeft}px`;
-    viewportBox.style.top = `${boxTop}px`;
+function drawMinimap() {
+  const imageData = minimapCtx.createImageData(MAP_SIZE, MAP_SIZE);
+  for (let i = 0; i < mapData.length; i++) {
+    const color = mapData[i];
+    const idx = i * 4;
+    const rgb = hexToRgb(color);
+    imageData.data[idx] = rgb.r;
+    imageData.data[idx + 1] = rgb.g;
+    imageData.data[idx + 2] = rgb.b;
+    imageData.data[idx + 3] = 255;
   }
+  minimapCtx.putImageData(imageData, 0, 0);
+  updateViewportBox();
+}
 
-  function render() {
-    drawGrid();
-    drawMinimap();
+function updateViewportBox() {
+  const scale = 400 / MAP_SIZE;
+  viewportBox.style.left = offsetX * scale + "px";
+  viewportBox.style.top = offsetY * scale + "px";
+  viewportBox.style.width = VIEWPORT_SIZE * scale + "px";
+  viewportBox.style.height = VIEWPORT_SIZE * scale + "px";
+}
+
+function hexToRgb(hex) {
+  hex = hex.replace("#", "");
+  if (hex.length === 3) {
+    hex = hex.split("").map(c => c + c).join("");
   }
+  const bigint = parseInt(hex, 16);
+  return {
+    r: (bigint >> 16) & 255,
+    g: (bigint >> 8) & 255,
+    b: bigint & 255
+  };
+}
 
-  // Load initial painted squares from server
-  fetch("https://155ca338-0e90-4f5a-88ec-b6163921baae-00-181dgn4pq10j7.janeway.replit.dev/painted")
-    .then(res => res.json())
-    .then(data => {
-      gridData = data;
-      render();
-    });
+canvas.addEventListener("mousedown", (e) => {
+  isDragging = true;
+  dragStartX = e.offsetX;
+  dragStartY = e.offsetY;
+});
 
-  // Zoom with mouse wheel
-  document.getElementById('mainframe').addEventListener('wheel', (e) => {
-    e.preventDefault();
-    const rect = canvas.getBoundingClientRect();
-    const mx = e.clientX - rect.left;
-    const my = e.clientY - rect.top;
+canvas.addEventListener("mouseup", (e) => {
+  if (!isDragging) return;
+  isDragging = false;
 
-    const oldZoom = zoom;
-    const delta = e.deltaY > 0 ? -0.5 : 0.5;
-    zoom = Math.min(15, Math.max(1, zoom + delta));
-
-    // Adjust offset so zoom centers on mouse
-    offsetX -= (mx / oldZoom - mx / zoom);
-    offsetY -= (my / oldZoom - my / zoom);
-
-    render();
-  }, { passive: false });
-
-  // Drag to pan
-  let isDragging = false;
-  let dragStart = { x: 0, y: 0 };
-  canvas.addEventListener('mousedown', (e) => {
-    isDragging = true;
-    dragStart = { x: e.clientX, y: e.clientY };
-    canvas.style.cursor = 'grabbing';
-  });
-  window.addEventListener('mouseup', () => {
-    isDragging = false;
-    canvas.style.cursor = 'grab';
-  });
-  window.addEventListener('mousemove', (e) => {
-    if (!isDragging) return;
-    const dx = (e.clientX - dragStart.x) / zoom;
-    const dy = (e.clientY - dragStart.y) / zoom;
-    offsetX -= dx;
-    offsetY -= dy;
-    offsetX = Math.min(Math.max(0, offsetX), GRID_SIZE - CANVAS_SIZE / zoom);
-    offsetY = Math.min(Math.max(0, offsetY), GRID_SIZE - CANVAS_SIZE / zoom);
-    dragStart = { x: e.clientX, y: e.clientY };
-    render();
-  });
-
-  // Click square to open color modal
-  let selectedSquare = null;
-  canvas.addEventListener('click', (e) => {
-    const rect = canvas.getBoundingClientRect();
-    const mx = e.clientX - rect.left;
-    const my = e.clientY - rect.top;
-    const gridX = Math.floor(offsetX + mx / zoom);
-    const gridY = Math.floor(offsetY + my / zoom);
-
-    const key = `${gridX},${gridY}`;
-    if (gridData[key]) {
-      alert("This square is already painted.");
-      return;
-    }
-
-    selectedSquare = { x: gridX, y: gridY };
+  if (Math.abs(e.offsetX - dragStartX) < 3 && Math.abs(e.offsetY - dragStartY) < 3) {
+    const tileX = e.offsetX;
+    const tileY = e.offsetY;
+    const mapX = tileX + offsetX;
+    const mapY = tileY + offsetY;
+    selectedTile = { mapX, mapY };
     modal.style.display = "block";
-  });
+  }
+});
 
-  // Color modal logic
-  const modal = document.getElementById('colorModal');
-  const colorPicker = document.getElementById('colorPicker');
-  const cancelBtn = document.getElementById('cancelBtn');
-  const okBtn = document.getElementById('okBtn');
+canvas.addEventListener("mousemove", (e) => {
+  if (isDragging) {
+    offsetX -= (e.offsetX - dragStartX);
+    offsetY -= (e.offsetY - dragStartY);
+    offsetX = Math.max(0, Math.min(MAP_SIZE - VIEWPORT_SIZE, offsetX));
+    offsetY = Math.max(0, Math.min(MAP_SIZE - VIEWPORT_SIZE, offsetY));
+    dragStartX = e.offsetX;
+    dragStartY = e.offsetY;
+    drawMap();
+    updateViewportBox();
+  }
+});
 
-  cancelBtn.addEventListener('click', () => {
+cancelBtn.onclick = () => {
+  modal.style.display = "none";
+  selectedTile = null;
+};
+
+okBtn.onclick = () => {
+  if (selectedTile) {
+    const color = picker.value;
+    const idx = selectedTile.mapY * MAP_SIZE + selectedTile.mapX;
+    mapData[idx] = color;
+    drawMap();
+    drawMinimap();
     modal.style.display = "none";
-    selectedSquare = null;
-  });
+    selectedTile = null;
+  }
+};
 
-  okBtn.addEventListener('click', () => {
-    if (!selectedSquare) return;
-    const color = colorPicker.value;
-    modal.style.display = "none";
-
-    // Dummy PayPal transaction ID generator (fake UUID)
-    const dummyTxId = 'dummy-tx-' + Math.random().toString(36).substr(2, 9);
-
-    // Simulate payment delay
-    setTimeout(() => {
-      fetch("https://155ca338-0e90-4f5a-88ec-b6163921baae-00-181dgn4pq10j7.janeway.replit.dev/paint", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ x: selectedSquare.x, y: selectedSquare.y, color, tx: dummyTxId }),
-      })
-      .then(res => res.json())
-      .then(data => {
-        if (data.success) {
-          gridData[`${selectedSquare.x},${selectedSquare.y}`] = { color };
-          render();
-        } else {
-          alert("Failed to paint square on server: " + (data.error || "unknown error"));
-        }
-      })
-      .catch(() => alert("Error communicating with server."));
-
-      selectedSquare = null;
-    }, 500); // 0.5s delay to simulate payment
-  });
-
-  // Close modal on Escape key
-  window.addEventListener('keydown', e => {
-    if (e.key === 'Escape' && modal.style.display === 'block') {
-      modal.style.display = 'none';
-      selectedSquare = null;
-    }
-  });
-
-  render();
+drawMap();
+drawMinimap();
 </script>
 </body>
 </html>
