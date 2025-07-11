@@ -350,8 +350,8 @@
     }
 
     function coordsFromPixel(x, y) {
-      const gridX = Math.floor(offsetX + x / zoom) + 1;
-      const gridY = Math.floor(offsetY + y / zoom) + 1;
+      const gridX = Math.floor(offsetX + x / zoom);
+      const gridY = Math.floor(offsetY + y / zoom);
       if (gridX < 0 || gridX >= GRID_SIZE || gridY < 0 || gridY >= GRID_SIZE) return null;
       return { x: gridX, y: gridY };
     }
