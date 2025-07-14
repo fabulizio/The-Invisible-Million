@@ -11,7 +11,6 @@
     background: #222;
     color: #eee;
     user-select: none;
-    touch-action: none;
   }
   #container {
     display: flex;
@@ -22,7 +21,7 @@
   #mainCanvas {
     flex-grow: 1;
     background: #333;
-    touch-action: none;
+    touch-action: none; /* Prevent default gestures on mobile */
     position: relative;
     cursor: crosshair;
   }
