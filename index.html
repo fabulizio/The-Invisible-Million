@@ -1,601 +1,301 @@
 <!DOCTYPE html>
-<html lang="it">
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
-  <title> The Invisible Million </title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>The Invisible Million</title>
   <style>
     body {
       margin: 0;
-      padding: 0;
-      font-family: Arial, sans-serif;
-      background-color: #111;
-      color: #fff;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
+      overflow: hidden;
+      font-family: sans-serif;
+      background-color: #222;
+      color: white;
     }
 
-    header {
-      max-width: 600px;
-      padding: 1.5rem;
-      text-align: center;
+    #coordinates {
+      position: fixed;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(0, 0, 0, 0.7);
+      padding: 6px 12px;
+      border-radius: 8px;
+      font-size: 14px;
+      z-index: 1000;
+      pointer-events: none;
+    }
+
+    #zoomSliderContainer {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: rgba(0, 0, 0, 0.7);
+      padding: 6px 10px;
+      border-radius: 8px;
+      z-index: 1000;
+    }
+
+    #zoomSlider {
+      width: 100px;
     }
 
     #container {
       display: flex;
       flex-direction: column;
+      height: 100vh;
+    }
+
+    #minimapContainer {
+      flex: 0 0 120px;
+      background: #111;
+      display: flex;
+      justify-content: center;
       align-items: center;
-      gap: 20px;
-      margin-bottom: 30px;
     }
 
-    #minimap-container {
+    #minimap {
+      width: 200px;
+      height: 200px;
+      border: 2px solid #fff;
+      background: #000;
+      cursor: pointer;
+    }
+
+    #gridContainer {
+      flex: 1;
       position: relative;
-      width: 300px;
-      height: 300px;
-      border: 3px solid white;
-      background-color: #ddd;
-      touch-action: none; /* no zoom on minimap */
-    }
-
-    #mainframe {
-      position: relative;
-      width: 600px;
-      height: 600px;
-      border: 3px solid black; /* black outline fixed */
-      background-color: #ddd;
-      touch-action: none; /* disable zoom/page pinch */
-      overflow: hidden;
-    }
-
-    @media (max-width: 900px) {
-      #minimap-container {
-        width: 90vw;
-        height: 90vw;
-        touch-action: none; /* no pinch zoom on minimap */
-      }
-
-      #mainframe {
-        width: 90vw;
-        height: 90vw;
-        touch-action: none; /* disable zoom/page pinch */
-      }
-
-      #container {
-        padding-left: 5vw;
-        padding-right: 5vw;
-      }
     }
 
     canvas {
-      position: absolute;
-      top: 0;
-      left: 0;
-      cursor: default;
-      image-rendering: pixelated;
-      background-color: #ddd;
-    }
-
-    #viewport-box {
-      position: absolute;
-      border: 2px solid red;
-      pointer-events: auto;
-      background: rgba(255, 0, 0, 0.15);
-      touch-action: none;
-      cursor: grab;
-    }
-
-    #colorModal {
-      display: none;
-      position: fixed;
-      z-index: 9999;
-      left: 50%;
-      top: 50%;
-      transform: translate(-50%, -50%);
-      background: #222;
-      padding: 20px 25px;
-      border-radius: 8px;
-      box-shadow: 0 0 15px #ff4444cc;
-      color: #fff;
-      user-select: none;
-      text-align: center;
-      min-width: 250px;
-    }
-
-    #colorModal h2 {
-      margin: 0 0 10px;
-      font-weight: normal;
-    }
-
-    #colorPicker {
+      display: block;
       width: 100%;
-      height: 40px;
-      border: none;
-      background-color: transparent;
-      margin-bottom: 15px;
+      height: 100%;
     }
 
-    #colorModal button {
-      background-color: #ff4444;
-      border: none;
-      padding: 8px 20px;
-      color: white;
-      font-weight: bold;
-      border-radius: 5px;
-      margin: 0 10px;
-      transition: background-color 0.2s ease;
-    }
-
-    #colorModal button:hover {
-      background-color: #cc0000;
-    }
-
-    #counter {
-      font-size: 1.2rem;
-      margin-top: 10px;
-    }
-
-    /* Coordinate display box */
-    #coordsDisplay {
+    #joystick {
       position: fixed;
-      bottom: 15px;
-      right: 15px;
-      background: rgba(0,0,0,0.7);
+      bottom: 20px;
+      left: 20px;
+      z-index: 999;
+      display: grid;
+      grid-template-columns: 40px 40px 40px;
+      grid-template-rows: 40px 40px 40px;
+      gap: 5px;
+    }
+
+    .joy-btn {
+      width: 40px;
+      height: 40px;
+      background: rgba(255, 255, 255, 0.2);
+      border: 1px solid #aaa;
       color: white;
-      padding: 6px 10px;
-      font-family: monospace;
-      border-radius: 5px;
-      pointer-events: none;
+      font-size: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
       user-select: none;
-      font-size: 14px;
-      display: none;
-      z-index: 10000;
-      white-space: nowrap;
+      cursor: pointer;
+      border-radius: 5px;
+    }
+
+    .joy-btn:active {
+      background: rgba(255, 255, 255, 0.4);
     }
   </style>
 </head>
 <body>
-  <header>
-    <h1>The Invisible Million</h1>
-    <p>MIO MANIFESTO!</p>
-    <div id="counter">Loading painted squares...</div>
-  </header>
+  <div id="coordinates">X: 0, Y: 0</div>
+
+  <div id="zoomSliderContainer">
+    <label for="zoomSlider">Zoom</label>
+    <input type="range" id="zoomSlider" min="0.1" max="5" step="0.1" value="1">
+  </div>
 
   <div id="container">
-    <div id="minimap-container">
-      <canvas id="minimap"></canvas>
-      <div id="viewport-box"></div>
+    <div id="minimapContainer">
+      <canvas id="minimap" width="200" height="200"></canvas>
     </div>
-    <div id="mainframe">
-      <canvas id="mainCanvas"></canvas>
-    </div>
-  </div>
-
-  <div id="colorModal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
-    <h2 id="modalTitle">Scegli un colore</h2>
-    <input type="color" id="colorPicker" value="#ff0000" />
-    <div>
-      <button id="cancelBtn">Annulla</button>
-      <button id="okBtn">OK</button>
+    <div id="gridContainer">
+      <canvas id="grid" width="1000" height="1000"></canvas>
     </div>
   </div>
 
-  <div id="coordsDisplay"></div>
+  <div id="joystick">
+    <div></div>
+    <div class="joy-btn" data-dir="up">↑</div>
+    <div></div>
+    <div class="joy-btn" data-dir="left">←</div>
+    <div></div>
+    <div class="joy-btn" data-dir="right">→</div>
+    <div></div>
+    <div class="joy-btn" data-dir="down">↓</div>
+    <div></div>
+  </div>
 
   <script>
-    const BACKEND_URL = "https://155ca338-0e90-4f5a-88ec-b6163921baae-00-181dgn4pq10j7.janeway.replit.dev";
-    const GRID_SIZE = 1000;
+    const grid = document.getElementById("grid");
+    const ctx = grid.getContext("2d");
 
-    // Desktop sizes fixed
-    const DESKTOP_MAIN_SIZE = 600;
-    const DESKTOP_MINIMAP_SIZE = 300;
+    const minimap = document.getElementById("minimap");
+    const mtx = minimap.getContext("2d");
 
-    // Responsive sizes
-    const isMobile = window.innerWidth <= 900;
-    const CANVAS_SIZE = isMobile ? Math.floor(window.innerWidth * 0.9) : DESKTOP_MAIN_SIZE;
-    const MINIMAP_SIZE = isMobile ? Math.floor(window.innerWidth * 0.9) : DESKTOP_MINIMAP_SIZE;
-    const SCALE_FACTOR = GRID_SIZE / MINIMAP_SIZE;
+    const coordinates = document.getElementById("coordinates");
+    const zoomSlider = document.getElementById("zoomSlider");
 
-    // Zoom and offset from localStorage or defaults
-    let zoom = 5;
+    let zoom = 1;
     let offsetX = 0;
     let offsetY = 0;
+    let isPanning = false;
+    let startX, startY;
 
-    // Main canvas setup
-    const canvas = document.getElementById('mainCanvas');
-    const ctx = canvas.getContext('2d');
-    canvas.width = CANVAS_SIZE;
-    canvas.height = CANVAS_SIZE;
+    const gridSize = 1000;
+    const squareSize = 10;
 
-    // Minimap canvas setup
-    const minimap = document.getElementById('minimap');
-    const miniCtx = minimap.getContext('2d');
-    minimap.width = MINIMAP_SIZE;
-    minimap.height = MINIMAP_SIZE;
-
-    // Other DOM elements
-    const viewportBox = document.getElementById('viewport-box');
-    const counter = document.getElementById('counter');
-    const coordsDisplay = document.getElementById('coordsDisplay');
-
-    // Color modal elements
-    const colorModal = document.getElementById('colorModal');
-    const colorPicker = document.getElementById('colorPicker');
-    const cancelBtn = document.getElementById('cancelBtn');
-    const okBtn = document.getElementById('okBtn');
-
-    let gridData = {};
-    let selectedSquare = null;
-
-    function clampOffsets() {
-      const visibleSquares = Math.floor(CANVAS_SIZE / zoom);
-      offsetX = Math.min(Math.max(offsetX, 0), GRID_SIZE - visibleSquares);
-      offsetY = Math.min(Math.max(offsetY, 0), GRID_SIZE - visibleSquares);
-    }
+    // Store grid colors
+    const gridColors = Array.from({ length: gridSize }, () =>
+      Array(gridSize).fill(0)
+    );
+    const colorPalette = ["#444", "#e74c3c", "#3498db", "#2ecc71", "#f1c40f"];
 
     function drawGrid() {
-      ctx.clearRect(0, 0, CANVAS_SIZE, CANVAS_SIZE);
-      const pixelSize = zoom;
-      const visibleSquares = Math.floor(CANVAS_SIZE / pixelSize);
+      ctx.clearRect(0, 0, grid.width, grid.height);
+      ctx.save();
+      ctx.translate(offsetX, offsetY);
+      ctx.scale(zoom, zoom);
 
-      clampOffsets();
+      const visibleCols = Math.ceil(grid.width / (squareSize * zoom)) + 2;
+      const visibleRows = Math.ceil(grid.height / (squareSize * zoom)) + 2;
+      const startCol = Math.max(Math.floor(-offsetX / (squareSize * zoom)), 0);
+      const startRow = Math.max(Math.floor(-offsetY / (squareSize * zoom)), 0);
 
-      // Background
-      ctx.fillStyle = '#ddd';
-      ctx.fillRect(0, 0, CANVAS_SIZE, CANVAS_SIZE);
-
-      // Grid lines
-      ctx.strokeStyle = '#bbb';
-      ctx.lineWidth = 1;
-      ctx.beginPath();
-      for (let x = 0; x <= visibleSquares; x++) {
-        const px = x * pixelSize;
-        ctx.moveTo(px, 0);
-        ctx.lineTo(px, visibleSquares * pixelSize);
-      }
-      for (let y = 0; y <= visibleSquares; y++) {
-        const py = y * pixelSize;
-        ctx.moveTo(0, py);
-        ctx.lineTo(visibleSquares * pixelSize, py);
-      }
-      ctx.stroke();
-
-      // Colored squares
-      for (let x = 0; x < visibleSquares; x++) {
-        for (let y = 0; y < visibleSquares; y++) {
-          const gridX = Math.floor(offsetX) + x;
-          const gridY = Math.floor(offsetY) + y;
-          const key = `${gridX},${gridY}`;
-          if (gridData[key]) {
-            ctx.fillStyle = gridData[key].color;
-            ctx.fillRect(x * pixelSize, y * pixelSize, pixelSize, pixelSize);
-            ctx.strokeStyle = '#000';
-            ctx.lineWidth = 1;
-            ctx.strokeRect(x * pixelSize, y * pixelSize, pixelSize, pixelSize);
-          }
+      for (let x = startCol; x < startCol + visibleCols && x < gridSize; x++) {
+        for (let y = startRow; y < startRow + visibleRows && y < gridSize; y++) {
+          ctx.fillStyle = colorPalette[gridColors[x][y]];
+          ctx.fillRect(x * squareSize, y * squareSize, squareSize - 1, squareSize - 1);
         }
       }
 
-      // Selected square highlight
-      if (selectedSquare) {
-        const selX = selectedSquare.x - Math.floor(offsetX);
-        const selY = selectedSquare.y - Math.floor(offsetY);
-        if (selX >= 0 && selX < visibleSquares && selY >= 0 && selY < visibleSquares) {
-          ctx.strokeStyle = 'yellow';
-          ctx.lineWidth = 3;
-          ctx.strokeRect(selX * pixelSize, selY * pixelSize, pixelSize, pixelSize);
-        }
-      }
+      ctx.restore();
+
+      const centerX = Math.round(-offsetX / zoom + grid.width / (2 * zoom));
+      const centerY = Math.round(-offsetY / zoom + grid.height / (2 * zoom));
+      coordinates.textContent = `X: ${centerX}, Y: ${centerY}`;
+
+      drawMinimap();
     }
 
     function drawMinimap() {
-      miniCtx.clearRect(0, 0, MINIMAP_SIZE, MINIMAP_SIZE);
-      miniCtx.fillStyle = '#ddd';
-      miniCtx.fillRect(0, 0, MINIMAP_SIZE, MINIMAP_SIZE);
+      mtx.clearRect(0, 0, minimap.width, minimap.height);
+      mtx.fillStyle = "#555";
+      mtx.fillRect(0, 0, minimap.width, minimap.height);
 
-      for (const key in gridData) {
-        const [x, y] = key.split(',').map(Number);
-        miniCtx.fillStyle = gridData[key].color;
-        miniCtx.fillRect(x / SCALE_FACTOR, y / SCALE_FACTOR, 1, 1);
-      }
+      const viewW = grid.width / zoom / gridSize;
+      const viewH = grid.height / zoom / gridSize;
+      const viewX = -offsetX / zoom / gridSize;
+      const viewY = -offsetY / zoom / gridSize;
 
-      // Draw viewport rectangle in minimap
-      const visibleSquares = Math.floor(CANVAS_SIZE / zoom);
-      const rectX = offsetX / SCALE_FACTOR;
-      const rectY = offsetY / SCALE_FACTOR;
-      const rectSize = visibleSquares / SCALE_FACTOR;
-
-      viewportBox.style.left = rectX + "px";
-      viewportBox.style.top = rectY + "px";
-      viewportBox.style.width = rectSize + "px";
-      viewportBox.style.height = rectSize + "px";
+      mtx.strokeStyle = "red";
+      mtx.lineWidth = 2;
+      mtx.strokeRect(
+        viewX * minimap.width,
+        viewY * minimap.height,
+        viewW * minimap.width,
+        viewH * minimap.height
+      );
     }
 
-    // Fetch painted squares count and update
-    async function fetchCount() {
-      try {
-        const resp = await fetch(BACKEND_URL + '/count');
-        if (!resp.ok) throw new Error("Count fetch failed");
-        const data = await resp.json();
-        counter.textContent = `${data.count} quadrati colorati su 1,000,000`;
-      } catch {
-        counter.textContent = "Impossibile caricare il conteggio.";
-      }
-    }
-
-    // Load painted squares for visible area from backend
-    async function fetchGridData() {
-      const visibleSquares = Math.floor(CANVAS_SIZE / zoom);
-      const x0 = Math.floor(offsetX);
-      const y0 = Math.floor(offsetY);
-      const limit = visibleSquares * visibleSquares;
-
-      try {
-        const resp = await fetch(`${BACKEND_URL}/paintedSquares?x=${x0}&y=${y0}&limit=${limit}`);
-        if (!resp.ok) throw new Error("Grid data fetch failed");
-        const data = await resp.json();
-        gridData = {};
-        data.forEach(item => {
-          gridData[`${item.x},${item.y}`] = { color: item.color };
-        });
-        drawGrid();
-        drawMinimap();
-        fetchCount();
-      } catch {
-        // On failure, keep previous gridData but redraw empty area
-        drawGrid();
-        drawMinimap();
-      }
-    }
-
-    function coordsFromPixel(x, y) {
-      const gridX = Math.floor(offsetX + x / zoom);
-      const gridY = Math.floor(offsetY + y / zoom);
-      if (gridX < 0 || gridX >= GRID_SIZE || gridY < 0 || gridY >= GRID_SIZE) return null;
-      return { x: gridX, y: gridY };
-    }
-
-    function showCoordsDisplay(coords) {
-      if (coords) {
-        coordsDisplay.textContent = `X: ${coords.x}, Y: ${coords.y}`;
-        coordsDisplay.style.display = 'block';
-      } else {
-        coordsDisplay.style.display = 'none';
-      }
-    }
-
-    // Save painted square to backend
-    async function paintSquare(x, y, color) {
-      try {
-        const resp = await fetch(`${BACKEND_URL}/paint`, {
-          method: "POST",
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ x, y, color }),
-        });
-        if (!resp.ok) throw new Error("Paint failed");
-        gridData[`${x},${y}`] = { color };
-        await fetchCount();
-        drawGrid();
-        drawMinimap();
-      } catch {
-        alert("Errore nel salvare il colore. Riprova.");
-      }
-    }
-
-    // Handle canvas click to select a square
-    function onCanvasClick(e) {
-      const rect = canvas.getBoundingClientRect();
-      const mouseX = e.clientX - rect.left;
-      const mouseY = e.clientY - rect.top;
-      const coords = coordsFromPixel(mouseX, mouseY);
-      if (!coords) return;
-      selectedSquare = coords;
-      drawGrid();
-      openColorModal();
-    }
-
-    function openColorModal() {
-      if (!selectedSquare) return;
-      colorModal.style.display = 'block';
-      colorPicker.value = gridData[`${selectedSquare.x},${selectedSquare.y}`]?.color || '#ff0000';
-      colorPicker.focus();
-    }
-
-    function closeColorModal() {
-      colorModal.style.display = 'none';
-      selectedSquare = null;
-      drawGrid();
-    }
-
-    cancelBtn.addEventListener('click', () => {
-      closeColorModal();
+    grid.addEventListener("mousedown", (e) => {
+      isPanning = true;
+      startX = e.clientX - offsetX;
+      startY = e.clientY - offsetY;
     });
 
-    okBtn.addEventListener('click', async () => {
-      if (!selectedSquare) return;
-      const color = colorPicker.value;
-      await paintSquare(selectedSquare.x, selectedSquare.y, color);
-      closeColorModal();
+    window.addEventListener("mousemove", (e) => {
+      if (isPanning) {
+        offsetX = e.clientX - startX;
+        offsetY = e.clientY - startY;
+        drawGrid();
+      }
     });
 
-    // Drag viewport box on minimap
-    let dragging = false;
-    let dragStart = null;
+    window.addEventListener("mouseup", () => {
+      isPanning = false;
+    });
 
-    viewportBox.addEventListener('pointerdown', e => {
+    grid.addEventListener("wheel", (e) => {
       e.preventDefault();
-      dragging = true;
-      dragStart = { x: e.clientX, y: e.clientY };
-      viewportBox.setPointerCapture(e.pointerId);
-      viewportBox.style.cursor = 'grabbing';
-    });
+      const scale = e.deltaY < 0 ? 1.1 : 0.9;
+      const rect = grid.getBoundingClientRect();
+      const mx = e.clientX - rect.left;
+      const my = e.clientY - rect.top;
+      const wx = (mx - offsetX) / zoom;
+      const wy = (my - offsetY) / zoom;
 
-    viewportBox.addEventListener('pointermove', e => {
-      if (!dragging) return;
-      e.preventDefault();
-      const dx = e.clientX - dragStart.x;
-      const dy = e.clientY - dragStart.y;
-      dragStart = { x: e.clientX, y: e.clientY };
+      zoom *= scale;
+      zoom = Math.max(0.1, Math.min(zoom, 5));
+      zoomSlider.value = zoom;
+      offsetX = mx - wx * zoom;
+      offsetY = my - wy * zoom;
 
-      const visibleSquares = Math.floor(CANVAS_SIZE / zoom);
-      offsetX += dx * SCALE_FACTOR;
-      offsetY += dy * SCALE_FACTOR;
-
-      clampOffsets();
       drawGrid();
-      drawMinimap();
     });
 
-    viewportBox.addEventListener('pointerup', e => {
-      dragging = false;
-      viewportBox.style.cursor = 'grab';
-      viewportBox.releasePointerCapture(e.pointerId);
-    });
-
-    viewportBox.style.cursor = 'grab';
-
-    // Also allow clicking on minimap to move viewport box
-    minimap.addEventListener('click', e => {
+    minimap.addEventListener("click", (e) => {
       const rect = minimap.getBoundingClientRect();
-      const clickX = e.clientX - rect.left;
-      const clickY = e.clientY - rect.top;
-      const visibleSquares = Math.floor(CANVAS_SIZE / zoom);
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
 
-      offsetX = clickX * SCALE_FACTOR - visibleSquares / 2;
-      offsetY = clickY * SCALE_FACTOR - visibleSquares / 2;
-      clampOffsets();
+      const gridX = (x / minimap.width) * gridSize;
+      const gridY = (y / minimap.height) * gridSize;
+
+      offsetX = -gridX * squareSize * zoom + grid.width / 2;
+      offsetY = -gridY * squareSize * zoom + grid.height / 2;
+
       drawGrid();
-      drawMinimap();
     });
 
-    // Handle pinch zoom on main canvas (touch)
-    let lastDist = null;
+    grid.addEventListener("click", (e) => {
+      const rect = grid.getBoundingClientRect();
+      const mx = e.clientX - rect.left;
+      const my = e.clientY - rect.top;
 
-    canvas.addEventListener('touchstart', e => {
-      if (e.touches.length === 2) {
-        e.preventDefault();
-        lastDist = getTouchDistance(e.touches);
-      }
-    }, { passive: false });
+      const x = Math.floor((mx - offsetX) / (squareSize * zoom));
+      const y = Math.floor((my - offsetY) / (squareSize * zoom));
 
-    canvas.addEventListener('touchmove', e => {
-      if (e.touches.length === 2) {
-        e.preventDefault();
-        const dist = getTouchDistance(e.touches);
-        if (lastDist) {
-          const delta = dist - lastDist;
-          if (Math.abs(delta) > 5) {
-            zoom += delta * 0.01;
-            zoom = Math.min(Math.max(zoom, 3), 30);
-            clampOffsets();
-            fetchGridData();
-          }
-        }
-        lastDist = dist;
-      }
-    }, { passive: false });
-
-    canvas.addEventListener('touchend', e => {
-      if (e.touches.length < 2) lastDist = null;
-    });
-
-    function getTouchDistance(touches) {
-      const dx = touches[0].clientX - touches[1].clientX;
-      const dy = touches[0].clientY - touches[1].clientY;
-      return Math.sqrt(dx * dx + dy * dy);
-    }
-
-    // Disable zoom on page (mobile) with meta viewport maximum-scale=1 user-scalable=no set
-
-    // Mouse wheel zoom for desktop
-    canvas.addEventListener('wheel', e => {
-      e.preventDefault();
-      const oldZoom = zoom;
-      if (e.deltaY < 0) {
-        zoom = Math.min(zoom + 1, 30);
-      } else {
-        zoom = Math.max(zoom - 1, 3);
-      }
-      if (zoom !== oldZoom) {
-        // Adjust offset to zoom centered on mouse
-        const rect = canvas.getBoundingClientRect();
-        const mouseX = e.clientX - rect.left;
-        const mouseY = e.clientY - rect.top;
-        const visibleSquaresOld = Math.floor(CANVAS_SIZE / oldZoom);
-        const visibleSquaresNew = Math.floor(CANVAS_SIZE / zoom);
-
-        const centerX = offsetX + mouseX / oldZoom;
-        const centerY = offsetY + mouseY / oldZoom;
-
-        offsetX = centerX - (mouseX / zoom);
-        offsetY = centerY - (mouseY / zoom);
-        clampOffsets();
-        fetchGridData();
-      }
-    }, { passive: false });
-
-    // Pan with mouse drag
-    let isDragging = false;
-    let dragStartPos = null;
-
-    canvas.addEventListener('mousedown', e => {
-      e.preventDefault();
-      isDragging = true;
-      dragStartPos = { x: e.clientX, y: e.clientY };
-    });
-
-    canvas.addEventListener('mousemove', e => {
-      const rect = canvas.getBoundingClientRect();
-      const mouseX = e.clientX - rect.left;
-      const mouseY = e.clientY - rect.top;
-      const coords = coordsFromPixel(mouseX, mouseY);
-      showCoordsDisplay(coords);
-
-      if (isDragging) {
-        e.preventDefault();
-        const dx = (dragStartPos.x - e.clientX) / zoom;
-        const dy = (dragStartPos.y - e.clientY) / zoom;
-        offsetX += dx;
-        offsetY += dy;
-        clampOffsets();
-        dragStartPos = { x: e.clientX, y: e.clientY };
-        fetchGridData();
+      if (x >= 0 && x < gridSize && y >= 0 && y < gridSize) {
+        gridColors[x][y] = (gridColors[x][y] + 1) % colorPalette.length;
+        drawGrid();
       }
     });
 
-    canvas.addEventListener('mouseup', e => {
-      isDragging = false;
+    document.querySelectorAll(".joy-btn").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const dir = btn.dataset.dir;
+        const amount = 50;
+        if (dir === "up") offsetY += amount;
+        if (dir === "down") offsetY -= amount;
+        if (dir === "left") offsetX += amount;
+        if (dir === "right") offsetX -= amount;
+        drawGrid();
+      });
     });
 
-    canvas.addEventListener('mouseleave', e => {
-      isDragging = false;
-      showCoordsDisplay(null);
+    zoomSlider.addEventListener("input", (e) => {
+      const rect = grid.getBoundingClientRect();
+      const mx = rect.width / 2;
+      const my = rect.height / 2;
+      const wx = (mx - offsetX) / zoom;
+      const wy = (my - offsetY) / zoom;
+
+      zoom = parseFloat(e.target.value);
+      offsetX = mx - wx * zoom;
+      offsetY = my - wy * zoom;
+
+      drawGrid();
     });
 
-    // Click to select square
-    canvas.addEventListener('click', e => {
-      if (isDragging) return; // avoid click after drag
-      onCanvasClick(e);
-    });
-
-    // Hide coords on mobile (or small screens)
-    function updateCoordsVisibility() {
-      if (window.innerWidth > 900) {
-        coordsDisplay.style.display = 'block';
-      } else {
-        coordsDisplay.style.display = 'none';
-      }
-    }
-
-    window.addEventListener('resize', () => {
-      updateCoordsVisibility();
-    });
-
-    // Initial load
-    fetchGridData();
-    updateCoordsVisibility();
-
+    drawGrid();
   </script>
 </body>
 </html>
