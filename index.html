@@ -2,300 +2,240 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>The Invisible Million</title>
   <style>
-    body {
+    html, body {
       margin: 0;
+      padding: 0;
       overflow: hidden;
       font-family: sans-serif;
-      background-color: #222;
-      color: white;
     }
-
-    #coordinates {
-      position: fixed;
-      top: 20px;
-      left: 50%;
-      transform: translateX(-50%);
-      background: rgba(0, 0, 0, 0.7);
-      padding: 6px 12px;
-      border-radius: 8px;
-      font-size: 14px;
-      z-index: 1000;
-      pointer-events: none;
-    }
-
-    #zoomSliderContainer {
-      position: fixed;
-      top: 20px;
-      right: 20px;
-      background: rgba(0, 0, 0, 0.7);
-      padding: 6px 10px;
-      border-radius: 8px;
-      z-index: 1000;
-    }
-
-    #zoomSlider {
-      width: 100px;
-    }
-
     #container {
       display: flex;
       flex-direction: column;
       height: 100vh;
     }
-
-    #minimapContainer {
-      flex: 0 0 120px;
-      background: #111;
-      display: flex;
-      justify-content: center;
-      align-items: center;
+    #coordinates {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      background: rgba(255,255,255,0.8);
+      padding: 5px 10px;
+      border-radius: 5px;
+      z-index: 10;
+      font-size: 14px;
     }
-
     #minimap {
-      width: 200px;
-      height: 200px;
-      border: 2px solid #fff;
-      background: #000;
+      height: 150px;
+      width: 150px;
+      background: #eee;
+      border: 1px solid #ccc;
+      position: absolute;
+      right: 10px;
+      top: 10px;
+      z-index: 10;
       cursor: pointer;
     }
-
-    #gridContainer {
+    #zoomableGrid {
       flex: 1;
-      position: relative;
+      background: #fff;
+      touch-action: none;
     }
-
-    canvas {
-      display: block;
-      width: 100%;
-      height: 100%;
-    }
-
     #joystick {
-      position: fixed;
-      bottom: 20px;
-      left: 20px;
-      z-index: 999;
-      display: grid;
-      grid-template-columns: 40px 40px 40px;
-      grid-template-rows: 40px 40px 40px;
-      gap: 5px;
+      position: absolute;
+      bottom: 10px;
+      left: 10px;
+      width: 100px;
+      height: 100px;
+      border-radius: 50%;
+      background: rgba(0,0,0,0.1);
+      z-index: 10;
+      touch-action: none;
     }
-
-    .joy-btn {
+    #joystickHandle {
       width: 40px;
       height: 40px;
-      background: rgba(255, 255, 255, 0.2);
-      border: 1px solid #aaa;
-      color: white;
-      font-size: 18px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      user-select: none;
-      cursor: pointer;
-      border-radius: 5px;
+      border-radius: 50%;
+      background: #333;
+      position: absolute;
+      top: 30px;
+      left: 30px;
     }
-
-    .joy-btn:active {
-      background: rgba(255, 255, 255, 0.4);
+    #zoomSlider {
+      position: absolute;
+      right: 10px;
+      bottom: 10px;
+      z-index: 10;
+      transform: rotate(-90deg);
+      transform-origin: right bottom;
+    }
+    #colorPicker {
+      position: absolute;
+      top: 10px;
+      left: 160px;
+      z-index: 10;
     }
   </style>
 </head>
 <body>
-  <div id="coordinates">X: 0, Y: 0</div>
-
-  <div id="zoomSliderContainer">
-    <label for="zoomSlider">Zoom</label>
-    <input type="range" id="zoomSlider" min="0.1" max="5" step="0.1" value="1">
-  </div>
-
   <div id="container">
-    <div id="minimapContainer">
-      <canvas id="minimap" width="200" height="200"></canvas>
+    <div id="coordinates">x: 0, y: 0</div>
+    <input type="color" id="colorPicker" value="#ff0000" />
+    <canvas id="minimap" width="150" height="150"></canvas>
+    <canvas id="zoomableGrid" width="1000" height="1000"></canvas>
+    <div id="joystick">
+      <div id="joystickHandle"></div>
     </div>
-    <div id="gridContainer">
-      <canvas id="grid" width="1000" height="1000"></canvas>
-    </div>
-  </div>
-
-  <div id="joystick">
-    <div></div>
-    <div class="joy-btn" data-dir="up">↑</div>
-    <div></div>
-    <div class="joy-btn" data-dir="left">←</div>
-    <div></div>
-    <div class="joy-btn" data-dir="right">→</div>
-    <div></div>
-    <div class="joy-btn" data-dir="down">↓</div>
-    <div></div>
+    <input type="range" id="zoomSlider" min="0.1" max="5" step="0.1" value="1" />
   </div>
 
   <script>
-    const grid = document.getElementById("grid");
-    const ctx = grid.getContext("2d");
-
+    const canvas = document.getElementById("zoomableGrid");
+    const ctx = canvas.getContext("2d");
     const minimap = document.getElementById("minimap");
-    const mtx = minimap.getContext("2d");
-
+    const miniCtx = minimap.getContext("2d");
     const coordinates = document.getElementById("coordinates");
+    const colorPicker = document.getElementById("colorPicker");
     const zoomSlider = document.getElementById("zoomSlider");
 
-    let zoom = 1;
+    let scale = 1;
     let offsetX = 0;
     let offsetY = 0;
-    let isPanning = false;
-    let startX, startY;
-
+    let isDragging = false;
+    let dragStart = { x: 0, y: 0 };
     const gridSize = 1000;
-    const squareSize = 10;
+    const tileSize = 20;
+    const API_URL = "https://155ca338-0e90-4f5a-88ec-b6163921baae-00-181dgn4pq10j7.janeway.replit.dev";
 
-    // Store grid colors
-    const gridColors = Array.from({ length: gridSize }, () =>
-      Array(gridSize).fill(0)
-    );
-    const colorPalette = ["#444", "#e74c3c", "#3498db", "#2ecc71", "#f1c40f"];
+    let painted = {};
 
-    function drawGrid() {
-      ctx.clearRect(0, 0, grid.width, grid.height);
+    async function loadPainted() {
+      const res = await fetch(`${API_URL}/painted`);
+      painted = await res.json();
+      draw();
+    }
+
+    function draw() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
       ctx.save();
       ctx.translate(offsetX, offsetY);
-      ctx.scale(zoom, zoom);
+      ctx.scale(scale, scale);
 
-      const visibleCols = Math.ceil(grid.width / (squareSize * zoom)) + 2;
-      const visibleRows = Math.ceil(grid.height / (squareSize * zoom)) + 2;
-      const startCol = Math.max(Math.floor(-offsetX / (squareSize * zoom)), 0);
-      const startRow = Math.max(Math.floor(-offsetY / (squareSize * zoom)), 0);
-
-      for (let x = startCol; x < startCol + visibleCols && x < gridSize; x++) {
-        for (let y = startRow; y < startRow + visibleRows && y < gridSize; y++) {
-          ctx.fillStyle = colorPalette[gridColors[x][y]];
-          ctx.fillRect(x * squareSize, y * squareSize, squareSize - 1, squareSize - 1);
+      for (let x = 0; x < gridSize; x++) {
+        for (let y = 0; y < gridSize; y++) {
+          const key = `${x},${y}`;
+          if (painted[key]) {
+            ctx.fillStyle = painted[key].color;
+            ctx.fillRect(x * tileSize, y * tileSize, tileSize, tileSize);
+          } else {
+            ctx.fillStyle = "#fff";
+            ctx.fillRect(x * tileSize, y * tileSize, tileSize, tileSize);
+          }
+          ctx.strokeStyle = "#ddd";
+          ctx.strokeRect(x * tileSize, y * tileSize, tileSize, tileSize);
         }
       }
-
       ctx.restore();
-
-      const centerX = Math.round(-offsetX / zoom + grid.width / (2 * zoom));
-      const centerY = Math.round(-offsetY / zoom + grid.height / (2 * zoom));
-      coordinates.textContent = `X: ${centerX}, Y: ${centerY}`;
 
       drawMinimap();
     }
 
     function drawMinimap() {
-      mtx.clearRect(0, 0, minimap.width, minimap.height);
-      mtx.fillStyle = "#555";
-      mtx.fillRect(0, 0, minimap.width, minimap.height);
+      miniCtx.clearRect(0, 0, minimap.width, minimap.height);
+      const miniScale = minimap.width / (gridSize * tileSize);
+      miniCtx.fillStyle = "#999";
+      for (const key in painted) {
+        const [x, y] = key.split(",").map(Number);
+        miniCtx.fillRect(x * tileSize * miniScale, y * tileSize * miniScale, tileSize * miniScale, tileSize * miniScale);
+      }
 
-      const viewW = grid.width / zoom / gridSize;
-      const viewH = grid.height / zoom / gridSize;
-      const viewX = -offsetX / zoom / gridSize;
-      const viewY = -offsetY / zoom / gridSize;
-
-      mtx.strokeStyle = "red";
-      mtx.lineWidth = 2;
-      mtx.strokeRect(
-        viewX * minimap.width,
-        viewY * minimap.height,
-        viewW * minimap.width,
-        viewH * minimap.height
-      );
+      // Draw red viewport
+      miniCtx.strokeStyle = "red";
+      miniCtx.lineWidth = 2;
+      const w = canvas.width / scale * miniScale;
+      const h = canvas.height / scale * miniScale;
+      const x = -offsetX / scale * miniScale;
+      const y = -offsetY / scale * miniScale;
+      miniCtx.strokeRect(x, y, w, h);
     }
 
-    grid.addEventListener("mousedown", (e) => {
-      isPanning = true;
-      startX = e.clientX - offsetX;
-      startY = e.clientY - offsetY;
+    canvas.addEventListener("mousedown", (e) => {
+      isDragging = true;
+      dragStart = { x: e.clientX, y: e.clientY };
     });
 
-    window.addEventListener("mousemove", (e) => {
-      if (isPanning) {
-        offsetX = e.clientX - startX;
-        offsetY = e.clientY - startY;
-        drawGrid();
+    canvas.addEventListener("mouseup", () => isDragging = false);
+    canvas.addEventListener("mouseleave", () => isDragging = false);
+
+    canvas.addEventListener("mousemove", (e) => {
+      if (isDragging) {
+        offsetX += e.clientX - dragStart.x;
+        offsetY += e.clientY - dragStart.y;
+        dragStart = { x: e.clientX, y: e.clientY };
+        draw();
       }
+
+      const x = Math.floor((e.offsetX - offsetX) / (tileSize * scale));
+      const y = Math.floor((e.offsetY - offsetY) / (tileSize * scale));
+      coordinates.textContent = `x: ${x}, y: ${y}`;
     });
 
-    window.addEventListener("mouseup", () => {
-      isPanning = false;
-    });
-
-    grid.addEventListener("wheel", (e) => {
-      e.preventDefault();
-      const scale = e.deltaY < 0 ? 1.1 : 0.9;
-      const rect = grid.getBoundingClientRect();
-      const mx = e.clientX - rect.left;
-      const my = e.clientY - rect.top;
-      const wx = (mx - offsetX) / zoom;
-      const wy = (my - offsetY) / zoom;
-
-      zoom *= scale;
-      zoom = Math.max(0.1, Math.min(zoom, 5));
-      zoomSlider.value = zoom;
-      offsetX = mx - wx * zoom;
-      offsetY = my - wy * zoom;
-
-      drawGrid();
+    canvas.addEventListener("click", async (e) => {
+      const x = Math.floor((e.offsetX - offsetX) / (tileSize * scale));
+      const y = Math.floor((e.offsetY - offsetY) / (tileSize * scale));
+      const color = colorPicker.value;
+      const key = `${x},${y}`;
+      if (!painted[key]) {
+        const res = await fetch(`${API_URL}/paint`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ x, y, color })
+        });
+        if (res.ok) {
+          painted[key] = { color };
+          draw();
+        }
+      }
     });
 
     minimap.addEventListener("click", (e) => {
-      const rect = minimap.getBoundingClientRect();
-      const x = e.clientX - rect.left;
-      const y = e.clientY - rect.top;
-
-      const gridX = (x / minimap.width) * gridSize;
-      const gridY = (y / minimap.height) * gridSize;
-
-      offsetX = -gridX * squareSize * zoom + grid.width / 2;
-      offsetY = -gridY * squareSize * zoom + grid.height / 2;
-
-      drawGrid();
+      const miniScale = minimap.width / (gridSize * tileSize);
+      const x = e.offsetX / miniScale;
+      const y = e.offsetY / miniScale;
+      offsetX = -x * scale + canvas.width / 2;
+      offsetY = -y * scale + canvas.height / 2;
+      draw();
     });
 
-    grid.addEventListener("click", (e) => {
-      const rect = grid.getBoundingClientRect();
-      const mx = e.clientX - rect.left;
-      const my = e.clientY - rect.top;
-
-      const x = Math.floor((mx - offsetX) / (squareSize * zoom));
-      const y = Math.floor((my - offsetY) / (squareSize * zoom));
-
-      if (x >= 0 && x < gridSize && y >= 0 && y < gridSize) {
-        gridColors[x][y] = (gridColors[x][y] + 1) % colorPalette.length;
-        drawGrid();
-      }
+    zoomSlider.addEventListener("input", () => {
+      scale = parseFloat(zoomSlider.value);
+      draw();
     });
 
-    document.querySelectorAll(".joy-btn").forEach(btn => {
-      btn.addEventListener("click", () => {
-        const dir = btn.dataset.dir;
-        const amount = 50;
-        if (dir === "up") offsetY += amount;
-        if (dir === "down") offsetY -= amount;
-        if (dir === "left") offsetX += amount;
-        if (dir === "right") offsetX -= amount;
-        drawGrid();
-      });
+    // Joystick
+    const joystick = document.getElementById("joystick");
+    const handle = document.getElementById("joystickHandle");
+    let joyInterval = null;
+
+    joystick.addEventListener("pointerdown", (e) => {
+      handle.setPointerCapture(e.pointerId);
+      joyInterval = setInterval(() => {
+        const rect = joystick.getBoundingClientRect();
+        const dx = e.clientX - (rect.left + rect.width / 2);
+        const dy = e.clientY - (rect.top + rect.height / 2);
+        offsetX += dx * 0.05;
+        offsetY += dy * 0.05;
+        draw();
+      }, 16);
     });
 
-    zoomSlider.addEventListener("input", (e) => {
-      const rect = grid.getBoundingClientRect();
-      const mx = rect.width / 2;
-      const my = rect.height / 2;
-      const wx = (mx - offsetX) / zoom;
-      const wy = (my - offsetY) / zoom;
-
-      zoom = parseFloat(e.target.value);
-      offsetX = mx - wx * zoom;
-      offsetY = my - wy * zoom;
-
-      drawGrid();
+    joystick.addEventListener("pointerup", () => {
+      clearInterval(joyInterval);
+      joyInterval = null;
     });
 
-    drawGrid();
+    loadPainted();
   </script>
 </body>
 </html>
