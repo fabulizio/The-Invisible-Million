@@ -269,7 +269,17 @@
       mainCtx.moveTo(offsetX + startCol * CELL_SIZE * zoom, y);
       mainCtx.lineTo(offsetX + (endCol + 1) * CELL_SIZE * zoom, y);
     }
-    mainCtx.stroke();
+    mainCtx.stroke();    mainCtx.stroke();
+
+    // Draw outline around entire grid
+    const outlineX = offsetX;
+    const outlineY = offsetY;
+    const outlineWidth = GRID_SIZE * CELL_SIZE * zoom;
+    const outlineHeight = GRID_SIZE * CELL_SIZE * zoom;
+
+    mainCtx.strokeStyle = '#fff'; // or any contrasting color
+    mainCtx.lineWidth = 2;
+    mainCtx.strokeRect(outlineX, outlineY, outlineWidth, outlineHeight);
 
     // Draw cursor box if mouse is inside canvas
     if (mousePos.inside) {
