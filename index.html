@@ -2,232 +2,192 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>The Invisible Million</title>
   <style>
-    * {
-      box-sizing: border-box;
-    }
-
     body {
       margin: 0;
-      font-family: Arial, sans-serif;
+      font-family: sans-serif;
       overflow: hidden;
     }
-
     header {
       position: sticky;
       top: 0;
-      background: #222;
-      color: white;
-      padding: 10px 20px;
-      font-size: 18px;
+      background: white;
+      padding: 10px;
+      border-bottom: 2px solid #000;
       z-index: 1000;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
     }
-
     header a {
-      color: #fff;
+      margin-right: 20px;
       text-decoration: none;
-      margin-left: 15px;
+      color: black;
+      font-weight: bold;
     }
-
-    .frame-container {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      margin-top: 10px;
-    }
-
-    .grid-frame {
+    #frame {
       position: relative;
-      width: 90vw;
-      height: 90vh;
       border: 4px solid black;
+      width: 100vw;
+      height: calc(100vh - 60px);
+      box-sizing: border-box;
       overflow: hidden;
     }
-
-    #main-grid {
-      width: 10000px;
-      height: 10000px;
-      display: grid;
-      grid-template-columns: repeat(1000, 10px);
-      grid-template-rows: repeat(1000, 10px);
-      transform-origin: 0 0;
+    #mainCanvas {
+      display: block;
     }
-
-    .cell {
-      width: 10px;
-      height: 10px;
-      background-color: #eee;
-      border: 1px solid #ccc;
-    }
-
     #minimap {
+      position: absolute;
+      width: 150px;
+      height: 150px;
+      bottom: 10px;
+      right: 10px;
+      border: 2px solid red;
+      background: white;
+      z-index: 10;
+      cursor: pointer;
+    }
+    #paypal-btn {
       position: absolute;
       top: 10px;
       right: 10px;
-      width: 150px;
-      height: 150px;
-      border: 2px solid #555;
-      background-color: white;
-      z-index: 10;
-      pointer-events: auto;
-    }
-
-    #minimap canvas {
-      width: 100%;
-      height: 100%;
-    }
-
-    #paypal-button {
-      position: absolute;
-      bottom: 10px;
-      right: 10px;
-      z-index: 1000;
-      padding: 10px 15px;
-      background: #ffc439;
-      color: black;
-      font-weight: bold;
+      background: gold;
       border: none;
+      padding: 10px 15px;
+      font-weight: bold;
       cursor: pointer;
     }
   </style>
 </head>
 <body>
   <header>
-    <div>The Invisible Million</div>
-    <nav>
-      <a href="about.html">About</a>
-      <a href="how-it-works.html">How it works</a>
-    </nav>
+    <a href="about.html">About</a>
+    <a href="faq.html">FAQ</a>
   </header>
-
-  <div class="frame-container">
-    <div class="grid-frame">
-      <div id="main-grid"></div>
-      <div id="minimap">
-        <canvas id="minimap-canvas" width="1000" height="1000"></canvas>
-      </div>
-      <button id="paypal-button">Donate to Color</button>
-    </div>
+  <div id="frame">
+    <canvas id="mainCanvas"></canvas>
+    <canvas id="minimap"></canvas>
+    <button id="paypal-btn">Donate (Dummy)</button>
   </div>
 
   <script>
-    const grid = document.getElementById("main-grid");
+    const canvas = document.getElementById('mainCanvas');
+    const minimap = document.getElementById('minimap');
+    const ctx = canvas.getContext('2d');
+    const miniCtx = minimap.getContext('2d');
+
+    const GRID_SIZE = 1000;
+    const CELL_SIZE = 10;
     let scale = 1;
-    let offsetX = 0, offsetY = 0;
+    let offsetX = 0;
+    let offsetY = 0;
     let isDragging = false;
-    let startX, startY;
+    let dragStart = {};
 
-    for (let i = 0; i < 1000000; i++) {
-      const cell = document.createElement("div");
-      cell.className = "cell";
-      cell.dataset.index = i;
-      grid.appendChild(cell);
-    }
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight - 60;
 
-    function updateTransform() {
-      grid.style.transform = `translate(${offsetX}px, ${offsetY}px) scale(${scale})`;
-      updateMinimapView();
-    }
+    function drawGrid() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      const visibleCols = Math.ceil(canvas.width / (CELL_SIZE * scale));
+      const visibleRows = Math.ceil(canvas.height / (CELL_SIZE * scale));
+      const startCol = Math.floor(offsetX / CELL_SIZE);
+      const startRow = Math.floor(offsetY / CELL_SIZE);
 
-    grid.addEventListener("mousedown", (e) => {
-      isDragging = true;
-      startX = e.clientX - offsetX;
-      startY = e.clientY - offsetY;
-    });
-
-    window.addEventListener("mouseup", () => isDragging = false);
-
-    window.addEventListener("mousemove", (e) => {
-      if (isDragging) {
-        offsetX = e.clientX - startX;
-        offsetY = e.clientY - startY;
-        updateTransform();
+      for (let y = startRow; y < startRow + visibleRows; y++) {
+        for (let x = startCol; x < startCol + visibleCols; x++) {
+          if (x >= 0 && y >= 0 && x < GRID_SIZE && y < GRID_SIZE) {
+            ctx.fillStyle = '#ccc';
+            ctx.fillRect(
+              (x * CELL_SIZE - offsetX) * scale,
+              (y * CELL_SIZE - offsetY) * scale,
+              CELL_SIZE * scale,
+              CELL_SIZE * scale
+            );
+          }
+        }
       }
+    }
+
+    function drawMinimap() {
+      miniCtx.clearRect(0, 0, minimap.width, minimap.height);
+      miniCtx.fillStyle = '#eee';
+      miniCtx.fillRect(0, 0, minimap.width, minimap.height);
+      miniCtx.fillStyle = '#888';
+      miniCtx.fillRect(0, 0, minimap.width, minimap.height);
+
+      const viewW = canvas.width / (GRID_SIZE * CELL_SIZE * scale);
+      const viewH = canvas.height / (GRID_SIZE * CELL_SIZE * scale);
+      const viewX = offsetX / (GRID_SIZE * CELL_SIZE);
+      const viewY = offsetY / (GRID_SIZE * CELL_SIZE);
+
+      miniCtx.strokeStyle = 'red';
+      miniCtx.lineWidth = 2;
+      miniCtx.strokeRect(
+        viewX * minimap.width,
+        viewY * minimap.height,
+        viewW * minimap.width,
+        viewH * minimap.height
+      );
+    }
+
+    function render() {
+      drawGrid();
+      drawMinimap();
+    }
+
+    canvas.addEventListener('mousedown', e => {
+      isDragging = true;
+      dragStart.x = e.clientX;
+      dragStart.y = e.clientY;
     });
 
-    window.addEventListener("wheel", (e) => {
-      e.preventDefault();
-      const zoomFactor = 0.001;
-      scale += e.deltaY * -zoomFactor;
-      scale = Math.min(Math.max(.5, scale), 5);
-      updateTransform();
-    }, { passive: false });
+    canvas.addEventListener('mousemove', e => {
+      if (!isDragging) return;
+      const dx = (e.clientX - dragStart.x) / scale;
+      const dy = (e.clientY - dragStart.y) / scale;
+      offsetX -= dx;
+      offsetY -= dy;
+      dragStart.x = e.clientX;
+      dragStart.y = e.clientY;
+      render();
+    });
 
-    grid.addEventListener("dblclick", () => {
-      const elem = document.documentElement;
+    canvas.addEventListener('mouseup', () => isDragging = false);
+    canvas.addEventListener('mouseleave', () => isDragging = false);
+
+    canvas.addEventListener('wheel', e => {
+      e.preventDefault();
+      const zoomFactor = 1.1;
+      const mouseX = e.offsetX / scale + offsetX;
+      const mouseY = e.offsetY / scale + offsetY;
+      if (e.deltaY < 0) {
+        scale *= zoomFactor;
+      } else {
+        scale /= zoomFactor;
+      }
+      offsetX = mouseX - (e.offsetX / scale);
+      offsetY = mouseY - (e.offsetY / scale);
+      render();
+    });
+
+    minimap.addEventListener('click', e => {
+      const rect = minimap.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+      offsetX = (x / minimap.width) * (GRID_SIZE * CELL_SIZE) - canvas.width / (2 * scale);
+      offsetY = (y / minimap.height) * (GRID_SIZE * CELL_SIZE) - canvas.height / (2 * scale);
+      render();
+    });
+
+    canvas.addEventListener('dblclick', () => {
       if (!document.fullscreenElement) {
-        elem.requestFullscreen();
+        canvas.requestFullscreen();
       } else {
         document.exitFullscreen();
       }
     });
 
-    let donationMade = false;
-
-    document.getElementById("paypal-button").addEventListener("click", () => {
-      alert("Thank you for your (simulated) donation!");
-      donationMade = true;
-    });
-
-    grid.addEventListener("click", (e) => {
-      if (!donationMade) {
-        alert("Please donate first!");
-        return;
-      }
-      if (e.target.classList.contains("cell")) {
-        e.target.style.backgroundColor = "#ff0000";
-      }
-    });
-
-    // Minimap rendering
-    const minimapCanvas = document.getElementById("minimap-canvas");
-    const ctx = minimapCanvas.getContext("2d");
-
-    function drawMinimap() {
-      ctx.fillStyle = "#eee";
-      ctx.fillRect(0, 0, 1000, 1000);
-
-      // Example: red squares
-      document.querySelectorAll(".cell").forEach(cell => {
-        if (cell.style.backgroundColor === "rgb(255, 0, 0)") {
-          const index = +cell.dataset.index;
-          const x = index % 1000;
-          const y = Math.floor(index / 1000);
-          ctx.fillStyle = "red";
-          ctx.fillRect(x, y, 1, 1);
-        }
-      });
-    }
-
-    function updateMinimapView() {
-      drawMinimap();
-      const frame = document.querySelector(".grid-frame");
-      const rect = frame.getBoundingClientRect();
-      const viewWidth = rect.width / (10000 * scale) * 1000;
-      const viewHeight = rect.height / (10000 * scale) * 1000;
-      const viewX = -offsetX / (10000 * scale) * 1000;
-      const viewY = -offsetY / (10000 * scale) * 1000;
-
-      ctx.strokeStyle = "blue";
-      ctx.lineWidth = 1;
-      ctx.strokeRect(viewX, viewY, viewWidth, viewHeight);
-    }
-
-    minimapCanvas.addEventListener("click", (e) => {
-      const rect = minimapCanvas.getBoundingClientRect();
-      const x = (e.clientX - rect.left);
-      const y = (e.clientY - rect.top);
-      offsetX = -x * 10 * scale + 75;
-      offsetY = -y * 10 * scale + 75;
-      updateTransform();
-    });
-
-    updateTransform();
+    render();
   </script>
 </body>
 </html>
