@@ -21,9 +21,10 @@
   #mainCanvas {
     flex-grow: 1;
     background: #333;
-    touch-action: none; /* Prevent default gestures on mobile */
+    touch-action: none;
     position: relative;
     cursor: crosshair;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.7); /* Shadow effect added */
   }
   #controls {
     background: #111;
@@ -32,6 +33,7 @@
     align-items: center;
     gap: 10px;
     flex-wrap: wrap;
+    box-shadow: 0 -2px 10px rgba(0,0,0,0.6); /* Optional bottom shadow */
   }
   #colorPickerLabel {
     display: flex;
@@ -43,6 +45,7 @@
     height: 24px;
     border: 1px solid #ccc;
     display: inline-block;
+    box-shadow: 0 0 4px rgba(255,255,255,0.6);
   }
   #tooltip {
     position: fixed;
@@ -54,6 +57,7 @@
     border-radius: 4px;
     z-index: 10;
     white-space: nowrap;
+    box-shadow: 0 0 8px rgba(255,255,255,0.2);
   }
   #cursorBox {
     position: absolute;
@@ -68,6 +72,7 @@
     white-space: nowrap;
     display: none;
     z-index: 20;
+    box-shadow: 0 0 6px rgba(0,0,0,0.6);
   }
   button {
     background: #444;
@@ -77,6 +82,7 @@
     border-radius: 4px;
     cursor: pointer;
     user-select: none;
+    box-shadow: 0 0 5px rgba(0,0,0,0.5);
   }
   button:hover {
     background: #666;
@@ -87,9 +93,32 @@
     border: none;
     padding: 6px 8px;
     border-radius: 4px;
+    box-shadow: 0 0 5px rgba(0,0,0,0.4);
   }
 </style>
 </head>
+<body>
+<div id="container">
+  <canvas id="mainCanvas" width="800" height="600"></canvas>
+  <div id="controls">
+    <label id="colorPickerLabel" for="colorPicker">Select color:
+      <input type="color" id="colorPicker" value="#FF0000" />
+    </label>
+    <div id="colorPreview"></div>
+    <button id="resetViewBtn">Reset View</button>
+    <select id="languageSelect" title="Select language">
+      <option value="en">English</option>
+      <option value="it">Italiano</option>
+    </select>
+    <button id="donateBtn">Donate 💖</button>
+  </div>
+</div>
+<div id="tooltip"></div>
+<div id="cursorBox"></div>
+<script src="main.js"></script>
+</body>
+</html>
+
 <body>
 <div id="container">
   <canvas id="mainCanvas" width="800" height="600"></canvas>
