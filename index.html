@@ -3,326 +3,245 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Zoomable Grid with Color Picker</title>
+<title>Zoomable Grid with Legend</title>
 <style>
-  body, html { margin:0; height:100%; overflow:hidden; font-family: Arial, sans-serif; }
-  #frame {
+  html, body {
+    margin: 0; padding: 0; height: 100%; background: black; color: white; font-family: monospace;
+    user-select: none;
+    overflow: hidden;
+  }
+  #container {
     position: relative;
     width: 100vw; height: 100vh;
-    background: #eee;
+    display: flex; flex-direction: column;
+  }
+  #legendX {
+    height: 30px;
+    background: #222;
+    color: #ccc;
+    border-bottom: 2px solid white;
+    display: flex;
+    font-size: 12px;
+    line-height: 30px;
+    overflow: hidden;
+    user-select: none;
+  }
+  #legendX > div {
+    flex-shrink: 0;
+    width: 40px;
+    text-align: center;
+    border-left: 1px solid #555;
+  }
+  #legendX > div:first-child {
+    border-left: none;
+  }
+  #main {
+    flex: 1;
+    display: flex;
+    background: black;
     overflow: hidden;
   }
-  #grid {
-    position: absolute;
-    top:0; left:0;
-    transform-origin: top left;
-    cursor: pointer;
+  #legendY {
+    width: 40px;
+    background: #222;
+    color: #ccc;
+    border-right: 2px solid white;
+    font-size: 12px;
+    line-height: 40px;
+    text-align: right;
+    padding-right: 4px;
+    user-select: none;
   }
-  .cell {
-    box-sizing: border-box;
-    border: 1px solid #ccc;
-    width: 20px;
-    height: 20px;
-    float: left;
-    background: white;
-  }
-  #minimap {
-    position: absolute;
-    bottom: 20px;
-    right: 20px;
-    width: 200px;
-    height: 200px;
-    background: white;
-    border: 1px solid black;
-    opacity: 0.8;
-    z-index: 1000;
+  #gridContainer {
+    flex: 1;
+    background: #333;
+    border: 4px solid white;
+    position: relative;
     overflow: hidden;
+    cursor: grab;
   }
-  #colorPickerPopup {
-    position: fixed;
-    top: 50%; left: 50%;
-    transform: translate(-50%, -50%);
-    background: white;
-    border: 2px solid #333;
-    padding: 15px;
-    box-shadow: 0 0 10px #000a;
+  #gridCanvas {
+    display: block;
+    background: #333;
+    image-rendering: pixelated;
+  }
+  /* Hide scrollbar */
+  #gridContainer::-webkit-scrollbar {
     display: none;
-    z-index: 2000;
-  }
-  #colorPickerPopup input[type=color] {
-    width: 100px;
-    height: 40px;
-    border:none;
-    cursor:pointer;
-  }
-  #colorPickerPopup button {
-    margin-left: 10px;
-    padding: 6px 12px;
   }
 </style>
 </head>
 <body>
-<div id="frame">
-  <div id="grid"></div>
-  <canvas id="minimap"></canvas>
-</div>
-
-<!-- Color picker popup -->
-<div id="colorPickerPopup">
-  <label for="colorPicker">Choose color:</label>
-  <input type="color" id="colorPicker" value="#ff0000" />
-  <button id="colorConfirmBtn">OK</button>
-  <button id="colorCancelBtn">Cancel</button>
+<div id="container">
+  <div id="legendX"></div>
+  <div id="main">
+    <div id="legendY"></div>
+    <div id="gridContainer">
+      <canvas id="gridCanvas" width="800" height="800"></canvas>
+    </div>
+  </div>
 </div>
 
 <script>
-  // Constants
-  const GRID_SIZE = 1000; // 1000x1000 grid
-  const CELL_SIZE = 20;   // px
-  let scale = 1;
+(() => {
+  const canvas = document.getElementById('gridCanvas');
+  const ctx = canvas.getContext('2d');
+  const legendX = document.getElementById('legendX');
+  const legendY = document.getElementById('legendY');
+  const gridContainer = document.getElementById('gridContainer');
+
+  const GRID_SIZE = 1000;  // 1000x1000 grid
+  const CELL_SIZE_BASE = 20; // base cell size in px at zoom=1
+
+  let zoom = 1;
   let offsetX = 0;
   let offsetY = 0;
 
-  // Grid data: store colors for squares (key: "x_y" => color string)
-  const coloredSquares = {};
+  // For dragging
+  let isDragging = false;
+  let dragStartX, dragStartY;
+  let dragOffsetX, dragOffsetY;
 
-  // Selected cell for coloring
-  let selectedCell = null;
+  // Set canvas size to container size
+  function resizeCanvas() {
+    canvas.width = gridContainer.clientWidth;
+    canvas.height = gridContainer.clientHeight;
+  }
+  resizeCanvas();
 
-  // DOM refs
-  const frame = document.getElementById('frame');
-  const grid = document.getElementById('grid');
-  const minimap = document.getElementById('minimap');
-  const colorPopup = document.getElementById('colorPickerPopup');
-  const colorPicker = document.getElementById('colorPicker');
-  const colorConfirmBtn = document.getElementById('colorConfirmBtn');
-  const colorCancelBtn = document.getElementById('colorCancelBtn');
+  // Draw grid and legend
+  function draw() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-  // Initialize grid container size
-  grid.style.width = (GRID_SIZE * CELL_SIZE) + 'px';
-  grid.style.height = (GRID_SIZE * CELL_SIZE) + 'px';
+    const cellSize = CELL_SIZE_BASE * zoom;
 
-  // Create canvas context for minimap
-  const minimapCtx = minimap.getContext('2d');
+    // Calculate visible grid range
+    const startCol = Math.floor(offsetX / cellSize);
+    const startRow = Math.floor(offsetY / cellSize);
+    const visibleCols = Math.ceil(canvas.width / cellSize) + 1;
+    const visibleRows = Math.ceil(canvas.height / cellSize) + 1;
 
-  // We'll not create 1 million divs — too heavy.
-  // Instead we will use a virtual approach for visible part.
+    // Draw background
+    ctx.fillStyle = '#333';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-  // For demo, let's create a smaller grid (50x50) with cells as divs for interaction,
-  // but your full grid would need canvas or optimized approach for performance.
+    // Draw vertical grid lines
+    ctx.strokeStyle = '#bbb'; // light grey
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    for(let c = 0; c <= visibleCols; c++) {
+      const x = Math.round(c * cellSize - (offsetX % cellSize));
+      ctx.moveTo(x, 0);
+      ctx.lineTo(x, canvas.height);
+    }
+    // Draw horizontal grid lines
+    for(let r = 0; r <= visibleRows; r++) {
+      const y = Math.round(r * cellSize - (offsetY % cellSize));
+      ctx.moveTo(0, y);
+      ctx.lineTo(canvas.width, y);
+    }
+    ctx.stroke();
 
-  const VISIBLE_CELLS = 50;
-  const visibleGridSizePx = VISIBLE_CELLS * CELL_SIZE;
+    // Draw coordinates legend content
+    drawLegend(startCol, visibleCols, startRow, visibleRows, cellSize);
 
-  // We'll create VISIBLE_CELLS^2 div cells inside grid container,
-  // and update their positions on pan/zoom.
-
-  // Generate visible cells pool
-  const visibleCells = [];
-  for(let i=0; i<VISIBLE_CELLS*VISIBLE_CELLS; i++) {
-    const cell = document.createElement('div');
-    cell.classList.add('cell');
-    grid.appendChild(cell);
-    visibleCells.push(cell);
+    // Draw fixed white bold outline is handled by CSS border on gridContainer
   }
 
-  // Convert page coords to grid coords (x,y of cell)
-  function pageToGrid(x, y) {
-    const gx = Math.floor((x - offsetX) / (CELL_SIZE * scale));
-    const gy = Math.floor((y - offsetY) / (CELL_SIZE * scale));
-    return {x: gx, y: gy};
-  }
+  function drawLegend(startCol, visibleCols, startRow, visibleRows, cellSize) {
+    // Draw X axis legend
+    legendX.innerHTML = '';
+    for(let c = startCol; c < startCol + visibleCols; c++) {
+      if(c < 0 || c >= GRID_SIZE) {
+        legendX.appendChild(createLegendCell(''));
+      } else if (c % 10 === 0) {
+        legendX.appendChild(createLegendCell(c));
+      } else {
+        legendX.appendChild(createLegendCell(''));
+      }
+    }
 
-  // Update visible cells positions and colors based on current offset and scale
-  function updateVisibleCells() {
-    const startX = Math.floor(-offsetX / (CELL_SIZE * scale));
-    const startY = Math.floor(-offsetY / (CELL_SIZE * scale));
-    for(let i=0; i<VISIBLE_CELLS; i++) {
-      for(let j=0; j<VISIBLE_CELLS; j++) {
-        const index = i * VISIBLE_CELLS + j;
-        const cell = visibleCells[index];
-        const gridX = startX + j;
-        const gridY = startY + i;
-        if(gridX < 0 || gridY < 0 || gridX >= GRID_SIZE || gridY >= GRID_SIZE){
-          cell.style.display = 'none';
-          continue;
-        }
-        cell.style.display = 'block';
-        cell.style.width = (CELL_SIZE * scale) + 'px';
-        cell.style.height = (CELL_SIZE * scale) + 'px';
-        cell.style.position = 'absolute';
-        cell.style.left = (offsetX + gridX * CELL_SIZE * scale) + 'px';
-        cell.style.top = (offsetY + gridY * CELL_SIZE * scale) + 'px';
-
-        // Set color if any
-        const key = gridX + '_' + gridY;
-        if(coloredSquares[key]){
-          cell.style.backgroundColor = coloredSquares[key];
-          cell.style.borderColor = 'black';
-        } else {
-          cell.style.backgroundColor = 'white';
-          cell.style.borderColor = '#ccc';
-        }
-        cell.dataset.gridX = gridX;
-        cell.dataset.gridY = gridY;
+    // Draw Y axis legend
+    legendY.innerHTML = '';
+    for(let r = startRow; r < startRow + visibleRows; r++) {
+      if(r < 0 || r >= GRID_SIZE) {
+        legendY.appendChild(createLegendCell(''));
+      } else if (r % 10 === 0) {
+        legendY.appendChild(createLegendCell(r));
+      } else {
+        legendY.appendChild(createLegendCell(''));
       }
     }
   }
 
-  // Initial render
-  updateVisibleCells();
+  function createLegendCell(text) {
+    const div = document.createElement('div');
+    div.style.width = '40px';
+    div.style.height = '30px';
+    div.style.lineHeight = '30px';
+    div.style.textAlign = 'center';
+    div.style.userSelect = 'none';
+    div.textContent = text;
+    return div;
+  }
 
-  // Handle pan with mouse drag
-  let isPanning = false;
-  let panStart = {x:0,y:0};
-  frame.addEventListener('mousedown', e => {
-    isPanning = true;
-    panStart = {x: e.clientX - offsetX, y: e.clientY - offsetY};
+  // Drag to pan grid
+  gridContainer.addEventListener('mousedown', e => {
+    isDragging = true;
+    dragStartX = e.clientX;
+    dragStartY = e.clientY;
+    dragOffsetX = offsetX;
+    dragOffsetY = offsetY;
+    gridContainer.style.cursor = 'grabbing';
   });
-  window.addEventListener('mouseup', e => {
-    isPanning = false;
+  window.addEventListener('mouseup', () => {
+    isDragging = false;
+    gridContainer.style.cursor = 'grab';
   });
   window.addEventListener('mousemove', e => {
-    if(isPanning){
-      offsetX = e.clientX - panStart.x;
-      offsetY = e.clientY - panStart.y;
-      updateVisibleCells();
-      drawMinimap();
+    if(isDragging) {
+      offsetX = Math.min(Math.max(dragOffsetX - (e.clientX - dragStartX), 0), GRID_SIZE * CELL_SIZE_BASE * zoom - canvas.width);
+      offsetY = Math.min(Math.max(dragOffsetY - (e.clientY - dragStartY), 0), GRID_SIZE * CELL_SIZE_BASE * zoom - canvas.height);
+      draw();
     }
   });
 
-  // Handle zoom with wheel
-  frame.addEventListener('wheel', e => {
+  // Zoom with mouse wheel
+  gridContainer.addEventListener('wheel', e => {
     e.preventDefault();
-    let oldScale = scale;
-    if(e.deltaY < 0) scale *= 1.1;
-    else scale /= 1.1;
-    scale = Math.min(Math.max(0.1, scale), 5);
+    const zoomStep = 0.1;
+    let newZoom = zoom - e.deltaY * zoomStep / 100;
+    newZoom = Math.min(Math.max(newZoom, 0.1), 5);
 
-    // Zoom around cursor
-    const rect = frame.getBoundingClientRect();
-    const cx = e.clientX - rect.left;
-    const cy = e.clientY - rect.top;
+    // To zoom relative to mouse pointer
+    const rect = canvas.getBoundingClientRect();
+    const mx = e.clientX - rect.left;
+    const my = e.clientY - rect.top;
 
-    offsetX = cx - ((cx - offsetX) / oldScale) * scale;
-    offsetY = cy - ((cy - offsetY) / oldScale) * scale;
+    const worldX = offsetX + mx;
+    const worldY = offsetY + my;
 
-    updateVisibleCells();
-    drawMinimap();
-  }, {passive:false});
+    offsetX = (worldX * newZoom / zoom) - mx;
+    offsetY = (worldY * newZoom / zoom) - my;
 
-  // Color picker popup logic
-  grid.addEventListener('click', e => {
-    // Ignore if clicking on color picker popup
-    if(e.target === colorPicker || e.target === colorConfirmBtn || e.target === colorCancelBtn) return;
+    zoom = newZoom;
 
-    const cellEl = e.target.closest('.cell');
-    if(!cellEl) return;
+    // Clamp offsets
+    offsetX = Math.min(Math.max(offsetX, 0), GRID_SIZE * CELL_SIZE_BASE * zoom - canvas.width);
+    offsetY = Math.min(Math.max(offsetY, 0), GRID_SIZE * CELL_SIZE_BASE * zoom - canvas.height);
 
-    const x = parseInt(cellEl.dataset.gridX);
-    const y = parseInt(cellEl.dataset.gridY);
-    if(!x && x !== 0) return;
-    if(!y && y !== 0) return;
+    draw();
+  }, { passive: false });
 
-    const key = x + '_' + y;
-    if(coloredSquares[key]){
-      alert("This square is already colored and cannot be changed.");
-      return;
-    }
+  // Initial draw
+  draw();
 
-    selectedCell = {x,y};
-
-    // Show popup
-    colorPicker.value = "#ff0000";
-    colorPopup.style.display = 'block';
+  // Resize handling
+  window.addEventListener('resize', () => {
+    resizeCanvas();
+    draw();
   });
-
-  colorConfirmBtn.addEventListener('click', () => {
-    if(!selectedCell) return;
-    const key = selectedCell.x + '_' + selectedCell.y;
-    const color = colorPicker.value;
-    coloredSquares[key] = color;
-    updateVisibleCells();
-    drawMinimap();
-    sendColorUpdate(selectedCell.x, selectedCell.y, color);
-    selectedCell = null;
-    colorPopup.style.display = 'none';
-  });
-  colorCancelBtn.addEventListener('click', () => {
-    selectedCell = null;
-    colorPopup.style.display = 'none';
-  });
-
-  // Minimap drawing
-  function drawMinimap() {
-    minimap.width = minimap.clientWidth;
-    minimap.height = minimap.clientHeight;
-    const ctx = minimapCtx;
-    ctx.clearRect(0, 0, minimap.width, minimap.height);
-
-    // Draw colored pixels
-    const scaleX = minimap.width / GRID_SIZE;
-    const scaleY = minimap.height / GRID_SIZE;
-    ctx.fillStyle = 'gray';
-    for(const key in coloredSquares){
-      const [x, y] = key.split('_').map(Number);
-      ctx.fillStyle = coloredSquares[key];
-      ctx.fillRect(x * scaleX, y * scaleY, scaleX, scaleY);
-    }
-
-    // Draw viewport rectangle
-    const viewX = -offsetX / (CELL_SIZE * scale) * scaleX;
-    const viewY = -offsetY / (CELL_SIZE * scale) * scaleY;
-    const viewW = VISIBLE_CELLS / GRID_SIZE * minimap.width;
-    const viewH = VISIBLE_CELLS / GRID_SIZE * minimap.height;
-
-    ctx.strokeStyle = 'red';
-    ctx.lineWidth = 2;
-    ctx.strokeRect(viewX, viewY, viewW, viewH);
-  }
-
-  drawMinimap();
-
-  // --- WebSocket for real-time updates ---
-
-  // Replace this URL with your backend WS URL (Replit or your server)
-  const WS_URL = 'ws://localhost:8765';
-
-  let ws = new WebSocket(WS_URL);
-
-  ws.onopen = () => {
-    console.log('Connected to server');
-    // Request current colored squares state
-    ws.send(JSON.stringify({type: 'request_state'}));
-  };
-  ws.onmessage = (event) => {
-    const data = JSON.parse(event.data);
-    if(data.type === 'state'){
-      // Full state update
-      Object.assign(coloredSquares, data.coloredSquares);
-      updateVisibleCells();
-      drawMinimap();
-    } else if(data.type === 'color_update'){
-      // New colored square from other user
-      const key = data.x + '_' + data.y;
-      coloredSquares[key] = data.color;
-      updateVisibleCells();
-      drawMinimap();
-    }
-  };
-  ws.onclose = () => {
-    console.log('Disconnected from server');
-  };
-  ws.onerror = (err) => {
-    console.error('WebSocket error', err);
-  };
-
-  function sendColorUpdate(x, y, color) {
-    if(ws.readyState === WebSocket.OPEN){
-      ws.send(JSON.stringify({type:'color_update', x, y, color}));
-    }
-  }
-
+})();
 </script>
 </body>
 </html>
