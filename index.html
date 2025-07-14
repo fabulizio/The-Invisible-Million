@@ -1,246 +1,118 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Zoomable Grid with Legend</title>
-<style>
-  html, body {
-    margin: 0; padding: 0; height: 100%; background: black; color: white; font-family: monospace;
-    user-select: none;
-    overflow: hidden;
-  }
-  #container {
-    position: relative;
-    width: 100vw; height: 100vh;
-    display: flex; flex-direction: column;
-  }
-  #legendX {
-    height: 30px;
-    background: #222;
-    color: #ccc;
-    border-bottom: 2px solid white;
-    display: flex;
-    font-size: 12px;
-    line-height: 30px;
-    overflow: hidden;
-    user-select: none;
-  }
-  #legendX > div {
-    flex-shrink: 0;
-    width: 40px;
-    text-align: center;
-    border-left: 1px solid #555;
-  }
-  #legendX > div:first-child {
-    border-left: none;
-  }
-  #main {
-    flex: 1;
-    display: flex;
-    background: black;
-    overflow: hidden;
-  }
-  #legendY {
-    width: 40px;
-    background: #222;
-    color: #ccc;
-    border-right: 2px solid white;
-    font-size: 12px;
-    line-height: 40px;
-    text-align: right;
-    padding-right: 4px;
-    user-select: none;
-  }
-  #gridContainer {
-    flex: 1;
-    background: #333;
-    border: 4px solid white;
-    position: relative;
-    overflow: hidden;
-    cursor: grab;
-  }
-  #gridCanvas {
-    display: block;
-    background: #333;
-    image-rendering: pixelated;
-  }
-  /* Hide scrollbar */
-  #gridContainer::-webkit-scrollbar {
-    display: none;
-  }
-</style>
-</head>
-<body>
-<div id="container">
-  <div id="legendX"></div>
-  <div id="main">
-    <div id="legendY"></div>
-    <div id="gridContainer">
-      <canvas id="gridCanvas" width="800" height="800"></canvas>
-    </div>
-  </div>
-</div>
-
-<script>
-(() => {
-  const canvas = document.getElementById('gridCanvas');
-  const ctx = canvas.getContext('2d');
-  const legendX = document.getElementById('legendX');
-  const legendY = document.getElementById('legendY');
-  const gridContainer = document.getElementById('gridContainer');
-
-  const GRID_SIZE = 1000;  // 1000x1000 grid
-  const CELL_SIZE_BASE = 20; // base cell size in px at zoom=1
-
-  let zoom = 1;
-  let offsetX = 0;
-  let offsetY = 0;
-
-  // For dragging
-  let isDragging = false;
-  let dragStartX, dragStartY;
-  let dragOffsetX, dragOffsetY;
-
-  // Set canvas size to container size
-  function resizeCanvas() {
-    canvas.width = gridContainer.clientWidth;
-    canvas.height = gridContainer.clientHeight;
-  }
-  resizeCanvas();
-
-  // Draw grid and legend
-  function draw() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-    const cellSize = CELL_SIZE_BASE * zoom;
-
-    // Calculate visible grid range
-    const startCol = Math.floor(offsetX / cellSize);
-    const startRow = Math.floor(offsetY / cellSize);
-    const visibleCols = Math.ceil(canvas.width / cellSize) + 1;
-    const visibleRows = Math.ceil(canvas.height / cellSize) + 1;
-
-    // Draw background
-    ctx.fillStyle = '#333';
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-    // Draw vertical grid lines
-    ctx.strokeStyle = '#bbb'; // light grey
-    ctx.lineWidth = 1;
-    ctx.beginPath();
-    for(let c = 0; c <= visibleCols; c++) {
-      const x = Math.round(c * cellSize - (offsetX % cellSize));
-      ctx.moveTo(x, 0);
-      ctx.lineTo(x, canvas.height);
-    }
-    // Draw horizontal grid lines
-    for(let r = 0; r <= visibleRows; r++) {
-      const y = Math.round(r * cellSize - (offsetY % cellSize));
-      ctx.moveTo(0, y);
-      ctx.lineTo(canvas.width, y);
-    }
-    ctx.stroke();
-
-    // Draw coordinates legend content
-    drawLegend(startCol, visibleCols, startRow, visibleRows, cellSize);
-
-    // Draw fixed white bold outline is handled by CSS border on gridContainer
-  }
-
-  function drawLegend(startCol, visibleCols, startRow, visibleRows, cellSize) {
-    // Draw X axis legend
-    legendX.innerHTML = '';
-    for(let c = startCol; c < startCol + visibleCols; c++) {
-      if(c < 0 || c >= GRID_SIZE) {
-        legendX.appendChild(createLegendCell(''));
-      } else if (c % 10 === 0) {
-        legendX.appendChild(createLegendCell(c));
-      } else {
-        legendX.appendChild(createLegendCell(''));
+        offsetX -= (midX - offsetX) * (zoom / oldZoom - 1);
+        offsetY -= (midY - offsetY) * (zoom / oldZoom - 1);
+        clampOffset();
+        saveView();
       }
+      lastTouchDist = dist;
     }
+  }, {passive:false});
+  mainCanvas.addEventListener('touchend', e => {
+    if(e.touches.length < 2) {
+      lastTouchDist = null;
+    }
+  });
 
-    // Draw Y axis legend
-    legendY.innerHTML = '';
-    for(let r = startRow; r < startRow + visibleRows; r++) {
-      if(r < 0 || r >= GRID_SIZE) {
-        legendY.appendChild(createLegendCell(''));
-      } else if (r % 10 === 0) {
-        legendY.appendChild(createLegendCell(r));
-      } else {
-        legendY.appendChild(createLegendCell(''));
-      }
+  function getTouchDistance(t1, t2) {
+    const dx = t1.clientX - t2.clientX;
+    const dy = t1.clientY - t2.clientY;
+    return Math.sqrt(dx*dx + dy*dy);
+  }
+
+  // Double tap / double click fullscreen toggle
+  let lastTap = 0;
+  mainCanvas.addEventListener('touchend', e => {
+    const currentTime = new Date().getTime();
+    const tapLength = currentTime - lastTap;
+    if(tapLength < 300 && tapLength > 0) {
+      toggleFullscreen();
+      e.preventDefault();
+    }
+    lastTap = currentTime;
+  });
+
+  mainCanvas.addEventListener('dblclick', e => {
+    toggleFullscreen();
+  });
+
+  function toggleFullscreen() {
+    if (!document.fullscreenElement) {
+      document.documentElement.requestFullscreen().catch(err => {
+        alert(`Error attempting to enable fullscreen: ${err.message}`);
+      });
+    } else {
+      document.exitFullscreen();
     }
   }
 
-  function createLegendCell(text) {
-    const div = document.createElement('div');
-    div.style.width = '40px';
-    div.style.height = '30px';
-    div.style.lineHeight = '30px';
-    div.style.textAlign = 'center';
-    div.style.userSelect = 'none';
-    div.textContent = text;
-    return div;
-  }
-
-  // Drag to pan grid
-  gridContainer.addEventListener('mousedown', e => {
-    isDragging = true;
-    dragStartX = e.clientX;
-    dragStartY = e.clientY;
-    dragOffsetX = offsetX;
-    dragOffsetY = offsetY;
-    gridContainer.style.cursor = 'grabbing';
-  });
-  window.addEventListener('mouseup', () => {
-    isDragging = false;
-    gridContainer.style.cursor = 'grab';
-  });
-  window.addEventListener('mousemove', e => {
-    if(isDragging) {
-      offsetX = Math.min(Math.max(dragOffsetX - (e.clientX - dragStartX), 0), GRID_SIZE * CELL_SIZE_BASE * zoom - canvas.width);
-      offsetY = Math.min(Math.max(dragOffsetY - (e.clientY - dragStartY), 0), GRID_SIZE * CELL_SIZE_BASE * zoom - canvas.height);
-      draw();
-    }
-  });
-
-  // Zoom with mouse wheel
-  gridContainer.addEventListener('wheel', e => {
+  // Minimap interaction: drag viewport rect
+  minimapCanvas.addEventListener('pointerdown', e => {
     e.preventDefault();
-    const zoomStep = 0.1;
-    let newZoom = zoom - e.deltaY * zoomStep / 100;
-    newZoom = Math.min(Math.max(newZoom, 0.1), 5);
+    const rect = minimapCanvas.getBoundingClientRect();
+    const scaleX = minimapCanvas.width / (GRID_SIZE * CELL_SIZE);
+    const scaleY = minimapCanvas.height / (GRID_SIZE * CELL_SIZE);
+    const scale = Math.min(scaleX, scaleY);
 
-    // To zoom relative to mouse pointer
-    const rect = canvas.getBoundingClientRect();
+    // Calculate viewport rectangle
+    const viewX = -offsetX * scale / zoom;
+    const viewY = -offsetY * scale / zoom;
+    const viewW = minimapCanvas.width / zoom;
+    const viewH = minimapCanvas.height / zoom;
+
     const mx = e.clientX - rect.left;
     const my = e.clientY - rect.top;
 
-    const worldX = offsetX + mx;
-    const worldY = offsetY + my;
-
-    offsetX = (worldX * newZoom / zoom) - mx;
-    offsetY = (worldY * newZoom / zoom) - my;
-
-    zoom = newZoom;
-
-    // Clamp offsets
-    offsetX = Math.min(Math.max(offsetX, 0), GRID_SIZE * CELL_SIZE_BASE * zoom - canvas.width);
-    offsetY = Math.min(Math.max(offsetY, 0), GRID_SIZE * CELL_SIZE_BASE * zoom - canvas.height);
-
-    draw();
-  }, { passive: false });
-
-  // Initial draw
-  draw();
-
-  // Resize handling
-  window.addEventListener('resize', () => {
-    resizeCanvas();
-    draw();
+    if (mx >= viewX && mx <= viewX + viewW && my >= viewY && my <= viewY + viewH) {
+      dragCell = {startX: mx, startY: my, offsetX, offsetY};
+      minimapCanvas.setPointerCapture(e.pointerId);
+    }
   });
+  minimapCanvas.addEventListener('pointermove', e => {
+    if (!dragCell) return;
+    e.preventDefault();
+    const rect = minimapCanvas.getBoundingClientRect();
+    const scaleX = minimapCanvas.width / (GRID_SIZE * CELL_SIZE);
+    const scaleY = minimapCanvas.height / (GRID_SIZE * CELL_SIZE);
+    const scale = Math.min(scaleX, scaleY);
+
+    const mx = e.clientX - rect.left;
+    const my = e.clientY - rect.top;
+    const dx = mx - dragCell.startX;
+    const dy = my - dragCell.startY;
+
+    // Translate dx, dy in pixels on main canvas
+    const panDx = -dx * zoom / scale;
+    const panDy = -dy * zoom / scale;
+
+    offsetX = dragCell.offsetX + panDx;
+    offsetY = dragCell.offsetY + panDy;
+    clampOffset();
+    saveView();
+  });
+  minimapCanvas.addEventListener('pointerup', e => {
+    dragCell = null;
+    minimapCanvas.releasePointerCapture(e.pointerId);
+  });
+  minimapCanvas.addEventListener('pointercancel', e => {
+    dragCell = null;
+    minimapCanvas.releasePointerCapture(e.pointerId);
+  });
+
+  // Responsive resize
+  window.addEventListener('resize', () => {
+    resizeCanvases();
+    clampOffset();
+  });
+
+  // Initial setup
+  function init() {
+    resizeCanvases();
+    loadCells();
+    loadView();
+    clampOffset();
+    animate();
+  }
+  init();
+
 })();
 </script>
 </body>
