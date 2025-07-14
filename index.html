@@ -198,9 +198,9 @@
     const SCALE_FACTOR = GRID_SIZE / MINIMAP_SIZE;
 
     // Zoom and offset from localStorage or defaults
-    let zoom = parseFloat(localStorage.getItem("zoom")) || 5;
-    let offsetX = parseFloat(localStorage.getItem("offsetX")) || 0;
-    let offsetY = parseFloat(localStorage.getItem("offsetY")) || 0;
+    let zoom = 5;
+    let offsetX = 0;
+    let offsetY = 0;
 
     // Main canvas setup
     const canvas = document.getElementById('mainCanvas');
