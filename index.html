@@ -3,249 +3,326 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>The Invisible Million - Zoomable Grid with Minimap</title>
+<title>Zoomable Grid with Color Picker</title>
 <style>
-  html, body {
-    margin: 0; padding: 0; height: 100%; overflow: hidden; background: #000;
-    user-select: none; -webkit-user-select: none; -moz-user-select: none;
-  }
-  #container {
+  body, html { margin:0; height:100%; overflow:hidden; font-family: Arial, sans-serif; }
+  #frame {
     position: relative;
-    width: 100vw;
-    height: 100vh;
+    width: 100vw; height: 100vh;
+    background: #eee;
     overflow: hidden;
-    touch-action: none;
   }
-  canvas {
+  #grid {
     position: absolute;
-    top: 0; left: 0;
-    display: block;
+    top:0; left:0;
+    transform-origin: top left;
+    cursor: pointer;
   }
-  #mainGrid {
-    background-color: #111;
-    width: 100vw;
-    height: 100vh;
+  .cell {
+    box-sizing: border-box;
+    border: 1px solid #ccc;
+    width: 20px;
+    height: 20px;
+    float: left;
+    background: white;
   }
   #minimap {
+    position: absolute;
+    bottom: 20px;
+    right: 20px;
     width: 200px;
     height: 200px;
-    position: absolute;
-    top: 10px;
-    right: 10px;
-    background: rgba(255,255,255,0.9);
-    border: 2px solid #333;
-    box-sizing: border-box;
-    z-index: 10;
+    background: white;
+    border: 1px solid black;
+    opacity: 0.8;
+    z-index: 1000;
+    overflow: hidden;
   }
-  #instructions {
-    position: absolute;
-    bottom: 10px;
-    left: 10px;
-    color: white;
-    font-family: sans-serif;
-    font-size: 14px;
-    background: rgba(0,0,0,0.5);
-    padding: 8px 12px;
-    border-radius: 8px;
-    max-width: 300px;
-    user-select: none;
+  #colorPickerPopup {
+    position: fixed;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    background: white;
+    border: 2px solid #333;
+    padding: 15px;
+    box-shadow: 0 0 10px #000a;
+    display: none;
+    z-index: 2000;
+  }
+  #colorPickerPopup input[type=color] {
+    width: 100px;
+    height: 40px;
+    border:none;
+    cursor:pointer;
+  }
+  #colorPickerPopup button {
+    margin-left: 10px;
+    padding: 6px 12px;
   }
 </style>
 </head>
 <body>
-  <div id="container">
-    <canvas id="mainGrid"></canvas>
-    <canvas id="minimap" width="200" height="200"></canvas>
-    <div id="instructions">
-      Drag to pan, mouse wheel to zoom. Click minimap to jump viewport.
-    </div>
-  </div>
+<div id="frame">
+  <div id="grid"></div>
+  <canvas id="minimap"></canvas>
+</div>
+
+<!-- Color picker popup -->
+<div id="colorPickerPopup">
+  <label for="colorPicker">Choose color:</label>
+  <input type="color" id="colorPicker" value="#ff0000" />
+  <button id="colorConfirmBtn">OK</button>
+  <button id="colorCancelBtn">Cancel</button>
+</div>
 
 <script>
-  (() => {
-    const GRID_SIZE = 1000;   // grid is 1000 x 1000 cells
-    const CELL_SIZE = 20;     // each cell 20px base size
-    const MIN_ZOOM = 0.1;
-    const MAX_ZOOM = 10;
+  // Constants
+  const GRID_SIZE = 1000; // 1000x1000 grid
+  const CELL_SIZE = 20;   // px
+  let scale = 1;
+  let offsetX = 0;
+  let offsetY = 0;
 
-    const canvas = document.getElementById('mainGrid');
-    const ctx = canvas.getContext('2d');
+  // Grid data: store colors for squares (key: "x_y" => color string)
+  const coloredSquares = {};
 
-    const minimap = document.getElementById('minimap');
-    const miniCtx = minimap.getContext('2d');
+  // Selected cell for coloring
+  let selectedCell = null;
 
-    let width, height;
+  // DOM refs
+  const frame = document.getElementById('frame');
+  const grid = document.getElementById('grid');
+  const minimap = document.getElementById('minimap');
+  const colorPopup = document.getElementById('colorPickerPopup');
+  const colorPicker = document.getElementById('colorPicker');
+  const colorConfirmBtn = document.getElementById('colorConfirmBtn');
+  const colorCancelBtn = document.getElementById('colorCancelBtn');
 
-    // Viewport offset (in grid pixels) and zoom level
-    let offsetX = 0;
-    let offsetY = 0;
-    let zoom = 1;
+  // Initialize grid container size
+  grid.style.width = (GRID_SIZE * CELL_SIZE) + 'px';
+  grid.style.height = (GRID_SIZE * CELL_SIZE) + 'px';
 
-    let isDragging = false;
-    let dragStartX = 0;
-    let dragStartY = 0;
+  // Create canvas context for minimap
+  const minimapCtx = minimap.getContext('2d');
 
-    // Resize main canvas to full viewport size
-    function resize() {
-      width = canvas.width = window.innerWidth;
-      height = canvas.height = window.innerHeight;
-      draw();
-    }
-    window.addEventListener('resize', resize);
-    resize();
+  // We'll not create 1 million divs — too heavy.
+  // Instead we will use a virtual approach for visible part.
 
-    // Draw the zoomable main grid
-    function drawGrid() {
-      ctx.clearRect(0, 0, width, height);
+  // For demo, let's create a smaller grid (50x50) with cells as divs for interaction,
+  // but your full grid would need canvas or optimized approach for performance.
 
-      ctx.fillStyle = '#222';
-      ctx.fillRect(0, 0, width, height);
+  const VISIBLE_CELLS = 50;
+  const visibleGridSizePx = VISIBLE_CELLS * CELL_SIZE;
 
-      // Calculate visible grid cell range
-      const visibleCols = Math.ceil(width / (CELL_SIZE * zoom)) + 2;
-      const visibleRows = Math.ceil(height / (CELL_SIZE * zoom)) + 2;
+  // We'll create VISIBLE_CELLS^2 div cells inside grid container,
+  // and update their positions on pan/zoom.
 
-      const startCol = Math.floor(offsetX / CELL_SIZE);
-      const startRow = Math.floor(offsetY / CELL_SIZE);
+  // Generate visible cells pool
+  const visibleCells = [];
+  for(let i=0; i<VISIBLE_CELLS*VISIBLE_CELLS; i++) {
+    const cell = document.createElement('div');
+    cell.classList.add('cell');
+    grid.appendChild(cell);
+    visibleCells.push(cell);
+  }
 
-      ctx.strokeStyle = '#444';
-      ctx.lineWidth = 1;
+  // Convert page coords to grid coords (x,y of cell)
+  function pageToGrid(x, y) {
+    const gx = Math.floor((x - offsetX) / (CELL_SIZE * scale));
+    const gy = Math.floor((y - offsetY) / (CELL_SIZE * scale));
+    return {x: gx, y: gy};
+  }
 
-      // Draw grid cells as dark squares
-      for (let row = startRow; row < startRow + visibleRows; row++) {
-        if (row < 0 || row >= GRID_SIZE) continue;
-        for (let col = startCol; col < startCol + visibleCols; col++) {
-          if (col < 0 || col >= GRID_SIZE) continue;
-
-          const x = (col * CELL_SIZE - offsetX) * zoom;
-          const y = (row * CELL_SIZE - offsetY) * zoom;
-
-          ctx.fillStyle = '#333';
-          ctx.fillRect(x, y, CELL_SIZE * zoom, CELL_SIZE * zoom);
-
-          // Optional: draw cell borders
-          ctx.strokeRect(x, y, CELL_SIZE * zoom, CELL_SIZE * zoom);
+  // Update visible cells positions and colors based on current offset and scale
+  function updateVisibleCells() {
+    const startX = Math.floor(-offsetX / (CELL_SIZE * scale));
+    const startY = Math.floor(-offsetY / (CELL_SIZE * scale));
+    for(let i=0; i<VISIBLE_CELLS; i++) {
+      for(let j=0; j<VISIBLE_CELLS; j++) {
+        const index = i * VISIBLE_CELLS + j;
+        const cell = visibleCells[index];
+        const gridX = startX + j;
+        const gridY = startY + i;
+        if(gridX < 0 || gridY < 0 || gridX >= GRID_SIZE || gridY >= GRID_SIZE){
+          cell.style.display = 'none';
+          continue;
         }
+        cell.style.display = 'block';
+        cell.style.width = (CELL_SIZE * scale) + 'px';
+        cell.style.height = (CELL_SIZE * scale) + 'px';
+        cell.style.position = 'absolute';
+        cell.style.left = (offsetX + gridX * CELL_SIZE * scale) + 'px';
+        cell.style.top = (offsetY + gridY * CELL_SIZE * scale) + 'px';
+
+        // Set color if any
+        const key = gridX + '_' + gridY;
+        if(coloredSquares[key]){
+          cell.style.backgroundColor = coloredSquares[key];
+          cell.style.borderColor = 'black';
+        } else {
+          cell.style.backgroundColor = 'white';
+          cell.style.borderColor = '#ccc';
+        }
+        cell.dataset.gridX = gridX;
+        cell.dataset.gridY = gridY;
       }
     }
+  }
 
-    // Draw the minimap
-    function drawMinimap() {
-      miniCtx.clearRect(0, 0, minimap.width, minimap.height);
+  // Initial render
+  updateVisibleCells();
 
-      // Background
-      miniCtx.fillStyle = '#ddd';
-      miniCtx.fillRect(0, 0, minimap.width, minimap.height);
-
-      // Grid fill
-      miniCtx.fillStyle = '#999';
-      miniCtx.fillRect(0, 0, minimap.width, minimap.height);
-
-      // Calculate scale from grid to minimap
-      const scale = minimap.width / (GRID_SIZE * CELL_SIZE);
-
-      // Draw viewport rectangle in red
-      miniCtx.strokeStyle = 'red';
-      miniCtx.lineWidth = 2;
-
-      // viewport in grid pixels:
-      const viewportWidthInGridPx = width / zoom;
-      const viewportHeightInGridPx = height / zoom;
-
-      miniCtx.strokeRect(
-        offsetX * scale,
-        offsetY * scale,
-        viewportWidthInGridPx * scale,
-        viewportHeightInGridPx * scale
-      );
-    }
-
-    // Main draw function
-    function draw() {
-      drawGrid();
+  // Handle pan with mouse drag
+  let isPanning = false;
+  let panStart = {x:0,y:0};
+  frame.addEventListener('mousedown', e => {
+    isPanning = true;
+    panStart = {x: e.clientX - offsetX, y: e.clientY - offsetY};
+  });
+  window.addEventListener('mouseup', e => {
+    isPanning = false;
+  });
+  window.addEventListener('mousemove', e => {
+    if(isPanning){
+      offsetX = e.clientX - panStart.x;
+      offsetY = e.clientY - panStart.y;
+      updateVisibleCells();
       drawMinimap();
     }
+  });
 
-    // Mouse dragging
-    canvas.addEventListener('mousedown', e => {
-      isDragging = true;
-      dragStartX = e.clientX;
-      dragStartY = e.clientY;
-      canvas.style.cursor = 'grabbing';
-    });
+  // Handle zoom with wheel
+  frame.addEventListener('wheel', e => {
+    e.preventDefault();
+    let oldScale = scale;
+    if(e.deltaY < 0) scale *= 1.1;
+    else scale /= 1.1;
+    scale = Math.min(Math.max(0.1, scale), 5);
 
-    window.addEventListener('mouseup', e => {
-      isDragging = false;
-      canvas.style.cursor = 'default';
-    });
+    // Zoom around cursor
+    const rect = frame.getBoundingClientRect();
+    const cx = e.clientX - rect.left;
+    const cy = e.clientY - rect.top;
 
-    window.addEventListener('mousemove', e => {
-      if (!isDragging) return;
-      const dx = (e.clientX - dragStartX) / zoom;
-      const dy = (e.clientY - dragStartY) / zoom;
+    offsetX = cx - ((cx - offsetX) / oldScale) * scale;
+    offsetY = cy - ((cy - offsetY) / oldScale) * scale;
 
-      offsetX -= dx;
-      offsetY -= dy;
+    updateVisibleCells();
+    drawMinimap();
+  }, {passive:false});
 
-      // Clamp offset so we don't pan outside grid bounds
-      offsetX = Math.min(Math.max(0, offsetX), GRID_SIZE * CELL_SIZE - width / zoom);
-      offsetY = Math.min(Math.max(0, offsetY), GRID_SIZE * CELL_SIZE - height / zoom);
+  // Color picker popup logic
+  grid.addEventListener('click', e => {
+    // Ignore if clicking on color picker popup
+    if(e.target === colorPicker || e.target === colorConfirmBtn || e.target === colorCancelBtn) return;
 
-      dragStartX = e.clientX;
-      dragStartY = e.clientY;
+    const cellEl = e.target.closest('.cell');
+    if(!cellEl) return;
 
-      draw();
-    });
+    const x = parseInt(cellEl.dataset.gridX);
+    const y = parseInt(cellEl.dataset.gridY);
+    if(!x && x !== 0) return;
+    if(!y && y !== 0) return;
 
-    // Zoom on wheel event
-    canvas.addEventListener('wheel', e => {
-      e.preventDefault();
+    const key = x + '_' + y;
+    if(coloredSquares[key]){
+      alert("This square is already colored and cannot be changed.");
+      return;
+    }
 
-      const mouseX = e.clientX;
-      const mouseY = e.clientY;
+    selectedCell = {x,y};
 
-      // Convert mouse pixel position to grid pixel coordinates before zoom
-      const beforeZoomX = offsetX + mouseX / zoom;
-      const beforeZoomY = offsetY + mouseY / zoom;
+    // Show popup
+    colorPicker.value = "#ff0000";
+    colorPopup.style.display = 'block';
+  });
 
-      const zoomFactor = e.deltaY < 0 ? 1.1 : 0.9;
+  colorConfirmBtn.addEventListener('click', () => {
+    if(!selectedCell) return;
+    const key = selectedCell.x + '_' + selectedCell.y;
+    const color = colorPicker.value;
+    coloredSquares[key] = color;
+    updateVisibleCells();
+    drawMinimap();
+    sendColorUpdate(selectedCell.x, selectedCell.y, color);
+    selectedCell = null;
+    colorPopup.style.display = 'none';
+  });
+  colorCancelBtn.addEventListener('click', () => {
+    selectedCell = null;
+    colorPopup.style.display = 'none';
+  });
 
-      zoom *= zoomFactor;
-      zoom = Math.min(Math.max(zoom, MIN_ZOOM), MAX_ZOOM);
+  // Minimap drawing
+  function drawMinimap() {
+    minimap.width = minimap.clientWidth;
+    minimap.height = minimap.clientHeight;
+    const ctx = minimapCtx;
+    ctx.clearRect(0, 0, minimap.width, minimap.height);
 
-      // Adjust offset so zoom is centered on mouse position
-      offsetX = beforeZoomX - mouseX / zoom;
-      offsetY = beforeZoomY - mouseY / zoom;
+    // Draw colored pixels
+    const scaleX = minimap.width / GRID_SIZE;
+    const scaleY = minimap.height / GRID_SIZE;
+    ctx.fillStyle = 'gray';
+    for(const key in coloredSquares){
+      const [x, y] = key.split('_').map(Number);
+      ctx.fillStyle = coloredSquares[key];
+      ctx.fillRect(x * scaleX, y * scaleY, scaleX, scaleY);
+    }
 
-      // Clamp offset inside bounds
-      offsetX = Math.min(Math.max(0, offsetX), GRID_SIZE * CELL_SIZE - width / zoom);
-      offsetY = Math.min(Math.max(0, offsetY), GRID_SIZE * CELL_SIZE - height / zoom);
+    // Draw viewport rectangle
+    const viewX = -offsetX / (CELL_SIZE * scale) * scaleX;
+    const viewY = -offsetY / (CELL_SIZE * scale) * scaleY;
+    const viewW = VISIBLE_CELLS / GRID_SIZE * minimap.width;
+    const viewH = VISIBLE_CELLS / GRID_SIZE * minimap.height;
 
-      draw();
-    }, { passive: false });
+    ctx.strokeStyle = 'red';
+    ctx.lineWidth = 2;
+    ctx.strokeRect(viewX, viewY, viewW, viewH);
+  }
 
-    // Click minimap to reposition main viewport
-    minimap.addEventListener('click', e => {
-      const rect = minimap.getBoundingClientRect();
-      const clickX = e.clientX - rect.left;
-      const clickY = e.clientY - rect.top;
+  drawMinimap();
 
-      const scale = minimap.width / (GRID_SIZE * CELL_SIZE);
+  // --- WebSocket for real-time updates ---
 
-      // Center viewport around clicked point
-      const targetX = clickX / scale - width / (2 * zoom);
-      const targetY = clickY / scale - height / (2 * zoom);
+  // Replace this URL with your backend WS URL (Replit or your server)
+  const WS_URL = 'ws://localhost:8765';
 
-      offsetX = Math.min(Math.max(0, targetX), GRID_SIZE * CELL_SIZE - width / zoom);
-      offsetY = Math.min(Math.max(0, targetY), GRID_SIZE * CELL_SIZE - height / zoom);
+  let ws = new WebSocket(WS_URL);
 
-      draw();
-    });
+  ws.onopen = () => {
+    console.log('Connected to server');
+    // Request current colored squares state
+    ws.send(JSON.stringify({type: 'request_state'}));
+  };
+  ws.onmessage = (event) => {
+    const data = JSON.parse(event.data);
+    if(data.type === 'state'){
+      // Full state update
+      Object.assign(coloredSquares, data.coloredSquares);
+      updateVisibleCells();
+      drawMinimap();
+    } else if(data.type === 'color_update'){
+      // New colored square from other user
+      const key = data.x + '_' + data.y;
+      coloredSquares[key] = data.color;
+      updateVisibleCells();
+      drawMinimap();
+    }
+  };
+  ws.onclose = () => {
+    console.log('Disconnected from server');
+  };
+  ws.onerror = (err) => {
+    console.error('WebSocket error', err);
+  };
 
-    // Initial draw
-    draw();
+  function sendColorUpdate(x, y, color) {
+    if(ws.readyState === WebSocket.OPEN){
+      ws.send(JSON.stringify({type:'color_update', x, y, color}));
+    }
+  }
 
-  })();
 </script>
 </body>
 </html>
