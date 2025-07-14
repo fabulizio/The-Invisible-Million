@@ -12,7 +12,7 @@
   body, html {
     margin: 0; padding: 0; height: 100vh; overflow: hidden; 
     font-family: Arial, sans-serif;
-    background: #111;
+    background: #000;
     color: #eee;
   }
   a {
@@ -31,7 +31,7 @@
   }
   #sidebar {
     width: 250px;
-    background: #222;
+    background: #111;
     border-right: 1px solid #444;
     display: flex;
     flex-direction: column;
@@ -62,7 +62,7 @@
   /* Main area */
   #main {
     flex-grow: 1;
-    background: #111;
+    background: #000;
     position: relative;
     overflow: hidden;
     display: flex;
@@ -71,7 +71,7 @@
 
   /* Top bar with donation + fullscreen */
   #topbar {
-    background: #222;
+    background: #111;
     padding: 8px 12px;
     display: flex;
     justify-content: flex-end;
@@ -97,22 +97,13 @@
     overflow: hidden;
     position: relative;
     touch-action: none;
-    background: #222;
+    background: #000;
   }
-  #grid {
+  #grid-canvas {
     position: absolute;
     top: 0; left: 0;
-    transform-origin: 0 0;
-    image-rendering: pixelated;
-  }
-  /* Each square */
-  .square {
-    width: 10px;
-    height: 10px;
-    box-sizing: border-box;
-    border: 1px solid #222;
-    float: left;
     user-select: none;
+    background: #000;
   }
 </style>
 </head>
@@ -136,7 +127,7 @@
       <button id="fullscreenBtn">Fullscreen</button>
     </div>
     <div id="grid-container">
-      <div id="grid"></div>
+      <canvas id="grid-canvas"></canvas>
     </div>
   </div>
 
@@ -144,142 +135,102 @@
 
 <script>
 (() => {
-  // Constants
   const GRID_SIZE = 1000;  // 1000x1000 squares
-  const SQUARE_SIZE = 10;  // 10px squares
-  const MIN_ZOOM = 0.1;
-  const MAX_ZOOM = 5;
+  const SQUARE_SIZE = 10;  // each square nominal size in pixels (at zoom = 1)
 
-  // DOM Elements
-  const grid = document.getElementById('grid');
+  // DOM elements
+  const canvas = document.getElementById('grid-canvas');
+  const ctx = canvas.getContext('2d');
   const gridContainer = document.getElementById('grid-container');
   const minimapContainer = document.getElementById('minimap-container');
   const donateBtn = document.getElementById('donateBtn');
   const fullscreenBtn = document.getElementById('fullscreenBtn');
 
-  // State for main grid
+  // State
   let zoom = 1;
   let offsetX = 0;
   let offsetY = 0;
   let isDragging = false;
   let dragStart = null;
 
-  // State for minimap
-  const minimapScale = 0.05; // minimap is 5% scale of full grid
+  // Minimap constants
+  const minimapScale = 0.05; // 5% scale
   const minimapWidth = GRID_SIZE * minimapScale;
   const minimapHeight = GRID_SIZE * minimapScale;
 
-  // Store colors of squares (default black)
-  const squares = new Array(GRID_SIZE * GRID_SIZE).fill('#222');
+  // Viewport rect in minimap coords
+  const viewportRect = { x: 0, y: 0, width: 0, height: 0 };
 
-  // Generate grid squares (just a lightweight way)
-  function createGrid() {
-    // We cannot create 1 million divs — will kill browser.
-    // Instead, use a canvas for performance.
+  // Setup canvas size
+  function resizeCanvas() {
+    const rect = gridContainer.getBoundingClientRect();
+    canvas.width = rect.width;
+    canvas.height = rect.height;
+    canvas.style.width = rect.width + 'px';
+    canvas.style.height = rect.height + 'px';
+    draw();
+  }
+  window.addEventListener('resize', resizeCanvas);
+  resizeCanvas();
 
-    // Replace #grid content with a canvas
-    const canvas = document.createElement('canvas');
-    canvas.width = GRID_SIZE * SQUARE_SIZE;
-    canvas.height = GRID_SIZE * SQUARE_SIZE;
-    canvas.style.position = 'absolute';
-    canvas.style.top = '0';
-    canvas.style.left = '0';
-    grid.replaceWith(canvas);
-    gridCanvas = canvas;
-    gridCtx = canvas.getContext('2d');
+  // Draw visible portion of grid
+  function draw() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    // Draw initial grid (black squares with faint grid lines)
-    for (let y = 0; y < GRID_SIZE; y++) {
-      for (let x = 0; x < GRID_SIZE; x++) {
-        gridCtx.fillStyle = squares[y * GRID_SIZE + x];
-        gridCtx.fillRect(x * SQUARE_SIZE, y * SQUARE_SIZE, SQUARE_SIZE, SQUARE_SIZE);
-        // gridCtx.strokeStyle = '#111';
-        // gridCtx.strokeRect(x * SQUARE_SIZE, y * SQUARE_SIZE, SQUARE_SIZE, SQUARE_SIZE);
+    // Fill background black
+    ctx.fillStyle = '#000';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    // Calculate visible area in grid coords
+    const viewLeft = -offsetX / zoom;
+    const viewTop = -offsetY / zoom;
+    const viewWidth = canvas.width / zoom;
+    const viewHeight = canvas.height / zoom;
+
+    // Calculate start/end squares to draw (clamp inside grid)
+    const startX = Math.max(0, Math.floor(viewLeft / SQUARE_SIZE));
+    const startY = Math.max(0, Math.floor(viewTop / SQUARE_SIZE));
+    const endX = Math.min(GRID_SIZE - 1, Math.ceil((viewLeft + viewWidth) / SQUARE_SIZE));
+    const endY = Math.min(GRID_SIZE - 1, Math.ceil((viewTop + viewHeight) / SQUARE_SIZE));
+
+    // Draw squares: dark grey fill (#333)
+    ctx.fillStyle = '#333';
+
+    for (let y = startY; y <= endY; y++) {
+      for (let x = startX; x <= endX; x++) {
+        const px = offsetX + x * SQUARE_SIZE * zoom;
+        const py = offsetY + y * SQUARE_SIZE * zoom;
+        const size = SQUARE_SIZE * zoom;
+        ctx.fillRect(px, py, size, size);
       }
     }
-  }
 
-  // Minimap: Use canvas
-  const minimapCanvas = document.createElement('canvas');
-  minimapCanvas.width = minimapWidth;
-  minimapCanvas.height = minimapHeight;
-  minimapCanvas.style.width = '100%';
-  minimapCanvas.style.height = 'auto';
-  minimapCanvas.style.display = 'block';
-  minimapContainer.appendChild(minimapCanvas);
-  const minimapCtx = minimapCanvas.getContext('2d');
+    // Draw grid lines: light grey (#ccc)
+    ctx.strokeStyle = '#ccc';
+    ctx.lineWidth = 1;
 
-  // Draw minimap base (black)
-  minimapCtx.fillStyle = '#000';
-  minimapCtx.fillRect(0, 0, minimapWidth, minimapHeight);
+    // Vertical lines
+    for (let x = startX; x <= endX + 1; x++) {
+      const px = offsetX + x * SQUARE_SIZE * zoom;
+      ctx.beginPath();
+      ctx.moveTo(px, offsetY + startY * SQUARE_SIZE * zoom);
+      ctx.lineTo(px, offsetY + (endY + 1) * SQUARE_SIZE * zoom);
+      ctx.stroke();
+    }
 
-  // Draw red viewport rectangle in minimap
-  const viewportRect = {
-    x: 0,
-    y: 0,
-    width: 0,
-    height: 0,
-  };
+    // Horizontal lines
+    for (let y = startY; y <= endY + 1; y++) {
+      const py = offsetY + y * SQUARE_SIZE * zoom;
+      ctx.beginPath();
+      ctx.moveTo(offsetX + startX * SQUARE_SIZE * zoom, py);
+      ctx.lineTo(offsetX + (endX + 1) * SQUARE_SIZE * zoom, py);
+      ctx.stroke();
+    }
 
-  // Track dragging minimap viewport
-  let minimapDragging = false;
-  let minimapDragStart = null;
-
-  // Initialize grid canvas
-  let gridCanvas, gridCtx;
-  createGrid();
-
-  // Resize grid canvas container
-  function resizeGridContainer() {
-    const rect = gridContainer.getBoundingClientRect();
-    gridCanvas.style.width = `${rect.width}px`;
-    gridCanvas.style.height = `${rect.height}px`;
-    updateGridTransform();
-  }
-  window.addEventListener('resize', resizeGridContainer);
-  resizeGridContainer();
-
-  // Apply transform to grid canvas for zoom and pan
-  function updateGridTransform() {
-    const transform = `translate(${offsetX}px, ${offsetY}px) scale(${zoom})`;
-    gridCanvas.style.transform = transform;
     updateMinimapViewport();
   }
 
-  // Update minimap viewport rectangle position and size based on current zoom & pan
-  function updateMinimapViewport() {
-    const containerRect = gridContainer.getBoundingClientRect();
-
-    // Viewport size in grid coordinates:
-    const viewWidth = containerRect.width / zoom;
-    const viewHeight = containerRect.height / zoom;
-
-    viewportRect.x = -offsetX / zoom * minimapScale;
-    viewportRect.y = -offsetY / zoom * minimapScale;
-    viewportRect.width = viewWidth * minimapScale;
-    viewportRect.height = viewHeight * minimapScale;
-
-    drawMinimap();
-  }
-
-  // Draw minimap with viewport rectangle
-  function drawMinimap() {
-    // Clear minimap
-    minimapCtx.clearRect(0, 0, minimapWidth, minimapHeight);
-
-    // Draw background (black)
-    minimapCtx.fillStyle = '#000';
-    minimapCtx.fillRect(0, 0, minimapWidth, minimapHeight);
-
-    // Draw viewport rectangle
-    minimapCtx.strokeStyle = 'red';
-    minimapCtx.lineWidth = 2;
-    minimapCtx.fillStyle = 'rgba(255,0,0,0.2)';
-    minimapCtx.fillRect(viewportRect.x, viewportRect.y, viewportRect.width, viewportRect.height);
-    minimapCtx.strokeRect(viewportRect.x, viewportRect.y, viewportRect.width, viewportRect.height);
-  }
-
-  // Handle dragging on main grid for panning
+  // Pan handling
   gridContainer.addEventListener('mousedown', (e) => {
     isDragging = true;
     dragStart = { x: e.clientX, y: e.clientY, offsetX, offsetY };
@@ -294,43 +245,41 @@
     const dy = e.clientY - dragStart.y;
     offsetX = dragStart.offsetX + dx;
     offsetY = dragStart.offsetY + dy;
-    updateGridTransform();
+    draw();
   });
 
-  // Handle zoom on wheel
+  // Zoom on wheel
   gridContainer.addEventListener('wheel', (e) => {
     e.preventDefault();
     const rect = gridContainer.getBoundingClientRect();
     const mouseX = e.clientX - rect.left;
     const mouseY = e.clientY - rect.top;
     const wheel = e.deltaY < 0 ? 1.1 : 0.9;
-    const newZoom = Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, zoom * wheel));
+    const newZoom = Math.min(5, Math.max(0.1, zoom * wheel));
     // Zoom towards mouse pointer
     offsetX -= (mouseX / zoom) * (newZoom - zoom);
     offsetY -= (mouseY / zoom) * (newZoom - zoom);
     zoom = newZoom;
-    updateGridTransform();
+    draw();
   }, { passive: false });
 
-  // Pinch to zoom support
+  // Pinch zoom
   let pinchStartDist = 0;
   let pinchStartZoom = 1;
-
   gridContainer.addEventListener('touchstart', (e) => {
     if (e.touches.length === 2) {
       pinchStartDist = getDistance(e.touches[0], e.touches[1]);
       pinchStartZoom = zoom;
     }
   });
-
   gridContainer.addEventListener('touchmove', (e) => {
     if (e.touches.length === 2) {
       e.preventDefault();
       const newDist = getDistance(e.touches[0], e.touches[1]);
       let newZoom = pinchStartZoom * (newDist / pinchStartDist);
-      newZoom = Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, newZoom));
+      newZoom = Math.min(5, Math.max(0.1, newZoom));
       zoom = newZoom;
-      updateGridTransform();
+      draw();
     }
   }, { passive: false });
 
@@ -340,17 +289,14 @@
     return Math.sqrt(dx * dx + dy * dy);
   }
 
-  // Double tap for fullscreen toggle (mobile)
+  // Double tap fullscreen toggle
   let lastTap = 0;
-  gridContainer.addEventListener('touchend', (e) => {
-    const currentTime = Date.now();
-    if (currentTime - lastTap < 300) {
-      toggleFullscreen();
-    }
-    lastTap = currentTime;
+  gridContainer.addEventListener('touchend', () => {
+    const now = Date.now();
+    if (now - lastTap < 300) toggleFullscreen();
+    lastTap = now;
   });
 
-  // Fullscreen button
   fullscreenBtn.addEventListener('click', toggleFullscreen);
 
   function toggleFullscreen() {
@@ -361,66 +307,89 @@
     }
   }
 
-  // Minimap interaction - click or drag viewport rectangle
-  minimapCanvas.addEventListener('mousedown', (e) => {
-    const rect = minimapCanvas.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
+  // --- Minimap setup ---
 
-    // Check if click inside viewport rect
-    if (
-      x >= viewportRect.x && x <= viewportRect.x + viewportRect.width &&
-      y >= viewportRect.y && y <= viewportRect.y + viewportRect.height
-    ) {
-      minimapDragging = true;
-      minimapDragStart = { x, y, offsetX, offsetY };
-    } else {
-      // Click outside viewport rect - jump viewport
-      moveViewportTo(x, y);
+  const minimapCanvas = document.createElement('canvas');
+  minimapCanvas.width = minimapWidth;
+  minimapCanvas.height = minimapHeight;
+  minimapCanvas.style.width = '100%';
+  minimapCanvas.style.height = 'auto';
+  minimapCanvas.style.display = 'block';
+  minimapContainer.appendChild(minimapCanvas);
+  const mmCtx = minimapCanvas.getContext('2d');
+
+  function drawMinimap() {
+    // Black background
+    mmCtx.fillStyle = '#000';
+    mmCtx.fillRect(0, 0, minimapCanvas.width, minimapCanvas.height);
+
+    // Draw all squares as dark grey (#333)
+    mmCtx.fillStyle = '#333';
+    mmCtx.fillRect(0, 0, minimapCanvas.width, minimapCanvas.height);
+
+    // Draw grid lines light grey (#ccc) every 10 squares (to reduce clutter)
+    mmCtx.strokeStyle = '#555';
+    mmCtx.lineWidth = 0.5;
+    const step = 10 * minimapScale * SQUARE_SIZE;
+
+    for (let x = 0; x <= minimapCanvas.width; x += step) {
+      mmCtx.beginPath();
+      mmCtx.moveTo(x, 0);
+      mmCtx.lineTo(x, minimapCanvas.height);
+      mmCtx.stroke();
     }
-  });
-  window.addEventListener('mouseup', () => {
-    minimapDragging = false;
-    minimapDragStart = null;
-  });
-  minimapCanvas.addEventListener('mousemove', (e) => {
-    if (!minimapDragging) return;
-    const rect = minimapCanvas.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
-    const dx = x - minimapDragStart.x;
-    const dy = y - minimapDragStart.y;
-
-    // Calculate new offsetX and offsetY based on drag delta
-    // Remember offsetX/Y are in pixels scaled by zoom
-    const moveX = -dx / minimapScale * zoom;
-    const moveY = -dy / minimapScale * zoom;
-
-    offsetX = minimapDragStart.offsetX + moveX;
-    offsetY = minimapDragStart.offsetY + moveY;
-    updateGridTransform();
-  });
-
-  // Click outside viewport rectangle on minimap moves viewport centered on click
-  function moveViewportTo(minimapX, minimapY) {
-    const containerRect = gridContainer.getBoundingClientRect();
-    const viewWidth = containerRect.width / zoom;
-    const viewHeight = containerRect.height / zoom;
-
-    // Calculate new offsetX, offsetY to center viewport at click
-    offsetX = -(minimapX / minimapScale) * zoom + containerRect.width / 2;
-    offsetY = -(minimapY / minimapScale) * zoom + containerRect.height / 2;
-
-    updateGridTransform();
+    for (let y = 0; y <= minimapCanvas.height; y += step) {
+      mmCtx.beginPath();
+      mmCtx.moveTo(0, y);
+      mmCtx.lineTo(minimapCanvas.width, y);
+      mmCtx.stroke();
+    }
   }
 
-  // Donate button handler (placeholder)
-  donateBtn.addEventListener('click', () => {
-    alert('Donation system coming soon!');
+  function updateMinimapViewport() {
+    // Clear minimap first
+    drawMinimap();
+
+    // Calculate viewport rect on minimap scale
+    const viewLeft = -offsetX / zoom;
+    const viewTop = -offsetY / zoom;
+    const viewWidth = canvas.width / zoom;
+    const viewHeight = canvas.height / zoom;
+
+    viewportRect.x = viewLeft * minimapScale;
+    viewportRect.y = viewTop * minimapScale;
+    viewportRect.width = viewWidth * minimapScale;
+    viewportRect.height = viewHeight * minimapScale;
+
+    // Draw red viewport rectangle
+    mmCtx.strokeStyle = 'red';
+    mmCtx.lineWidth = 2;
+    mmCtx.strokeRect(viewportRect.x, viewportRect.y, viewportRect.width, viewportRect.height);
+  }
+
+  // Clicking on minimap to pan grid view
+  minimapCanvas.addEventListener('click', (e) => {
+    const rect = minimapCanvas.getBoundingClientRect();
+    const clickX = e.clientX - rect.left;
+    const clickY = e.clientY - rect.top;
+
+    // Center view on clicked point
+    const centerGridX = clickX / minimapScale;
+    const centerGridY = clickY / minimapScale;
+
+    offsetX = canvas.width / 2 - centerGridX * zoom;
+    offsetY = canvas.height / 2 - centerGridY * zoom;
+    draw();
   });
 
-  // Initial update
-  updateGridTransform();
+  // Donation button handler (placeholder)
+  donateBtn.addEventListener('click', () => {
+    alert('Donation functionality coming soon!');
+  });
+
+  // Initial draws
+  draw();
+  drawMinimap();
 })();
 </script>
 
