@@ -1,4 +1,4 @@
-given this html:         <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8" />
@@ -22,12 +22,8 @@ given this html:         <!DOCTYPE html>
     flex-grow: 1;
     background: #333;
     touch-action: none; /* Prevent default gestures on mobile */
-  }
-  #minimapCanvas {
-    height: 150px;
-    background: #222;
-    border-top: 2px solid #444;
-    touch-action: none;
+    position: relative;
+    cursor: crosshair;
   }
   #controls {
     background: #111;
@@ -56,9 +52,22 @@ given this html:         <!DOCTYPE html>
     padding: 4px 8px;
     font-size: 14px;
     border-radius: 4px;
-    display: none;
     z-index: 10;
     white-space: nowrap;
+  }
+  #cursorBox {
+    position: absolute;
+    pointer-events: none;
+    background: rgba(50,50,50,0.8);
+    color: #eee;
+    padding: 6px 8px;
+    border-radius: 5px;
+    font-size: 14px;
+    border: 1px solid #888;
+    user-select: none;
+    white-space: nowrap;
+    display: none;
+    z-index: 20;
   }
   button {
     background: #444;
@@ -84,7 +93,6 @@ given this html:         <!DOCTYPE html>
 <body>
 <div id="container">
   <canvas id="mainCanvas" width="800" height="600"></canvas>
-  <canvas id="minimapCanvas" width="800" height="150"></canvas>
   <div id="controls">
     <label id="colorPickerLabel" for="colorPicker">Select color:
       <input type="color" id="colorPicker" value="#FF0000" />
@@ -99,6 +107,7 @@ given this html:         <!DOCTYPE html>
   </div>
 </div>
 <div id="tooltip"></div>
+<div id="cursorBox"></div>
 
 <script>
 (() => {
@@ -107,18 +116,19 @@ given this html:         <!DOCTYPE html>
   const CELL_SIZE = 20; // logical size of one cell in pixels at zoom = 1
   const MIN_ZOOM = 0.1;
   const MAX_ZOOM = 5;
+  const EDGE_PAN_MARGIN = 50; // px near edges to trigger auto pan on arrow keys
+  const EDGE_PAN_SPEED = 15;  // px per frame pan speed when arrow + edge
 
   // Elements
   const mainCanvas = document.getElementById('mainCanvas');
   const mainCtx = mainCanvas.getContext('2d');
-  const minimapCanvas = document.getElementById('minimapCanvas');
-  const miniCtx = minimapCanvas.getContext('2d');
   const colorPicker = document.getElementById('colorPicker');
   const colorPreview = document.getElementById('colorPreview');
   const resetViewBtn = document.getElementById('resetViewBtn');
   const tooltip = document.getElementById('tooltip');
   const languageSelect = document.getElementById('languageSelect');
   const donateBtn = document.getElementById('donateBtn');
+  const cursorBox = document.getElementById('cursorBox');
 
   // State
   let zoom = 1;
@@ -126,13 +136,17 @@ given this html:         <!DOCTYPE html>
   let offsetY = 0;
   let isDragging = false;
   let dragStart = null;
-  let dragCell = null; // for minimap viewport dragging
   let paintedCells = {}; // {"x,y": color}
   let currentColor = colorPicker.value;
   let language = 'en';
 
   // For pinch zoom
   let lastTouchDist = null;
+
+  // For keyboard and edge pan
+  let keysDown = {};
+  let mousePos = {x: 0, y: 0};
+  let edgePanActive = false;
 
   // Translations (basic)
   const translations = {
@@ -142,6 +156,8 @@ given this html:         <!DOCTYPE html>
       donate: "Donate 💖",
       coords: (x,y) => `Cell: (${x}, ${y})`,
       color: (c) => `Color: ${c.toUpperCase()}`,
+      colored: 'Colored',
+      notColored: 'Not colored',
     },
     it: {
       selectColor: "Seleziona colore:",
@@ -149,6 +165,8 @@ given this html:         <!DOCTYPE html>
       donate: "Dona 💖",
       coords: (x,y) => `Cella: (${x}, ${y})`,
       color: (c) => `Colore: ${c.toUpperCase()}`,
+      colored: 'Colorato',
+      notColored: 'Non colorato',
     }
   };
 
@@ -237,10 +255,11 @@ given this html:         <!DOCTYPE html>
     }
 
     // Draw grid lines
-    mainCtx.strokeStyle = '#555';
+    mainCtx.strokeStyle = '#666';
     mainCtx.lineWidth = 1;
+
     mainCtx.beginPath();
-    for(let c = startCol; c <= endCol; c++) {
+    for(let c = startCol; c <= endCol + 1; c++) {
       const x = offsetX + c * CELL_SIZE * zoom;
       mainCtx.moveTo(x, offsetY + startRow * CELL_SIZE * zoom);
       mainCtx.lineTo(x, offsetY + (endRow + 1) * CELL_SIZE * zoom);
@@ -251,322 +270,366 @@ given this html:         <!DOCTYPE html>
       mainCtx.lineTo(offsetX + (endCol + 1) * CELL_SIZE * zoom, y);
     }
     mainCtx.stroke();
+
+    // Draw cursor box if mouse is inside canvas
+    if (mousePos.inside) {
+      const cell = screenToCell(mousePos.x, mousePos.y);
+      if(cell.x >= 0 && cell.x < GRID_SIZE && cell.y >=0 && cell.y < GRID_SIZE){
+        const cellX = offsetX + cell.x * CELL_SIZE * zoom;
+        const cellY = offsetY + cell.y * CELL_SIZE * zoom;
+        mainCtx.strokeStyle = '#f00';
+        mainCtx.lineWidth = 2;
+        mainCtx.strokeRect(cellX, cellY, CELL_SIZE * zoom, CELL_SIZE * zoom);
+      }
+    }
   }
 
-  // Draw minimap
-  function drawMinimap() {
-    miniCtx.clearRect(0, 0, minimapCanvas.width, minimapCanvas.height);
+  // Draw cursor box info
+  function updateCursorBox() {
+    if (!mousePos.inside) {
+      cursorBox.style.display = 'none';
+      return;
+    }
+    const cell = screenToCell(mousePos.x, mousePos.y);
+    if(cell.x < 0 || cell.x >= GRID_SIZE || cell.y < 0 || cell.y >= GRID_SIZE){
+      cursorBox.style.display = 'none';
+      return;
+    }
+    const key = cell.x + ',' + cell.y;
+    const isColored = paintedCells[key] !== undefined;
+    const colorText = isColored ? paintedCells[key] : 'none';
 
-    // Scale factors to fit grid in minimap canvas
-    const scaleX = minimapCanvas.width / (GRID_SIZE * CELL_SIZE);
-    const scaleY = minimapCanvas.height / (GRID_SIZE * CELL_SIZE);
-    const scale = Math.min(scaleX, scaleY);
+    const content = `${localize('coords', cell.x, cell.y)} | ${localize('color', colorText)} | ${isColored ? localize('colored') : localize('notColored')}`;
+    cursorBox.textContent = content;
 
-    // Draw painted cells on minimap
-    for (const key in paintedCells) {
-      const [cx, cy] = key.split(',').map(Number);
-      miniCtx.fillStyle = paintedCells[key];
-      miniCtx.fillRect(
-        cx * CELL_SIZE * scale,
-        cy * CELL_SIZE * scale,
-        CELL_SIZE * scale,
-        CELL_SIZE * scale
-      );
+    // Position cursor box near mouse, inside viewport
+    let left = mousePos.x + 15;
+    let top = mousePos.y + 15;
+
+    // Prevent going outside viewport horizontally
+    if (left + cursorBox.offsetWidth > window.innerWidth) {
+      left = mousePos.x - cursorBox.offsetWidth - 15;
+    }
+    // Prevent going outside viewport vertically
+    if (top + cursorBox.offsetHeight > window.innerHeight) {
+      top = mousePos.y - cursorBox.offsetHeight - 15;
     }
 
-    // Draw viewport rectangle on minimap
-    const viewX = -offsetX * scale / zoom;
-    const viewY = -offsetY * scale / zoom;
-    const viewW = minimapCanvas.width / zoom;
-    const viewH = minimapCanvas.height / zoom;
-
-    miniCtx.strokeStyle = 'red';
-    miniCtx.lineWidth = 2;
-    miniCtx.fillStyle = 'rgba(255,0,0,0.15)';
-    miniCtx.fillRect(viewX, viewY, viewW, viewH);
-    miniCtx.strokeRect(viewX, viewY, viewW, viewH);
+    cursorBox.style.left = left + 'px';
+    cursorBox.style.top = top + 'px';
+    cursorBox.style.display = 'block';
   }
 
-  // Draw loop using requestAnimationFrame
-  function animate() {
+  // Update color preview square
+  function updateColorPreview() {
+    colorPreview.style.backgroundColor = currentColor;
+  }
+
+  // Paint cell at mouse location
+  function paintCellAt(x, y) {
+    const cell = screenToCell(x, y);
+    if(cell.x < 0 || cell.x >= GRID_SIZE || cell.y < 0 || cell.y >= GRID_SIZE) return;
+    const key = cell.x + ',' + cell.y;
+    paintedCells[key] = currentColor;
+    saveCells();
     drawGrid();
-    drawMinimap();
-    requestAnimationFrame(animate);
   }
 
-  // Set canvas sizes based on container
-  function resizeCanvases() {
-    const containerRect = document.getElementById('container').getBoundingClientRect();
-    mainCanvas.width = containerRect.width;
-    mainCanvas.height = containerRect.height - minimapCanvas.height - document.getElementById('controls').offsetHeight;
+  // Reset view to default
+  function resetView() {
+    zoom = 1;
+    offsetX = (mainCanvas.width - GRID_SIZE * CELL_SIZE) / 2;
+    offsetY = (mainCanvas.height - GRID_SIZE * CELL_SIZE) / 2;
+    saveView();
+    drawGrid();
   }
 
-  // Clamp pan offset to grid bounds
+  // Clamp offset so grid won't move too far off screen
   function clampOffset() {
     const maxOffsetX = 0;
     const maxOffsetY = 0;
     const minOffsetX = mainCanvas.width - GRID_SIZE * CELL_SIZE * zoom;
     const minOffsetY = mainCanvas.height - GRID_SIZE * CELL_SIZE * zoom;
 
-    if(minOffsetX > maxOffsetX) {
-      offsetX = (maxOffsetX + minOffsetX) / 2; // center if smaller than viewport
+    if (minOffsetX > maxOffsetX) {
+      // Grid smaller than canvas horizontally, center it
+      offsetX = (mainCanvas.width - GRID_SIZE * CELL_SIZE * zoom) / 2;
     } else {
       offsetX = Math.min(maxOffsetX, Math.max(minOffsetX, offsetX));
     }
-    if(minOffsetY > maxOffsetY) {
-      offsetY = (maxOffsetY + minOffsetY) / 2;
+
+    if (minOffsetY > maxOffsetY) {
+      // Grid smaller vertically, center it
+      offsetY = (mainCanvas.height - GRID_SIZE * CELL_SIZE * zoom) / 2;
     } else {
       offsetY = Math.min(maxOffsetY, Math.max(minOffsetY, offsetY));
     }
   }
 
-  // Handle color change
-  colorPicker.addEventListener('input', (e) => {
-    currentColor = e.target.value;
-    colorPreview.style.backgroundColor = currentColor;
-  });
-  colorPreview.style.backgroundColor = currentColor;
-
-  // Handle reset view
-  resetViewBtn.addEventListener('click', () => {
-    zoom = 1;
-    offsetX = 0;
-    offsetY = 0;
-    clampOffset();
-    saveView();
-  });
-
-  // Handle language select
-  languageSelect.addEventListener('change', (e) => {
-    language = e.target.value;
-    updateUITexts();
-  });
-
-  // Update UI texts for localization
-  function updateUITexts() {
-    document.querySelector('#colorPickerLabel').childNodes[0].nodeValue = localize('selectColor') + ' ';
-    resetViewBtn.textContent = localize('resetView');
-    donateBtn.textContent = localize('donate');
+  // Zoom with keys +/-
+  function changeZoom(delta, centerX = mainCanvas.width/2, centerY = mainCanvas.height/2) {
+    const oldZoom = zoom;
+    zoom = Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, zoom + delta));
+    if (zoom !== oldZoom) {
+      // Adjust offset to zoom toward center point
+      offsetX = centerX - (centerX - offsetX) * (zoom / oldZoom);
+      offsetY = centerY - (centerY - offsetY) * (zoom / oldZoom);
+      clampOffset();
+      saveView();
+      drawGrid();
+    }
   }
-  updateUITexts();
 
-  // Handle donations click (placeholder)
-  donateBtn.addEventListener('click', () => {
-    alert('Thank you for your interest! PayPal integration coming soon.');
-  });
+  // Keyboard pan step
+  const PAN_STEP = 30;
 
-  // Mouse and touch events for pan and painting
+  // Handle key down for pan and zoom
+  function handleKeyDown(e) {
+    if (e.repeat) return;
+    keysDown[e.key] = true;
 
+    // + and - zoom keys
+    if(e.key === '+' || e.key === '='){
+      changeZoom(0.1);
+      e.preventDefault();
+    } else if (e.key === '-'){
+      changeZoom(-0.1);
+      e.preventDefault();
+    }
+  }
+  function handleKeyUp(e) {
+    delete keysDown[e.key];
+  }
+
+  // Pan grid with arrow keys, and edge auto-pan
+  function updatePanWithKeys() {
+    let moved = false;
+    if(keysDown['ArrowLeft']){
+      offsetX += PAN_STEP;
+      moved = true;
+    }
+    if(keysDown['ArrowRight']){
+      offsetX -= PAN_STEP;
+      moved = true;
+    }
+    if(keysDown['ArrowUp']){
+      offsetY += PAN_STEP;
+      moved = true;
+    }
+    if(keysDown['ArrowDown']){
+      offsetY -= PAN_STEP;
+      moved = true;
+    }
+
+    if(moved){
+      clampOffset();
+      saveView();
+      drawGrid();
+    }
+  }
+
+  // Auto pan if mouse near edges and arrow keys pressed
+  function autoPanOnEdge() {
+    if(!mousePos.inside) return;
+
+    let panX = 0;
+    let panY = 0;
+
+    if(keysDown['ArrowLeft'] && mousePos.x < EDGE_PAN_MARGIN) panX += EDGE_PAN_SPEED;
+    if(keysDown['ArrowRight'] && mousePos.x > mainCanvas.width - EDGE_PAN_MARGIN) panX -= EDGE_PAN_SPEED;
+    if(keysDown['ArrowUp'] && mousePos.y < EDGE_PAN_MARGIN) panY += EDGE_PAN_SPEED;
+    if(keysDown['ArrowDown'] && mousePos.y > mainCanvas.height - EDGE_PAN_MARGIN) panY -= EDGE_PAN_SPEED;
+
+    if(panX !== 0 || panY !== 0){
+      offsetX += panX;
+      offsetY += panY;
+      clampOffset();
+      saveView();
+      drawGrid();
+    }
+  }
+
+  // Mouse and touch events for painting and dragging pan
   function onPointerDown(e) {
     e.preventDefault();
+    if(e.pointerType === 'mouse' && e.button !== 0) return; // only left click
     isDragging = true;
-    dragStart = {x: e.clientX, y: e.clientY};
+    dragStart = {x: e.clientX, y: e.clientY, offsetX, offsetY};
   }
   function onPointerMove(e) {
     e.preventDefault();
-    if(isDragging) {
-      // Pan mode
-      const dx = e.clientX - dragStart.x;
-      const dy = e.clientY - dragStart.y;
-      dragStart = {x: e.clientX, y: e.clientY};
-      offsetX += dx;
-      offsetY += dy;
+    mousePos.x = e.clientX;
+    mousePos.y = e.clientY;
+    mousePos.inside = true;
+
+    if(isDragging && dragStart){
+      offsetX = dragStart.offsetX + (e.clientX - dragStart.x);
+      offsetY = dragStart.offsetY + (e.clientY - dragStart.y);
       clampOffset();
       saveView();
+      drawGrid();
+    } else {
+      updateCursorBox();
     }
-    updateTooltip(e.clientX, e.clientY);
   }
   function onPointerUp(e) {
     e.preventDefault();
+    if(isDragging && dragStart){
+      // If no significant drag, treat as paint click
+      const dx = Math.abs(e.clientX - dragStart.x);
+      const dy = Math.abs(e.clientY - dragStart.y);
+      if(dx < 5 && dy < 5){
+        paintCellAt(e.clientX, e.clientY);
+      }
+    }
+    isDragging = false;
+    dragStart = null;
+  }
+  function onPointerLeave(e) {
+    mousePos.inside = false;
+    cursorBox.style.display = 'none';
     isDragging = false;
   }
-  mainCanvas.addEventListener('pointerdown', onPointerDown);
-  mainCanvas.addEventListener('pointermove', onPointerMove);
-  mainCanvas.addEventListener('pointerup', onPointerUp);
-  mainCanvas.addEventListener('pointerleave', onPointerUp);
 
-  // Painting cells on click (without drag)
-  mainCanvas.addEventListener('click', e => {
-    const cell = screenToCell(e.clientX, e.clientY);
-    if(cell.x < 0 || cell.y < 0 || cell.x >= GRID_SIZE || cell.y >= GRID_SIZE) return;
-    const key = `${cell.x},${cell.y}`;
-    paintedCells[key] = currentColor;
-    saveCells();
-  });
-
-  // Keyboard navigation: arrows to pan, +/- to zoom
-  window.addEventListener('keydown', e => {
-    let moved = false;
-    if(e.key === 'ArrowLeft') { offsetX += 50; moved = true; }
-    else if(e.key === 'ArrowRight') { offsetX -= 50; moved = true; }
-    else if(e.key === 'ArrowUp') { offsetY += 50; moved = true; }
-    else if(e.key === 'ArrowDown') { offsetY -= 50; moved = true; }
-    else if(e.key === '+' || e.key === '=') { zoom *= 1.1; zoom = Math.min(zoom, MAX_ZOOM); moved = true; }
-    else if(e.key === '-' || e.key === '_') { zoom /= 1.1; zoom = Math.max(zoom, MIN_ZOOM); moved = true; }
-    if(moved) {
-      clampOffset();
-      saveView();
-      e.preventDefault();
-    }
-  });
-
-  // Tooltip handling
-  function updateTooltip(x, y) {
-    const cell = screenToCell(x, y);
-    if(cell.x < 0 || cell.y < 0 || cell.x >= GRID_SIZE || cell.y >= GRID_SIZE) {
-      tooltip.style.display = 'none';
-      return;
-    }
-    const key = `${cell.x},${cell.y}`;
-    const color = paintedCells[key] || 'none';
-    tooltip.textContent = `${localize('coords', cell.x, cell.y)} - ${localize('color', color)}`;
-    tooltip.style.left = (x + 15) + 'px';
-    tooltip.style.top = (y + 15) + 'px';
-    tooltip.style.display = 'block';
-  }
-
-  mainCanvas.addEventListener('mousemove', e => {
-    updateTooltip(e.clientX, e.clientY);
-  });
-  mainCanvas.addEventListener('mouseleave', () => {
-    tooltip.style.display = 'none';
-  });
-
-  // Pinch zoom support
-  mainCanvas.addEventListener('touchstart', e => {
-    if(e.touches.length === 2) {
-      lastTouchDist = getTouchDistance(e.touches[0], e.touches[1]);
-    }
-  }, {passive:false});
-  mainCanvas.addEventListener('touchmove', e => {
-    if(e.touches.length === 2) {
-      e.preventDefault();
-      const dist = getTouchDistance(e.touches[0], e.touches[1]);
-      if(lastTouchDist !== null) {
-        const delta = dist / lastTouchDist;
-        const oldZoom = zoom;
-        zoom *= delta;
-        zoom = Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, zoom));
-        // Adjust offset to zoom around midpoint between touches
-        const rect = mainCanvas.getBoundingClientRect();
-        const midX = (e.touches[0].clientX + e.touches[1].clientX)/2 - rect.left;
-        const midY = (e.touches[0].clientY + e.touches[1].clientY)/2 - rect.top;
-
-        offsetX -= (midX - offsetX) * (zoom / oldZoom - 1);
-        offsetY -= (midY - offsetY) * (zoom / oldZoom - 1);
-        offsetX -= (midX - offsetX) * (zoom / oldZoom - 1);
-        offsetY -= (midY - offsetY) * (zoom / oldZoom - 1);
-        clampOffset();
-        saveView();
-      }
-      lastTouchDist = dist;
-    }
-  }, {passive:false});
-  mainCanvas.addEventListener('touchend', e => {
-    if(e.touches.length < 2) {
-      lastTouchDist = null;
-    }
-  });
-
-  function getTouchDistance(t1, t2) {
-    const dx = t1.clientX - t2.clientX;
-    const dy = t1.clientY - t2.clientY;
+  // Touch pinch zoom handlers
+  function getTouchDistance(touches) {
+    if (touches.length < 2) return null;
+    const dx = touches[0].clientX - touches[1].clientX;
+    const dy = touches[0].clientY - touches[1].clientY;
     return Math.sqrt(dx*dx + dy*dy);
   }
+  function onTouchStart(e) {
+    if (e.touches.length === 2) {
+      lastTouchDist = getTouchDistance(e.touches);
+    }
+  }
+  function onTouchMove(e) {
+    if (e.touches.length === 2 && lastTouchDist !== null) {
+      const dist = getTouchDistance(e.touches);
+      if(dist) {
+        const zoomDelta = (dist - lastTouchDist) / 200; // sensitivity
+        if(Math.abs(zoomDelta) > 0.01){
+          // Zoom centered on midpoint of two touches
+          const rect = mainCanvas.getBoundingClientRect();
+          const midX = (e.touches[0].clientX + e.touches[1].clientX)/2 - rect.left;
+          const midY = (e.touches[0].clientY + e.touches[1].clientY)/2 - rect.top;
+          changeZoom(zoomDelta, midX, midY);
+          lastTouchDist = dist;
+        }
+      }
+    }
+  }
+  function onTouchEnd(e) {
+    if (e.touches.length < 2) {
+      lastTouchDist = null;
+    }
+  }
 
-  // Double tap / double click fullscreen toggle
-  let lastTap = 0;
-  mainCanvas.addEventListener('touchend', e => {
-    const currentTime = new Date().getTime();
-    const tapLength = currentTime - lastTap;
-    if(tapLength < 300 && tapLength > 0) {
+  // Prevent double tap zoom on mobile and implement double tap fullscreen toggle
+  let lastTapTime = 0;
+  mainCanvas.addEventListener('touchend', (e) => {
+    const now = Date.now();
+    if (now - lastTapTime < 350) {
+      // Double tap detected, toggle fullscreen
       toggleFullscreen();
       e.preventDefault();
     }
-    lastTap = currentTime;
+    lastTapTime = now;
   });
 
-  mainCanvas.addEventListener('dblclick', e => {
-    toggleFullscreen();
-  });
-
+  // Fullscreen toggle
   function toggleFullscreen() {
     if (!document.fullscreenElement) {
-      document.documentElement.requestFullscreen().catch(err => {
-        alert(`Error attempting to enable fullscreen: ${err.message}`);
-      });
+      document.documentElement.requestFullscreen();
     } else {
       document.exitFullscreen();
     }
   }
 
-  // Minimap interaction: drag viewport rect
-  minimapCanvas.addEventListener('pointerdown', e => {
-    e.preventDefault();
-    const rect = minimapCanvas.getBoundingClientRect();
-    const scaleX = minimapCanvas.width / (GRID_SIZE * CELL_SIZE);
-    const scaleY = minimapCanvas.height / (GRID_SIZE * CELL_SIZE);
-    const scale = Math.min(scaleX, scaleY);
+  // Donate button click (placeholder)
+  donateBtn.onclick = () => {
+    alert("Donation functionality will be implemented later.");
+  };
 
-    // Calculate viewport rectangle
-    const viewX = -offsetX * scale / zoom;
-    const viewY = -offsetY * scale / zoom;
-    const viewW = minimapCanvas.width / zoom;
-    const viewH = minimapCanvas.height / zoom;
+  // Reset view button
+  resetViewBtn.onclick = () => {
+    resetView();
+  };
 
-    const mx = e.clientX - rect.left;
-    const my = e.clientY - rect.top;
+  // Language selection
+  languageSelect.onchange = () => {
+    language = languageSelect.value;
+    updateUITexts();
+    drawGrid();
+  };
 
-    if (mx >= viewX && mx <= viewX + viewW && my >= viewY && my <= viewY + viewH) {
-      dragCell = {startX: mx, startY: my, offsetX, offsetY};
-      minimapCanvas.setPointerCapture(e.pointerId);
-    }
-  });
-  minimapCanvas.addEventListener('pointermove', e => {
-    if (!dragCell) return;
-    e.preventDefault();
-    const rect = minimapCanvas.getBoundingClientRect();
-    const scaleX = minimapCanvas.width / (GRID_SIZE * CELL_SIZE);
-    const scaleY = minimapCanvas.height / (GRID_SIZE * CELL_SIZE);
-    const scale = Math.min(scaleX, scaleY);
+  // Update UI texts for selected language
+  function updateUITexts(){
+    document.querySelector('#colorPickerLabel').childNodes[0].nodeValue = localize('selectColor') + ' ';
+    resetViewBtn.textContent = localize('resetView');
+    donateBtn.textContent = localize('donate');
+  }
 
-    const mx = e.clientX - rect.left;
-    const my = e.clientY - rect.top;
-    const dx = mx - dragCell.startX;
-    const dy = my - dragCell.startY;
+  // Color picker change
+  colorPicker.oninput = () => {
+    currentColor = colorPicker.value;
+    updateColorPreview();
+  };
 
-    // Translate dx, dy in pixels on main canvas
-    const panDx = -dx * zoom / scale;
-    const panDy = -dy * zoom / scale;
+  // Setup canvas size & scaling for high DPI
+  function setupCanvas() {
+    const dpr = window.devicePixelRatio || 1;
+    mainCanvas.width = mainCanvas.clientWidth * dpr;
+    mainCanvas.height = mainCanvas.clientHeight * dpr;
+    mainCtx.setTransform(1,0,0,1,0,0);
+    mainCtx.scale(dpr, dpr);
+  }
 
-    offsetX = dragCell.offsetX + panDx;
-    offsetY = dragCell.offsetY + panDy;
-    clampOffset();
-    saveView();
-  });
-  minimapCanvas.addEventListener('pointerup', e => {
-    dragCell = null;
-    minimapCanvas.releasePointerCapture(e.pointerId);
-  });
-  minimapCanvas.addEventListener('pointercancel', e => {
-    dragCell = null;
-    minimapCanvas.releasePointerCapture(e.pointerId);
-  });
+  // Animation loop for keyboard pan and auto pan
+  function animationLoop() {
+    updatePanWithKeys();
+    autoPanOnEdge();
+    updateCursorBox();
+    requestAnimationFrame(animationLoop);
+  }
 
-  // Responsive resize
-  window.addEventListener('resize', () => {
-    resizeCanvases();
-    clampOffset();
-  });
-
-  // Initial setup
+  // Initialize
   function init() {
-    resizeCanvases();
+    setupCanvas();
     loadCells();
     loadView();
-    clampOffset();
-    animate();
+    updateColorPreview();
+    updateUITexts();
+    drawGrid();
+    animationLoop();
   }
+
+  // Resize handling
+  window.addEventListener('resize', () => {
+    setupCanvas();
+    clampOffset();
+    drawGrid();
+  });
+
+  // Event listeners
+  mainCanvas.addEventListener('pointerdown', onPointerDown);
+  mainCanvas.addEventListener('pointermove', onPointerMove);
+  mainCanvas.addEventListener('pointerup', onPointerUp);
+  mainCanvas.addEventListener('pointercancel', onPointerUp);
+  mainCanvas.addEventListener('pointerleave', onPointerLeave);
+
+  mainCanvas.addEventListener('touchstart', onTouchStart, {passive: false});
+  mainCanvas.addEventListener('touchmove', onTouchMove, {passive: false});
+  mainCanvas.addEventListener('touchend', onTouchEnd, {passive: false});
+  mainCanvas.addEventListener('touchcancel', onTouchEnd, {passive: false});
+
+  window.addEventListener('keydown', handleKeyDown);
+  window.addEventListener('keyup', handleKeyUp);
+
+  // Prevent context menu on right click canvas
+  mainCanvas.oncontextmenu = e => e.preventDefault();
+
+  // Initial call
   init();
 
 })();
