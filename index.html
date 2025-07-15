@@ -2,11 +2,9 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>The Invisible Million Grid</title>
+  <title>Invisible Million Grid</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <!-- ======= STYLES ======= -->
   <style>
-    /* Website background and text color */
     html, body {
       background: #000;
       color: #fff;
@@ -31,18 +29,25 @@
       display: flex;
       align-items: center;
       justify-content: center;
+      flex-direction: column;
     }
+    /* 1. SQUARE OUTLINE FRAME */
     #frame {
       outline: 3px solid #fff;
       background: #222;
-      width: 95vw; max-width: 1000px;
-      height: 75vh; max-height: 900px;
+      /* Always square: aspect-ratio 1, size based on viewport */
+      width: min(80vw, 80vh);
+      height: min(80vw, 80vh);
+      aspect-ratio: 1;
       position: relative;
       overflow: hidden;
       touch-action: none;
       border-radius: 10px;
       margin: auto;
       box-sizing: border-box;
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
     #gridCanvas {
       width: 100%; height: 100%;
@@ -52,66 +57,21 @@
       background: #222;
       border-radius: 10px;
       box-sizing: border-box;
+      position: absolute;
+      left: 0; top: 0;
     }
     .coords { font-family: monospace; }
-    .zoom-controls button {
+    .zoom-controls button, .jump-btn, .random-btn {
       background: #444; color: #fff; border: none;
       border-radius: 4px; margin: 0 3px; padding: 8px 14px; font-size: 1em; cursor: pointer;
     }
-    .zoom-controls button:focus, .zoom-controls button:hover { background: #888; outline: 2px solid #fff; }
+    .zoom-controls button:focus, .zoom-controls button:hover,
+    .jump-btn:focus, .jump-btn:hover,
+    .random-btn:focus, .random-btn:hover { background: #888; outline: 2px solid #fff; }
     .counter {
       font-weight: bold;
       letter-spacing: 2px;
       margin-right: 10px;
-    }
-    /* Modal for color picker */
-    .modal-bg {
-      position: fixed;
-      left: 0; top: 0; width: 100vw; height: 100vh;
-      background: rgba(0,0,0,0.85);
-      display: none;
-      align-items: center;
-      justify-content: center;
-      z-index: 100;
-    }
-    .modal {
-      background: #222;
-      color: #fff;
-      border: 3px solid #fff;
-      border-radius: 14px;
-      padding: 24px 18px;
-      min-width: 300px;
-      max-width: 90vw;
-      box-shadow: 0 0 18px #000;
-      text-align: center;
-      position: relative;
-      font-size: 1.1em;
-    }
-    .modal h2 { margin: 0 0 12px 0; }
-    /* Simple color palette for picker */
-    .palette {
-      display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin-bottom: 20px;
-    }
-    .palette div {
-      width: 40px; height: 40px; border-radius: 50%;
-      border: 3px solid #fff; cursor: pointer;
-      transition: transform 0.1s;
-    }
-    .palette .selected {
-      border: 3px solid #FF0070;
-      box-shadow: 0 0 8px #FF0070;
-      transform: scale(1.1);
-    }
-    .modal button {
-      background: #FF0070; color: #fff; border: none; border-radius: 5px;
-      padding: 8px 18px; font-size: 1.1em; margin: 0 8px; cursor: pointer;
-    }
-    /* Responsive adjustments for mobile */
-    @media (max-width: 700px) {
-      main { height: calc(100vh - 80px); }
-      #frame { width: 99vw; max-width: none; height: 68vh; max-height: none; }
-      .modal { min-width: 200px; padding: 14px 6px; font-size: 1em; }
-      .palette div { width: 32px; height: 32px; }
     }
     /* Coordinate info box next to cursor */
     .coord-popup {
@@ -131,6 +91,58 @@
     }
     .coord-popup .colored { color: #FF0070; font-weight: bold; }
     .coord-popup .not-colored { color: #aaa; }
+    /* 5. PALETTE TOOL: absolute, transparent bg */
+    .color-picker-modal {
+      position: absolute;
+      z-index: 100;
+      background: rgba(40,40,40,0.85);
+      border-radius: 12px;
+      padding: 18px 12px;
+      box-shadow: 0 0 8px #000;
+      display: none;
+      align-items: center;
+      flex-direction: column;
+    }
+    .color-picker-modal label {
+      color: #fff;
+      margin-bottom: 8px;
+      font-size: 1.1em;
+      font-weight: bold;
+    }
+    .color-picker-modal input[type="color"] {
+      width: 60px; height: 60px; border: none; border-radius: 8px;
+      margin-bottom: 12px;
+      background: #222;
+      box-shadow: 0 0 4px #888;
+      cursor: pointer;
+    }
+    .color-picker-modal .modal-btns {
+      display: flex; gap: 10px;
+    }
+    .color-picker-modal button {
+      background: #FF0070; color: #fff; border: none; border-radius: 5px;
+      padding: 8px 18px; font-size: 1.1em; margin: 0 8px; cursor: pointer;
+    }
+    /* Responsive */
+    @media (max-width: 700px) {
+      main { height: calc(100vh - 80px); }
+      #frame { width: min(98vw, 70vh); height: min(98vw, 70vh);}
+      .color-picker-modal { min-width: 160px; padding: 8px 3px; font-size: 1em; }
+    }
+    /* 3. Editable coordinate jump panel */
+    .jump-panel {
+      margin: 12px 0 0 0;
+      display: flex; gap: 10px; align-items: center; flex-wrap: wrap;
+    }
+    .jump-panel input {
+      width: 60px; padding: 6px;
+      border-radius: 5px; border: 1px solid #aaa; font-size: 1em;
+      margin-right: 6px;
+      background: #222; color: #fff;
+      outline: none;
+    }
+    .jump-panel label { font-weight: bold; margin-right: 4px; }
+    .jump-panel .random-btn { background: #FF0070; }
   </style>
 </head>
 <body>
@@ -143,19 +155,29 @@
   </header>
   <!-- ======= MAIN GRID FRAME ======= -->
   <main>
+    <!-- 1. SQUARE OUTLINE FRAME -->
     <div id="frame" tabindex="0" aria-label="Zoomable grid frame">
       <canvas id="gridCanvas" aria-label="Grid canvas"></canvas>
       <!-- Coordinate info popup for grid cursor (positioned by JS) -->
       <div id="coordPopup" class="coord-popup"></div>
-    </div>
-    <!-- Color picker modal (hidden by default) -->
-    <div id="modalBg" class="modal-bg">
-      <div class="modal" id="colorModal">
-        <h2>Pick your color</h2>
-        <div class="palette" id="palette"></div>
-        <button id="confirmColorBtn">OK</button>
-        <button id="cancelColorBtn">Cancel</button>
+      <!-- 5. COLOR PICKER TOOL (absolute, below selected square) -->
+      <div id="colorPickerModal" class="color-picker-modal">
+        <label for="colorInput">Pick any color</label>
+        <input type="color" id="colorInput" value="#000000" />
+        <div class="modal-btns">
+          <button id="confirmColorBtn" type="button">OK</button>
+          <button id="cancelColorBtn" type="button">Cancel</button>
+        </div>
       </div>
+    </div>
+    <!-- 3. Editable coordinate panel + 4. Random available button -->
+    <div class="jump-panel">
+      <label for="jumpX">X:</label>
+      <input type="number" id="jumpX" min="0" max="1099" value="0" />
+      <label for="jumpY">Y:</label>
+      <input type="number" id="jumpY" min="0" max="1099" value="0" />
+      <button class="jump-btn" id="jumpBtn">Jump</button>
+      <button class="random-btn" id="randomBtn">Bring me to a random available square</button>
     </div>
   </main>
   <!-- ======= FOOTER ======= -->
@@ -174,7 +196,7 @@
   const BACKEND_URL = "https://155ca338-0e90-4f5a-88ec-b6163921baae-00-181dgn4pq10j7.janeway.replit.dev";
   const GRID_SIZE = 1100;
   const CELL_SIZE = 30;
-  let MIN_ZOOM = 0.1; // calculated per device
+  let MIN_ZOOM = 0.1;
   const MAX_ZOOM = 3;
   let zoom = 1;
   let offsetX = 0;
@@ -185,12 +207,8 @@
   let dragStart = {x: 0, y: 0};
   let offsetStart = {x: 0, y: 0};
   let touchStart = null;
-  let hasDonated = false; // Only allow coloring after donation
-  let colorCount = 0; // Total colored squares
-  // Colors for the palette (photoshop-like)
-  const PALETTE_COLORS = [
-    "#000000", "#FF0000", "#00AA00", "#0000FF", "#FFFF00", "#FFA500", "#800080", "#FFFFFF", "#FF0070", "#00FFFF", "#FFD700", "#008080"
-  ];
+  let hasDonated = false;
+  let colorCount = 0;
 
   // ==== DOM ELEMENTS ====
   const canvas = document.getElementById('gridCanvas');
@@ -203,15 +221,18 @@
   const zoomDisplay = document.getElementById('zoomDisplay');
   const colorCountElem = document.getElementById('colorCount');
   const coordPopup = document.getElementById('coordPopup');
-  const modalBg = document.getElementById('modalBg');
-  const paletteElem = document.getElementById('palette');
+  const colorPickerModal = document.getElementById('colorPickerModal');
+  const colorInput = document.getElementById('colorInput');
   const confirmColorBtn = document.getElementById('confirmColorBtn');
   const cancelColorBtn = document.getElementById('cancelColorBtn');
+  const jumpX = document.getElementById('jumpX');
+  const jumpY = document.getElementById('jumpY');
+  const jumpBtn = document.getElementById('jumpBtn');
+  const randomBtn = document.getElementById('randomBtn');
 
   // Grid-dedicated cursor (target pointer)
   let gridCursor = { x: Math.floor(GRID_SIZE / 2), y: Math.floor(GRID_SIZE / 2) };
-  let selectedColor = PALETTE_COLORS[0]; // default for modal
-  let cursorCellLocked = false; // used for info popup
+  let cursorCellLocked = false;
 
   // ==== CANVAS AND GRID SIZING ====
   function setCanvasSize() {
@@ -239,21 +260,19 @@
 
   // ==== DRAWING GRID, CELLS, CURSOR, AND COORDS POPUP ====
   function drawGrid() {
-    const width = canvas.width;
-    const height = canvas.height;
-    ctx.clearRect(0, 0, width, height);
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
 
     // Grid background (dark grey)
     ctx.fillStyle = "#222";
-    ctx.fillRect(0, 0, width, height);
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
 
     const scaledCellSize = CELL_SIZE * zoom;
     const startCol = Math.floor(-offsetX / scaledCellSize);
     const startRow = Math.floor(-offsetY / scaledCellSize);
-    const visibleCols = Math.ceil(width / scaledCellSize) + 2;
-    const visibleRows = Math.ceil(height / scaledCellSize) + 2;
+    const visibleCols = Math.ceil(canvas.width / scaledCellSize) + 2;
+    const visibleRows = Math.ceil(canvas.height / scaledCellSize) + 2;
 
-    // Draw grid lines (light grey)
+    // Grid lines (light grey)
     ctx.strokeStyle = "#bbb";
     ctx.lineWidth = 1;
     for(let c = startCol; c <= startCol + visibleCols; c++) {
@@ -261,7 +280,7 @@
       const x = offsetX + c * scaledCellSize;
       ctx.beginPath();
       ctx.moveTo(x + 0.5, 0);
-      ctx.lineTo(x + 0.5, height);
+      ctx.lineTo(x + 0.5, canvas.height);
       ctx.stroke();
     }
     for(let r = startRow; r <= startRow + visibleRows; r++) {
@@ -269,11 +288,11 @@
       const y = offsetY + r * scaledCellSize;
       ctx.beginPath();
       ctx.moveTo(0, y + 0.5);
-      ctx.lineTo(width, y + 0.5);
+      ctx.lineTo(canvas.width, y + 0.5);
       ctx.stroke();
     }
 
-    // Draw colored cells
+    // Colored cells
     for (const key in coloredCells) {
       const [x, y] = key.split(',').map(Number);
       if (
@@ -296,7 +315,7 @@
     ctx.fillRect(highlightX + 1, highlightY + 1, scaledCellSize - 2, scaledCellSize - 2);
     ctx.globalAlpha = 1.0;
 
-    // Draw rounded target pointer at cursor
+    // Draw rounded target pointer
     const cursorX = highlightX + scaledCellSize / 2;
     const cursorY = highlightY + scaledCellSize / 2;
     ctx.beginPath();
@@ -329,7 +348,6 @@
     boxLeft = Math.min(canvas.width - 150, Math.max(10, boxLeft));
     boxTop = Math.min(canvas.height - 60, Math.max(10, boxTop));
 
-    // Info for cell
     const key = gridCursor.x + "," + gridCursor.y;
     let info = `<span>X: ${gridCursor.x}, Y: ${gridCursor.y}</span><br>`;
     if (coloredCells[key] && coloredCells[key].locked) {
@@ -345,7 +363,6 @@
     coordPopup.style.display = "block";
   }
 
-  // ==== HELPER FUNCTIONS ====
   function pixelToCell(x, y) {
     const scaledCellSize = CELL_SIZE * zoom;
     const cellX = Math.floor((x - offsetX) / scaledCellSize);
@@ -393,7 +410,6 @@
   }
 
   // ==== BACKEND COMMUNICATION ====
-  // Store cell color and lock status
   function sendCellColor(x, y, color) {
     fetch(`${BACKEND_URL}/cell`, {
       method: "POST",
@@ -405,7 +421,6 @@
     .catch(err => {});
   }
 
-  // Load all colored cells and total count
   function fetchGridState() {
     fetch(`${BACKEND_URL}/grid`)
       .then(res => res.json())
@@ -425,7 +440,6 @@
   }
 
   // ==== EVENT HANDLERS ====
-  // Mouse wheel zoom
   canvas.addEventListener('wheel', (e) => {
     e.preventDefault();
     const zoomStep = 1.1;
@@ -433,7 +447,6 @@
     else setZoom(zoom / zoomStep, e.offsetX, e.offsetY);
   }, {passive: false});
 
-  // Mouse drag pan
   canvas.addEventListener('mousedown', (e) => {
     isDragging = true;
     dragStart.x = e.clientX;
@@ -451,7 +464,6 @@
     requestRedraw();
   });
 
-  // Mobile/touch: pan
   canvas.addEventListener('touchstart', (e) => {
     if (e.touches.length === 1) {
       touchStart = {
@@ -481,14 +493,15 @@
     const cell = pixelToCell(mouseX, mouseY);
     gridCursor.x = Math.max(0, Math.min(GRID_SIZE - 1, cell.x));
     gridCursor.y = Math.max(0, Math.min(GRID_SIZE - 1, cell.y));
+    jumpX.value = gridCursor.x;
+    jumpY.value = gridCursor.y;
     updateFooterCoords();
     ensureCellVisible(gridCursor.x, gridCursor.y);
     requestRedraw();
 
-    // After donation, allow coloring via modal (if square not colored)
     const key = gridCursor.x + "," + gridCursor.y;
     if (hasDonated && (!coloredCells[key] || !coloredCells[key].locked)) {
-      showColorModal();
+      showColorPickerModal();
     }
   });
 
@@ -519,30 +532,29 @@
       case ' ':
         const key = gridCursor.x + "," + gridCursor.y;
         if (hasDonated && (!coloredCells[key] || !coloredCells[key].locked)) {
-          showColorModal();
+          showColorPickerModal();
         }
         e.preventDefault(); break;
     }
     if (moved) {
+      jumpX.value = gridCursor.x;
+      jumpY.value = gridCursor.y;
       updateFooterCoords();
       ensureCellVisible(gridCursor.x, gridCursor.y);
       requestRedraw();
     }
   });
 
-  // Update coordinate display in footer
   function updateFooterCoords() {
     footerCoords.textContent = `X: ${gridCursor.x}, Y: ${gridCursor.y}`;
   }
 
-  // Mouse move: update coordinate popup position
   canvas.addEventListener('mousemove', () => {
     updateCoordPopupPosition();
   });
 
-  // ==== DONATE BUTTON AND WORKFLOW ====
+  // ==== DONATE BUTTON ====
   donateBtn.addEventListener('click', () => {
-    // Simulate donation (replace with real integration as needed)
     if (!hasDonated) {
       setTimeout(() => {
         if (confirm("Simulated donation: proceed to color a square?")) {
@@ -555,47 +567,85 @@
     }
   });
 
-  // ==== MODAL COLOR PICKER WORKFLOW ====
-  function showColorModal() {
-    // Setup palette
-    paletteElem.innerHTML = "";
-    PALETTE_COLORS.forEach((color, i) => {
-      const div = document.createElement("div");
-      div.style.background = color;
-      div.className = (color === selectedColor) ? "selected" : "";
-      div.onclick = () => {
-        selectedColor = color;
-        Array.from(paletteElem.children).forEach((d) => d.classList.remove("selected"));
-        div.classList.add("selected");
-      };
-      paletteElem.appendChild(div);
-    });
-    modalBg.style.display = "flex";
+  // ==== 5. COLOR PICKER (absolute, below square) ====
+  function showColorPickerModal() {
+    // Set position below selected square
+    const scaledCellSize = CELL_SIZE * zoom;
+    const highlightX = offsetX + gridCursor.x * scaledCellSize;
+    const highlightY = offsetY + gridCursor.y * scaledCellSize;
+    colorPickerModal.style.left = (highlightX - scaledCellSize/2) + "px";
+    colorPickerModal.style.top = (highlightY + scaledCellSize + 16) + "px";
+    colorPickerModal.style.display = "flex";
+    // Default color is black, but user can choose any
+    colorInput.value = "#000000";
   }
   confirmColorBtn.onclick = function() {
-    modalBg.style.display = "none";
-    // Actually color the cell and lock it
+    colorPickerModal.style.display = "none";
+    const color = colorInput.value;
     const key = gridCursor.x + "," + gridCursor.y;
-    coloredCells[key] = {color: selectedColor, locked: true};
-    sendCellColor(gridCursor.x, gridCursor.y, selectedColor);
-    fetchGridState(); // reload and update counter
+    coloredCells[key] = {color: color, locked: true};
+    sendCellColor(gridCursor.x, gridCursor.y, color);
+    fetchGridState();
     requestRedraw();
   };
   cancelColorBtn.onclick = function() {
-    modalBg.style.display = "none";
+    colorPickerModal.style.display = "none";
   };
+
   // Hide modal on outside click
-  modalBg.onclick = function(e) {
-    if (e.target === modalBg) modalBg.style.display = "none";
-  };
+  document.addEventListener('mousedown', function(e) {
+    if (colorPickerModal.style.display === "flex" && !colorPickerModal.contains(e.target)) {
+      colorPickerModal.style.display = "none";
+    }
+  });
 
   // ==== ZOOM CONTROLS ====
   zoomInBtn.addEventListener('click', () => setZoom(zoom * 1.1));
   zoomOutBtn.addEventListener('click', () => setZoom(zoom / 1.1));
 
-  // Focus frame for keyboard input on click/touch
   frame.addEventListener('click', () => { frame.focus(); });
   frame.addEventListener('touchend', () => { frame.focus(); });
+
+  // ==== 3. EDITABLE COORDINATE PANEL ====
+  jumpBtn.addEventListener('click', () => {
+    const x = Math.min(GRID_SIZE-1, Math.max(0, Number(jumpX.value)));
+    const y = Math.min(GRID_SIZE-1, Math.max(0, Number(jumpY.value)));
+    gridCursor.x = x;
+    gridCursor.y = y;
+    updateFooterCoords();
+    ensureCellVisible(gridCursor.x, gridCursor.y);
+    requestRedraw();
+  });
+  jumpX.addEventListener('keydown', function(e){
+    if(e.key === "Enter") jumpBtn.click();
+  });
+  jumpY.addEventListener('keydown', function(e){
+    if(e.key === "Enter") jumpBtn.click();
+  });
+
+  // ==== 4. RANDOM AVAILABLE SQUARE BUTTON ====
+  randomBtn.addEventListener('click', () => {
+    // Try up to 1000 random attempts to find a free square
+    let tries = 1000;
+    let found = false;
+    while(tries-- > 0) {
+      const x = Math.floor(Math.random()*GRID_SIZE);
+      const y = Math.floor(Math.random()*GRID_SIZE);
+      const key = x + "," + y;
+      if (!coloredCells[key] || !coloredCells[key].locked) {
+        gridCursor.x = x;
+        gridCursor.y = y;
+        jumpX.value = x;
+        jumpY.value = y;
+        updateFooterCoords();
+        ensureCellVisible(x, y);
+        requestRedraw();
+        found = true;
+        break;
+      }
+    }
+    if (!found) { alert("No available squares left!"); }
+  });
 
   // ==== INIT ====
   window.addEventListener('load', () => {
