@@ -152,7 +152,7 @@
   const zoomDisplay = document.getElementById('zoomDisplay');
 
   // Grid settings
-  const GRID_SIZE = 1000;
+  const GRID_SIZE = 1100;
   const CELL_SIZE = 30;
   const MIN_ZOOM = 0.5;
   const MAX_ZOOM = 3;
@@ -218,7 +218,6 @@
     // Draw colored cells from backend
     for (const key in coloredCells) {
       const [x, y] = key.split(',').map(Number);
-      // Only draw if visible
       if (
         x >= startCol && x <= startCol + visibleCols &&
         y >= startRow && y <= startRow + visibleRows
@@ -279,6 +278,38 @@
     }
   }
 
+  // Ensures the hovered cell is always fully visible in the frame
+  function ensureCellVisible(cellX, cellY) {
+    const scaledCellSize = CELL_SIZE * zoom;
+    const cellLeft = offsetX + cellX * scaledCellSize;
+    const cellRight = cellLeft + scaledCellSize;
+    const cellTop = offsetY + cellY * scaledCellSize;
+    const cellBottom = cellTop + scaledCellSize;
+
+    let changed = false;
+
+    if (cellLeft < 0) {
+      offsetX += -cellLeft;
+      changed = true;
+    }
+    if (cellRight > canvas.width) {
+      offsetX -= cellRight - canvas.width;
+      changed = true;
+    }
+    if (cellTop < 0) {
+      offsetY += -cellTop;
+      changed = true;
+    }
+    if (cellBottom > canvas.height) {
+      offsetY -= cellBottom - canvas.height;
+      changed = true;
+    }
+    if (changed) {
+      clampOffset();
+      requestRedraw();
+    }
+  }
+
   function setZoom(newZoom, centerX, centerY) {
     const oldZoom = zoom;
     zoom = Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, newZoom));
@@ -303,7 +334,6 @@
     .then(res => res.json())
     .then(data => {
       // Optionally handle response
-      // console.log('Backend response:', data);
     })
     .catch(err => {
       console.error('Backend error:', err);
@@ -359,11 +389,12 @@
     if(cell.x !== currentCell.x || cell.y !== currentCell.y) {
       currentCell = cell;
       updateCoordsDisplay(cell.x, cell.y);
+      ensureCellVisible(cell.x, cell.y);
       requestRedraw();
     }
   });
 
-  // Throttled mousemove for highlight
+  // Throttled mousemove for highlight and auto cell push
   canvas.addEventListener('mousemove', (e) => {
     if(isDragging) return;
     if (redrawPending) return;
@@ -376,6 +407,7 @@
       if(cell.x !== currentCell.x || cell.y !== currentCell.y) {
         currentCell = cell;
         updateCoordsDisplay(cell.x, cell.y);
+        ensureCellVisible(cell.x, cell.y);
         drawGrid();
       }
       redrawPending = false;
@@ -434,6 +466,7 @@
     const centerY = canvas.height / 2;
     currentCell = pixelToCell(centerX, centerY);
     updateCoordsDisplay(currentCell.x, currentCell.y);
+    ensureCellVisible(currentCell.x, currentCell.y);
   });
 
   // Donate button
