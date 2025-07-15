@@ -50,6 +50,11 @@
       cursor: pointer;
       z-index: 100;
       background: none;
+      outline: 2px solid #ccc;
+      border-radius: 8px;
+    }
+    .menu-icon:focus {
+      outline: 3px solid #FF0070;
     }
     .menu-icon span {
       display: block;
@@ -74,12 +79,16 @@
       font-size: 2em;
     }
     .popup-menu.active { display: flex; }
+    .popup-menu a,
+    .popup-menu .close-menu {
+      outline: 2px solid #ccc;
+      border-radius: 12px;
+    }
     .popup-menu a {
       color: #fff !important;
       text-decoration: none;
       padding: 18px 42px;
       font-size: 1.1em;
-      border-radius: 12px;
       background: #444;
       margin: 10px 0;
       border: 2px solid #fff;
@@ -167,9 +176,10 @@
       display: flex;
       align-items: center;
       justify-content: center;
+      outline: 2px solid #ccc;
     }
     .arrow-btn:active, .center-btn:active { background: #f0f0f0; color: #111; }
-    .arrow-btn:focus, .center-btn:focus { outline: 2px solid #FF0070; }
+    .arrow-btn:focus, .center-btn:focus { outline: 3px solid #FF0070; }
     .zoom-controls {
       display: flex; gap: 8px;
       align-items: center;
@@ -192,6 +202,7 @@
       display: flex;
       align-items: center;
       justify-content: center;
+      outline: 2px solid #ccc;
     }
     .fancy-btn:active, .fancy-btn:focus,
     .color-picker-modal button:active,
@@ -199,7 +210,7 @@
     .dummy-btn:active, .dummy-btn:focus {
       background: #e0e0e0;
       color: #111;
-      outline: 2px solid #FF0070;
+      outline: 3px solid #FF0070;
     }
     footer {
       width: 100vw;
@@ -247,6 +258,7 @@
       background: #f8f8f8;
       color: #222;
       text-align: center;
+      outline: 2px solid #ccc;
       appearance: none;
       -webkit-appearance: none;
       -moz-appearance: textfield;
@@ -264,7 +276,7 @@
       align-items: center;
       border-radius: 18px;
       box-shadow: 0 0 24px #000;
-      border: 2px solid #fff;
+      border: 3px solid #ccc;
       min-width: 260px;
       min-height: 260px;
       justify-content: center;
@@ -300,6 +312,7 @@
       position: fixed;
       left: 50%;
       transform: translate(-50%, 0);
+      outline: 2px solid #ccc;
     }
     #coordPopup {
       pointer-events: none;
@@ -332,6 +345,7 @@
       pointer-events: auto;
       left: 50%;
       transform: translateX(-50%);
+      outline: 2px solid #ccc;
     }
     label {
       font-weight: bold;
@@ -355,7 +369,7 @@
   <header>
     <div class="header-content">
       <span class="big-title">The (In)Visible Million Project</span>
-      <div class="menu-icon" id="menuIcon" title="Menu">
+      <div class="menu-icon" id="menuIcon" title="Menu" tabindex="0">
         <span></span>
         <span></span>
         <span></span>
@@ -369,11 +383,11 @@
         <div id="coordPopup"></div>
         <div class="nav-panel">
           <div class="nav-btn-group">
-            <button class="arrow-btn" id="arrowUpBtn">&#8593;</button>
-            <button class="arrow-btn" id="arrowLeftBtn">&#8592;</button>
-            <button class="center-btn" id="centerBtn">&#9678; Center</button>
-            <button class="arrow-btn" id="arrowRightBtn">&#8594;</button>
-            <button class="arrow-btn" id="arrowDownBtn">&#8595;</button>
+            <button class="arrow-btn" id="arrowUpBtn">↑</button>
+            <button class="arrow-btn" id="arrowLeftBtn">←</button>
+            <button class="center-btn" id="centerBtn">⦿ Center</button>
+            <button class="arrow-btn" id="arrowRightBtn">→</button>
+            <button class="arrow-btn" id="arrowDownBtn">↓</button>
           </div>
           <div class="zoom-controls">
             <button id="zoomOutBtn" class="fancy-btn" title="Zoom out">−</button>
@@ -409,7 +423,7 @@
           <label for="jumpY">Y:</label>
           <input type="number" id="jumpY" min="0" max="1099" value="0" />
           <button class="fancy-btn" id="jumpBtn">Jump</button>
-          <button class="fancy-btn" id="randomBtn">&#x21bb; Random Square</button>
+          <button class="fancy-btn" id="randomBtn">⟳ Random Square</button>
         </div>
       </div>
     </footer>
