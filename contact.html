@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Contact | The (In)Visible Million Project</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    html, body {
+      margin: 0; padding: 0; height: 100%;
+      font-family: Arial, sans-serif;
+      background: #282828;
+      color: #fff;
+      width: 100vw; height: 100vh;
+      overflow-x: hidden;
+    }
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 120px;
+      min-height: 120px;
+      position: relative;
+    }
+    .header-content {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      height: 100%;
+      gap: 16px;
+      position: relative;
+    }
+    .big-title {
+      font-size: 4.2em;
+      font-weight: bold;
+      letter-spacing: 2px;
+      line-height: 1.2;
+      text-shadow: 0 2px 6px #111a;
+      color: #fff;
+      flex: none;
+      z-index: 2;
+    }
+    .menu-icon {
+      margin-left: 18px;
+      width: 48px; height: 48px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      gap: 10px;
+      cursor: pointer;
+      z-index: 100;
+      background: none;
+      outline: 2px solid #ccc;
+      border-radius: 8px;
+      transition: outline 0.2s;
+    }
+    .menu-icon:focus {
+      outline: 3px solid #eee;
+    }
+    .menu-icon span {
+      display: block;
+      width: 36px;
+      height: 6px;
+      background: #fff;
+      border-radius: 3px;
+      margin: 0 auto;
+      transition: background 0.2s;
+    }
+    .popup-menu {
+      position: fixed;
+      top: 0; right: 0; left: 0; bottom: 0;
+      width: 100vw; height: 100vh;
+      background: rgba(30,30,30,0.98);
+      z-index: 5000;
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 32px;
+      font-size: 2em;
+    }
+    .popup-menu.active { display: flex; }
+    .popup-menu a,
+    .popup-menu .close-menu {
+      outline: 2px solid #ccc;
+      border-radius: 12px;
+    }
+    .popup-menu a {
+      color: #fff !important;
+      text-decoration: none;
+      padding: 18px 42px;
+      font-size: 1.1em;
+      background: #444;
+      margin: 10px 0;
+      border: 2px solid #fff;
+      transition: background 0.2s, color 0.2s;
+      display: flex;
+      align-items: center;
+    }
+    .popup-menu a:hover {
+      background: #fff;
+      color: #222 !important;
+      border-color: #fff;
+    }
+    .popup-menu .close-menu {
+      position: absolute;
+      top: 44px;
+      right: 44px;
+      color: #fff;
+      background: none;
+      border: none;
+      font-size: 2.5em;
+      cursor: pointer;
+      z-index: 5100;
+    }
+    main {
+      max-width: 800px;
+      margin: 48px auto 0 auto;
+      padding: 32px 16px;
+      background: #333;
+      border-radius: 18px;
+      box-shadow: 0 4px 32px #111a;
+    }
+    h1 {
+      font-weight: bold;
+      color: #eee;
+      margin-top: 0;
+      font-size: 2em; /* 2 points smaller than .big-title */
+    }
+    p {
+      font-size: 2.2em; /* 2 points smaller than previous (was 2.4em) */
+      line-height: 1.7;
+      margin-bottom: 1.1em;
+    }
+    footer {
+      width: 100vw;
+      background: transparent;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 95px;
+      height: 95px;
+      overflow-x: auto;
+      font-size: 2.66em;
+      margin-top: 48px;
+    }
+    .footer-content {
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      justify-content: center;
+      gap: 36px;
+      width: 100%;
+      height: 95px;
+      flex-wrap: nowrap;
+      white-space: nowrap;
+    }
+    @media (max-width: 700px) {
+      header, footer { min-height: 40px; height: 40px; }
+      .big-title { font-size: 1.1em !important; }
+      main { padding: 12px 3px; }
+      h1 { font-size: 1em; }
+      p { font-size: 1.7em; }
+      .footer-content { font-size: 1.6em; height: 20px; min-width: 20px; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="header-content">
+      <span class="big-title">Contact | The (In)Visible Million Project</span>
+      <div class="menu-icon" tabindex="0" title="Menu" aria-label="Open menu">
+        <span></span>
+        <span></span>
+        <span></span>
+      </div>
+    </div>
+  </header>
+  <nav class="popup-menu" id="popupMenu" aria-hidden="true">
+    <button class="close-menu" id="closeMenu" title="Close menu" aria-label="Close menu">&times;</button>
+    <a href="index.html">Home</a>
+    <a href="Manifesto.html">Manifesto</a>
+    <a href="about.html">About</a>
+    <a href="contact.html">Contact</a>
+  </nav>
+  <main>
+    <h1>Contact Us</h1>
+    <p>
+      Please find below our invisible contact.
+    </p>
+  </main>
+  <footer>
+    <div class="footer-content">
+      &copy; 2025 The (In)Visible Million Project
+    </div>
+  </footer>
+  <script>
+    // Menu functionality
+    const menuIcon = document.querySelector('.menu-icon');
+    const popupMenu = document.getElementById('popupMenu');
+    const closeMenuBtn = document.getElementById('closeMenu');
+
+    function openMenu() {
+      popupMenu.classList.add('active');
+      popupMenu.setAttribute('aria-hidden', 'false');
+      closeMenuBtn.focus();
+    }
+
+    function closeMenu() {
+      popupMenu.classList.remove('active');
+      popupMenu.setAttribute('aria-hidden', 'true');
+      menuIcon.focus();
+    }
+
+    menuIcon.addEventListener('click', openMenu);
+    menuIcon.addEventListener('keydown', function(e) {
+      if (e.key === 'Enter' || e.key === ' ') openMenu();
+    });
+
+    closeMenuBtn.addEventListener('click', closeMenu);
+    closeMenuBtn.addEventListener('keydown', function(e) {
+      if (e.key === 'Enter' || e.key === ' ') closeMenu();
+    });
+
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape' && popupMenu.classList.contains('active')) {
+        closeMenu();
+      }
+    });
+
+    popupMenu.addEventListener('click', function(e) {
+      if (e.target === popupMenu) closeMenu();
+    });
+  </script>
+</body>
+</html>
