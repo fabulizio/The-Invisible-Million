@@ -19,7 +19,7 @@
       align-items: center;
       justify-content: center;
       text-align: center;
-      height: 120px; /* triple typical height */
+      height: 120px;
       min-height: 120px;
     }
     .header-content, .footer-content {
@@ -30,6 +30,76 @@
       align-items: center;
       justify-content: center;
       gap: 16px;
+      position: relative;
+    }
+    .menu-icon {
+      width: 48px;
+      height: 48px;
+      min-width: 48px;
+      min-height: 48px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      gap: 7px;
+      cursor: pointer;
+      margin-right: 22px;
+      position: absolute;
+      left: 0;
+      top: 50%;
+      transform: translateY(-50%);
+      z-index: 120;
+    }
+    .menu-icon span {
+      display: block;
+      width: 36px;
+      height: 6px;
+      background: #fff;
+      border-radius: 3px;
+      margin: 0 auto;
+      transition: background 0.2s;
+    }
+    .popup-menu {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(30,30,30,0.98);
+      z-index: 5000;
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 32px;
+      font-size: 2.2em;
+    }
+    .popup-menu.active { display: flex; }
+    .popup-menu a {
+      color: #fff;
+      text-decoration: none;
+      padding: 18px 42px;
+      font-size: 1.1em;
+      border-radius: 12px;
+      background: #444;
+      margin: 10px 0;
+      border: 2px solid #ff0070;
+      transition: background 0.2s, color 0.2s;
+    }
+    .popup-menu a:hover {
+      background: #ff0070;
+      color: #fff;
+    }
+    .popup-menu .close-menu {
+      position: absolute;
+      top: 44px;
+      right: 44px;
+      color: #fff;
+      background: none;
+      border: none;
+      font-size: 2.5em;
+      cursor: pointer;
+      z-index: 5100;
     }
     #frame {
       outline: 3px solid #ccc;
@@ -122,7 +192,7 @@
       height: 28px;
     }
     .color-picker-modal {
-      position: fixed; /* overlays whole site */
+      position: fixed;
       z-index: 9999;
       background: rgba(40,40,40,0.97);
       padding: 6px;
@@ -200,20 +270,47 @@
       font-size: 0.6em;
       color: #fff;
     }
+    .big-title {
+      font-size: 3em !important;
+      font-weight: bold;
+      letter-spacing: 2px;
+      line-height: 1.2;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      text-shadow: 0 2px 6px #111a;
+    }
     @media (max-width: 700px) {
       header, footer { min-height: 40px; height: 40px; }
       #frame { width: min(98vw, 70vh); height: min(98vw, 70vh);}
       .color-picker-modal canvas { width: 60px; height: 60px; }
       .color-picker-modal { min-width: 120px; }
+      .big-title { font-size: 2em !important; }
+      .menu-icon { width: 32px; height: 32px; min-width: 32px; min-height: 32px;}
+      .menu-icon span { width: 24px; height: 4px; }
+      .popup-menu { font-size: 1.2em; }
     }
   </style>
 </head>
 <body>
   <header>
     <div class="header-content">
-      <span style="font-weight:bold;font-size:1em;flex:1;display:flex;align-items:center;justify-content:center;">Invisible Million Grid</span>
+      <div class="menu-icon" id="menuIcon" title="Menu">
+        <span></span>
+        <span></span>
+        <span></span>
+      </div>
+      <span class="big-title">Invisible Million Grid</span>
     </div>
   </header>
+  <div class="popup-menu" id="popupMenu">
+    <button class="close-menu" id="closeMenuBtn" title="Close Menu">&times;</button>
+    <a href="manifesto.html">Manifesto</a>
+    <a href="about.html">About the Project</a>
+    <a href="collective.html">About the Collective</a>
+    <a href="next.html">Next Steps</a>
+  </div>
   <main>
     <div id="frame" tabindex="0">
       <canvas id="gridCanvas"></canvas>
@@ -258,7 +355,7 @@
     // ==== CONFIGURATION ====
     const BACKEND_URL = "https://155ca338-0e90-4f5a-88ec-b6163921baae-00-181dgn4pq10j7.janeway.replit.dev";
     const GRID_SIZE = 1100;
-    const CELL_SIZE = 30;
+    const CELL_SIZE = 24; // 20% smaller than 30
     let MIN_ZOOM = 0.1;
     const MAX_ZOOM = 3;
     let zoom = 1;
@@ -296,10 +393,24 @@
     const centerBtn = document.getElementById('centerBtn');
     const coordPopup = document.getElementById('coordPopup');
     const congratsMessage = document.getElementById('congratsMessage');
+    const menuIcon = document.getElementById('menuIcon');
+    const popupMenu = document.getElementById('popupMenu');
+    const closeMenuBtn = document.getElementById('closeMenuBtn');
 
     let gridCursor = { x: Math.floor(GRID_SIZE / 2), y: Math.floor(GRID_SIZE / 2) };
     let selectedColor = "#ffffff";
     let cursorCellLocked = false;
+
+    // ==== MENU HANDLERS ====
+    menuIcon.addEventListener('click', () => {
+      popupMenu.classList.add('active');
+    });
+    closeMenuBtn.addEventListener('click', () => {
+      popupMenu.classList.remove('active');
+    });
+    popupMenu.addEventListener('click', (e) => {
+      if (e.target === popupMenu) popupMenu.classList.remove('active');
+    });
 
     // ==== CANVAS AND GRID SIZING ====
     function setCanvasSize() {
@@ -603,18 +714,19 @@
       }
     });
 
-    // Donate button
+    // ==== Donate button logic (always available) ====
     donateBtn.addEventListener('click', () => {
-      if (!hasDonated) {
-        setTimeout(() => {
-          if (confirm("Simulated donation: proceed to color a square?")) {
-            hasDonated = true;
-            donateBtn.textContent = "Donated!";
-            donateBtn.disabled = true;
-          }
-        }, 100);
-      }
+      hasDonated = true;
+      donateBtn.textContent = "Donated!";
+      donateBtn.disabled = true;
+      localStorage.setItem("invisibleMillionHasDonated", "true");
     });
+
+    function resetDonateButton() {
+      donateBtn.textContent = "Donate";
+      donateBtn.disabled = false;
+      hasDonated = false;
+    }
 
     // ==== Color disc picker ====
     function drawColorDisc() {
@@ -708,6 +820,8 @@
       requestRedraw();
       showCongratsMessage();
       saveParticipation();
+      // Reset donate button for another simulation after participation
+      setTimeout(resetDonateButton, 5000);
     };
     cancelColorBtn.onclick = function() {
       colorPickerModal.style.display = "none";
@@ -727,9 +841,12 @@
       localStorage.setItem("invisibleMillionParticipation", "true");
     }
     function checkParticipation() {
-      if(localStorage.getItem("invisibleMillionParticipation") === "true") {
+      if(localStorage.getItem("invisibleMillionHasDonated") === "true") {
         donateBtn.textContent = "Donated!";
         donateBtn.disabled = true;
+        hasDonated = true;
+      } else {
+        resetDonateButton();
       }
     }
 
