@@ -19,6 +19,7 @@
       justify-content: center;
       height: 120px;
       min-height: 120px;
+      position: relative;
     }
     .header-content {
       display: flex;
@@ -36,6 +37,74 @@
       line-height: 1.2;
       text-shadow: 0 2px 6px #111a;
       flex: none;
+      z-index: 2;
+    }
+    .menu-icon {
+      position: absolute;
+      right: 24px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 48px; height: 48px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      gap: 10px;
+      cursor: pointer;
+      z-index: 100;
+      background: none;
+    }
+    .menu-icon span {
+      display: block;
+      width: 36px;
+      height: 6px;
+      background: #fff;
+      border-radius: 3px;
+      margin: 0 auto;
+      transition: background 0.2s;
+    }
+    .popup-menu {
+      position: fixed;
+      top: 0; right: 0; left: 0; bottom: 0;
+      width: 100vw; height: 100vh;
+      background: rgba(30,30,30,0.98);
+      z-index: 5000;
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 32px;
+      font-size: 2em;
+    }
+    .popup-menu.active { display: flex; }
+    .popup-menu a {
+      color: #fff !important;
+      text-decoration: none;
+      padding: 18px 42px;
+      font-size: 1.1em;
+      border-radius: 12px;
+      background: #444;
+      margin: 10px 0;
+      border: 2px solid #fff;
+      transition: background 0.2s, color 0.2s;
+      display: flex;
+      align-items: center;
+    }
+    .popup-menu a:hover {
+      background: #fff;
+      color: #222 !important;
+      border-color: #fff;
+    }
+    .popup-menu .close-menu {
+      position: absolute;
+      top: 44px;
+      right: 44px;
+      color: #fff;
+      background: none;
+      border: none;
+      font-size: 2.5em;
+      cursor: pointer;
+      z-index: 5100;
     }
     #frame {
       outline: 3px solid #ccc;
@@ -62,10 +131,9 @@
       cursor: pointer;
     }
     #gridCanvas.grabbing, #frame.grabbing { cursor: grabbing !important; }
-    /* Controls: dynamically fill bottom of grid */
     .nav-panel {
       position: absolute;
-      left: 0;
+      left: 0; right: 0;
       bottom: 0;
       width: 100%;
       z-index: 90;
@@ -114,7 +182,7 @@
       border: none;
       border-radius: 9px;
       padding: 7px 18px;
-      font-size: 1.06em; /* 33% larger than previously */
+      font-size: 1.06em;
       cursor: pointer;
       margin: 0 4px;
       font-weight: bold;
@@ -134,7 +202,6 @@
       color: #111;
       outline: 2px solid #FF0070;
     }
-    /* Footer: always a single line, scroll if needed, large */
     footer {
       width: 100vw;
       background: transparent;
@@ -190,7 +257,6 @@
       -webkit-appearance: none;
       margin: 0;
     }
-    /* Palette tool double size, square, modal at half-square offset */
     .color-picker-modal {
       position: fixed;
       z-index: 9999;
@@ -201,30 +267,25 @@
       border-radius: 18px;
       box-shadow: 0 0 24px #000;
       border: 2px solid #fff;
-      width: 280px; height: 280px;
-      min-width: 280px; min-height: 280px;
+      min-width: 220px;
+      min-height: 220px;
       justify-content: center;
-      padding: 0;
+      padding: 10px 18px 10px 18px;
+      /* width/height will be set dynamically */
     }
     .color-picker-modal canvas {
-      width: 88px; height: 88px;
+      width: 114px; height: 114px;
       border: 2px solid #fff;
       border-radius: 50%;
       background: transparent;
-      margin-bottom: 10px;
+      margin-bottom: 16px;
       display: block;
     }
     .color-picker-modal .modal-btns {
-      display: flex; gap: 14px; justify-content: center;
+      display: flex; flex-direction: column; gap: 14px; justify-content: center;
       align-items: center;
       margin-top: 8px;
-    }
-    .selected-color {
-      width: 28px; height: 28px; border-radius: 50%;
-      border: 2px solid #fff;
-      margin: 6px auto 6px auto;
-      background: #fff;
-      display: block;
+      width: 100%;
     }
     .palette-error, .palette-message {
       color: #fff;
@@ -280,8 +341,8 @@
     @media (max-width: 700px) {
       header, footer { min-height: 40px; height: 40px; }
       #frame { width: min(98vw, 70vh); height: min(98vw, 70vh);}
-      .color-picker-modal canvas { width: 48px; height: 48px; }
-      .color-picker-modal { min-width: 140px; min-height: 140px; width: 140px; height: 140px;}
+      .color-picker-modal canvas { width: 66px; height: 66px; }
+      .color-picker-modal { min-width: 120px; min-height: 120px; }
       .big-title { font-size: 1.3em !important; }
       .arrow-btn, .center-btn, .fancy-btn, .jump-panel, .footer-content { font-size: 0.8em; height: 20px; min-width: 20px; }
       .jump-panel input[type="number"] { height: 15px; width: 28px; font-size: 0.7em; }
@@ -292,6 +353,11 @@
   <header>
     <div class="header-content">
       <span class="big-title">The (In)Visible Million Project</span>
+      <div class="menu-icon" id="menuIcon" title="Menu">
+        <span></span>
+        <span></span>
+        <span></span>
+      </div>
     </div>
   </header>
   <main>
@@ -314,8 +380,7 @@
           </div>
         </div>
         <div id="colorPickerModal" class="color-picker-modal">
-          <canvas id="colorDisc" width="88" height="88"></canvas>
-          <div class="selected-color" id="selectedColorDisc"></div>
+          <canvas id="colorDisc" width="114" height="114"></canvas>
           <div class="modal-btns">
             <button id="randomColorBtn" type="button" class="fancy-btn">Random</button>
             <button id="confirmColorBtn" type="button" class="fancy-btn">OK</button>
@@ -325,6 +390,13 @@
         <div class="palette-error" id="paletteError"></div>
         <div id="congratsMessage"></div>
       </div>
+    </div>
+    <div class="popup-menu" id="popupMenu">
+      <button class="close-menu" id="closeMenuBtn" title="Close Menu">&times;</button>
+      <a href="manifesto.html">Manifesto</a>
+      <a href="about.html">About the Project</a>
+      <a href="collective.html">About the Collective</a>
+      <a href="next.html">Next Steps</a>
     </div>
     <footer>
       <div class="footer-content">
@@ -341,52 +413,56 @@
     </footer>
   </main>
   <script>
-    const BACKEND_URL = "https://155ca338-0e90-4f5a-88ec-b6163921baae-00-181dgn4pq10j7.janeway.replit.dev";
+    // ---- MENU ----
+    const menuIcon = document.getElementById('menuIcon');
+    const popupMenu = document.getElementById('popupMenu');
+    const closeMenuBtn = document.getElementById('closeMenuBtn');
+    menuIcon.addEventListener('click', () => popupMenu.classList.add('active'));
+    closeMenuBtn.addEventListener('click', () => popupMenu.classList.remove('active'));
+    popupMenu.addEventListener('click', (e) => {
+      if (e.target === popupMenu) popupMenu.classList.remove('active');
+    });
+
+    // ---- GRID ----
     const GRID_SIZE = 1100;
     const CELL_SIZE = 24;
+    let zoom = 1;
     let MIN_ZOOM = 0.1;
     const MAX_ZOOM = 3;
-    let zoom = 1;
-    let offsetX = 0;
-    let offsetY = 0;
+    let offsetX = 0, offsetY = 0;
     let coloredCells = {};
     let redrawPending = false;
     let isDragging = false;
     let dragStart = {x: 0, y: 0};
     let offsetStart = {x: 0, y: 0};
-    let touchStart = null;
-    let pinchStartDist = null;
-    let pinchStartZoom = null;
-    let hasDonated = false;
     let palettePreviewCell = null;
     let showCursor = true;
+    let hasDonated = false;
 
     const canvas = document.getElementById('gridCanvas');
     const ctx = canvas.getContext('2d');
     const frame = document.getElementById('frame');
-    const zoomInBtn = document.getElementById('zoomInBtn');
-    const zoomOutBtn = document.getElementById('zoomOutBtn');
     const zoomDisplay = document.getElementById('zoomDisplay');
-    const colorPickerModal = document.getElementById('colorPickerModal');
-    const colorDisc = document.getElementById('colorDisc');
-    const selectedColorDisc = document.getElementById('selectedColorDisc');
-    const confirmColorBtn = document.getElementById('confirmColorBtn');
-    const cancelColorBtn = document.getElementById('cancelColorBtn');
-    const randomColorBtn = document.getElementById('randomColorBtn');
-    const jumpX = document.getElementById('jumpX');
-    const jumpY = document.getElementById('jumpY');
-    const jumpBtn = document.getElementById('jumpBtn');
-    const randomBtn = document.getElementById('randomBtn');
     const arrowUpBtn = document.getElementById('arrowUpBtn');
     const arrowDownBtn = document.getElementById('arrowDownBtn');
     const arrowLeftBtn = document.getElementById('arrowLeftBtn');
     const arrowRightBtn = document.getElementById('arrowRightBtn');
     const centerBtn = document.getElementById('centerBtn');
+    const zoomInBtn = document.getElementById('zoomInBtn');
+    const zoomOutBtn = document.getElementById('zoomOutBtn');
+    const jumpX = document.getElementById('jumpX');
+    const jumpY = document.getElementById('jumpY');
+    const jumpBtn = document.getElementById('jumpBtn');
+    const randomBtn = document.getElementById('randomBtn');
+    const donateBtn = document.getElementById('donateBtn');
     const coordPopup = document.getElementById('coordPopup');
     const congratsMessage = document.getElementById('congratsMessage');
     const paletteError = document.getElementById('paletteError');
-    const donateBtn = document.getElementById('donateBtn');
-
+    const colorPickerModal = document.getElementById('colorPickerModal');
+    const colorDisc = document.getElementById('colorDisc');
+    const confirmColorBtn = document.getElementById('confirmColorBtn');
+    const cancelColorBtn = document.getElementById('cancelColorBtn');
+    const randomColorBtn = document.getElementById('randomColorBtn');
     let gridCursor = { x: Math.floor(GRID_SIZE / 2), y: Math.floor(GRID_SIZE / 2) };
     let previewColor = null;
 
@@ -476,7 +552,6 @@
         ctx.restore();
       }
     }
-
     function showCoordPopup(cell, mouseX, mouseY) {
       if (colorPickerModal.style.display === "flex") return;
       coordPopup.innerHTML = `<span>X: ${cell.x}, Y: ${cell.y}</span>`;
@@ -539,7 +614,7 @@
       });
     }
     function sendCellColor(x, y, color) {
-      fetch(`${BACKEND_URL}/cell`, {
+      fetch(`https://155ca338-0e90-4f5a-88ec-b6163921baae-00-181dgn4pq10j7.janeway.replit.dev/cell`, {
         method: "POST",
         headers: {"Content-Type": "application/json"},
         body: JSON.stringify({x, y, color, locked: true})
@@ -549,7 +624,7 @@
       .catch(err => {});
     }
     function fetchGridState() {
-      fetch(`${BACKEND_URL}/grid`)
+      fetch(`https://155ca338-0e90-4f5a-88ec-b6163921baae-00-181dgn4pq10j7.janeway.replit.dev/grid`)
         .then(res => res.json())
         .then(data => {
           if (data && data.cells) {
@@ -694,9 +769,7 @@
 
     canvas.addEventListener('wheel', function(e) {
       if (e.ctrlKey || e.metaKey) {
-        e.preventDefault();
-        setZoom(zoom * (e.deltaY < 0 ? 1.1 : 0.9), e.offsetX, e.offsetY);
-        hidePalette();
+        return; // Let browser do default zoom of whole page
       }
     }, {passive:false});
 
@@ -740,7 +813,6 @@
       const sat = r / radius;
       const rgb = hsvToRgb(hue/360, sat, 1);
       previewColor = rgbToHex(rgb[0], rgb[1], rgb[2]);
-      selectedColorDisc.style.background = previewColor;
       requestPalettePreview();
     });
     randomColorBtn.onclick = () => {
@@ -748,12 +820,10 @@
       const sat = 1;
       const rgb = hsvToRgb(hue/360, sat, 1);
       previewColor = rgbToHex(rgb[0], rgb[1], rgb[2]);
-      selectedColorDisc.style.background = previewColor;
       requestPalettePreview();
     };
 
     function showColorPickerModalDynamic(mouseX, mouseY) {
-      selectedColorDisc.style.background = "#fff";
       previewColor = null;
       palettePreviewCell = {x: gridCursor.x, y: gridCursor.y};
       showCursor = true;
@@ -766,16 +836,16 @@
       const topInFrame = offsetY + gridCursor.y * scaledCellSize + scaledCellSize / 2;
       let left = frameRect.left + leftInFrame + scaledCellSize/2;
       let top = frameRect.top + topInFrame - colorPickerModal.offsetHeight/2;
-      // If more space right, place right, else place left
       if (left + colorPickerModal.offsetWidth > window.innerWidth) {
         left = frameRect.left + leftInFrame - colorPickerModal.offsetWidth - scaledCellSize/2;
       }
-      // If more space above, place above, else place below
       if (top < 0) top = frameRect.top + topInFrame + scaledCellSize/2;
       colorPickerModal.style.left = left + "px";
       colorPickerModal.style.top = top + "px";
       colorPickerModal.style.display = "flex";
       colorPickerModal.style.position = "fixed";
+      colorPickerModal.style.width = "auto";
+      colorPickerModal.style.height = "auto";
     }
     function dynamicAboveBelow(mouseX, mouseY, popupHeight) {
       let vpad = 10;
