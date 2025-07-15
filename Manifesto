@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Contact</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <!-- Copy relevant CSS from index.html -->
+</head>
+<body>
+  <header>
+    <!-- Optionally copy your header/menu structure here -->
+  </header>
+  <main>
+    <h1>Contact Us</h1>
+    <!-- Your contact page content -->
+  </main>
+  <footer>
+    <!-- Optionally copy your footer here -->
+  </footer>
+</body>
+</html>
