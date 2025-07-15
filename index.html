@@ -1,288 +1,390 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>The Invisible Million</title>
-  <style>
-    html, body {
-      margin: 0;
-      padding: 0;
-      background: #111;
-      overflow: hidden;
-      font-family: sans-serif;
-      color: white;
-    }
-    #container {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-    }
-    #minimap {
-      margin-top: 10px;
-      border: 1px solid #444;
-      cursor: pointer;
-    }
-    #canvasWrapper {
-      position: relative;
-    }
-    canvas {
-      border: 1px solid #333;
-      touch-action: none;
-    }
-    #coords {
-      position: absolute;
-      top: 10px;
-      left: 10px;
-      background: rgba(0,0,0,0.7);
-      padding: 5px 10px;
-      border-radius: 4px;
-      font-size: 14px;
-    }
-    #zoomControls {
-      position: absolute;
-      top: 10px;
-      right: 10px;
-      display: flex;
-      flex-direction: column;
-    }
-    #zoomControls button {
-      margin: 2px;
-      background: #222;
-      border: none;
-      color: white;
-      padding: 8px;
-      cursor: pointer;
-      font-size: 16px;
-      border-radius: 4px;
-    }
-    #colorPicker {
-      position: absolute;
-      display: none;
-      z-index: 1000;
-    }
-  </style>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Zoomable Grid with Sticky Header/Footer</title>
+<style>
+  /* Reset */
+  * {
+    box-sizing: border-box;
+  }
+  body, html {
+    margin: 0; padding: 0; height: 100%;
+    font-family: Arial, sans-serif;
+    display: flex;
+    flex-direction: column;
+  }
+  /* Sticky header */
+  header {
+    position: sticky;
+    top: 0;
+    background: #222;
+    color: white;
+    padding: 10px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    z-index: 10;
+  }
+  header .left-links a {
+    color: #aaf;
+    margin-right: 15px;
+    text-decoration: none;
+    font-weight: 600;
+  }
+  header .left-links a:hover {
+    text-decoration: underline;
+  }
+  header button {
+    background: #4CAF50;
+    border: none;
+    color: white;
+    padding: 8px 15px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: 600;
+  }
+  header button:hover {
+    background: #45a049;
+  }
+
+  /* Sticky footer */
+  footer {
+    position: sticky;
+    bottom: 0;
+    background: #222;
+    color: white;
+    padding: 10px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    z-index: 10;
+  }
+  footer .coords {
+    font-family: monospace;
+  }
+  footer label {
+    margin-right: 10px;
+  }
+  footer select {
+    padding: 4px 8px;
+    border-radius: 3px;
+    border: none;
+    font-size: 1em;
+  }
+
+  /* Central block with fixed outline */
+  main {
+    flex: 1 1 auto;
+    background: #f0f0f0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 15px;
+    overflow: hidden;
+  }
+
+  /* Container for fixed frame */
+  #frame {
+    position: relative;
+    width: 800px;
+    height: 600px;
+    outline: 3px solid #333;
+    background: white;
+    overflow: hidden;
+    touch-action: none;
+  }
+
+  /* Canvas fills the frame */
+  #gridCanvas {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    display: block;
+    cursor: grab;
+    user-select: none;
+  }
+  #gridCanvas:active {
+    cursor: grabbing;
+  }
+</style>
 </head>
 <body>
-  <div id="container">
-    <canvas id="minimap" width="200" height="200"></canvas>
-    <div id="canvasWrapper">
-      <canvas id="grid" width="800" height="800"></canvas>
-      <div id="coords">x: –, y: –</div>
-      <div id="zoomControls">
-        <button id="zoomIn">+</button>
-        <button id="zoomOut">−</button>
-        <button id="fullscreen">⛶</button>
-      </div>
-    </div>
+
+<header>
+  <div class="left-links">
+    <a href="#stati1" tabindex="1">Stati Page 1</a>
+    <a href="#stati2" tabindex="2">Stati Page 2</a>
   </div>
-  <input type="color" id="colorPicker" />
-  
-  <script>
-    const canvas = document.getElementById('grid');
-    const ctx = canvas.getContext('2d');
-    const minimap = document.getElementById('minimap');
-    const minimapCtx = minimap.getContext('2d');
-    const coordsDisplay = document.getElementById('coords');
-    const colorPicker = document.getElementById('colorPicker');
-    const ZOOM_STEP = 2;
-    const GRID_SIZE = 1000;
-    const CANVAS_SIZE = 800;
-    const MIN_ZOOM = 4;
-    const MAX_ZOOM = 100;
-    const SCALE_FACTOR = minimap.width / GRID_SIZE;
+  <button id="donateBtn" tabindex="3">Donate</button>
+</header>
 
-    let zoom = 20;
-    let offsetX = 0;
-    let offsetY = 0;
-    let gridData = Array.from({ length: GRID_SIZE }, () => Array(GRID_SIZE).fill('#111'));
+<main>
+  <div id="frame" tabindex="0" aria-label="Zoomable grid frame">
+    <canvas id="gridCanvas" width="800" height="600"></canvas>
+  </div>
+</main>
 
-    function drawGrid() {
-      const cellSize = CANVAS_SIZE / zoom;
-      ctx.clearRect(0, 0, CANVAS_SIZE, CANVAS_SIZE);
+<footer>
+  <div class="coords" aria-live="polite" aria-atomic="true">X: 0, Y: 0</div>
+  <div>
+    <label for="colorSelect">Select Color:</label>
+    <select id="colorSelect" aria-label="Select drawing color">
+      <option value="#000000" selected>Black</option>
+      <option value="#FF0000">Red</option>
+      <option value="#00AA00">Green</option>
+      <option value="#0000FF">Blue</option>
+      <option value="#FFA500">Orange</option>
+      <option value="#800080">Purple</option>
+    </select>
+  </div>
+</footer>
 
-      for (let x = 0; x < zoom; x++) {
-        for (let y = 0; y < zoom; y++) {
-          const gridX = Math.floor(offsetX + x);
-          const gridY = Math.floor(offsetY + y);
-          if (gridX >= 0 && gridX < GRID_SIZE && gridY >= 0 && gridY < GRID_SIZE) {
-            ctx.fillStyle = gridData[gridX][gridY];
-            ctx.fillRect(x * cellSize, y * cellSize, cellSize, cellSize);
-          }
-        }
-      }
+<script>
+(() => {
+  const canvas = document.getElementById('gridCanvas');
+  const ctx = canvas.getContext('2d');
+  const frame = document.getElementById('frame');
+  const coordsDisplay = document.querySelector('footer .coords');
+  const colorSelect = document.getElementById('colorSelect');
+  const donateBtn = document.getElementById('donateBtn');
+
+  // Grid settings
+  const GRID_SIZE = 1000;   // 1000 x 1000 cells
+  const CELL_SIZE = 30;     // Base size (will scale with zoom)
+  const MIN_ZOOM = 0.5;
+  const MAX_ZOOM = 3;
+  let zoom = 1;
+  let offsetX = 0;  // pan offset in pixels
+  let offsetY = 0;
+
+  // Track mouse dragging for panning
+  let isDragging = false;
+  let dragStart = {x: 0, y: 0};
+  let offsetStart = {x: 0, y: 0};
+
+  // Current mouse cell coords
+  let currentCell = {x: 0, y: 0};
+
+  // Selected color for future extensions (e.g. coloring cells)
+  let selectedColor = colorSelect.value;
+
+  // Donation button click (dummy alert)
+  donateBtn.addEventListener('click', () => {
+    alert('Thank you for your intention to donate! (Functionality to be implemented)');
+  });
+
+  // Color selector change
+  colorSelect.addEventListener('change', (e) => {
+    selectedColor = e.target.value;
+  });
+
+  // Draw grid function
+  function drawGrid() {
+    const width = canvas.width;
+    const height = canvas.height;
+    ctx.clearRect(0, 0, width, height);
+
+    // Background fill
+    ctx.fillStyle = '#fff';
+    ctx.fillRect(0, 0, width, height);
+
+    // Calculate scaled cell size
+    const scaledCellSize = CELL_SIZE * zoom;
+
+    // Determine visible grid bounds in cells
+    const startCol = Math.floor(-offsetX / scaledCellSize);
+    const startRow = Math.floor(-offsetY / scaledCellSize);
+    const visibleCols = Math.ceil(width / scaledCellSize) + 1;
+    const visibleRows = Math.ceil(height / scaledCellSize) + 1;
+
+    ctx.strokeStyle = '#ccc';
+    ctx.lineWidth = 1;
+
+    // Draw vertical grid lines
+    for(let c = startCol; c <= startCol + visibleCols; c++) {
+      if (c < 0 || c >= GRID_SIZE) continue;
+      const x = offsetX + c * scaledCellSize;
+      ctx.beginPath();
+      ctx.moveTo(x + 0.5, 0);
+      ctx.lineTo(x + 0.5, height);
+      ctx.stroke();
     }
 
-    function drawMinimap() {
-      const w = minimap.width;
-      const h = minimap.height;
-      minimapCtx.clearRect(0, 0, w, h);
-
-      for (let x = 0; x < GRID_SIZE; x++) {
-        for (let y = 0; y < GRID_SIZE; y++) {
-          minimapCtx.fillStyle = gridData[x][y];
-          minimapCtx.fillRect(x * SCALE_FACTOR, y * SCALE_FACTOR, SCALE_FACTOR, SCALE_FACTOR);
-        }
-      }
-
-      const visibleSquares = Math.floor(CANVAS_SIZE / zoom);
-      const boxX = offsetX * SCALE_FACTOR;
-      const boxY = offsetY * SCALE_FACTOR;
-      const boxSize = visibleSquares * SCALE_FACTOR;
-
-      minimapCtx.strokeStyle = 'red';
-      minimapCtx.lineWidth = 1;
-      minimapCtx.strokeRect(boxX, boxY, boxSize, boxSize);
+    // Draw horizontal grid lines
+    for(let r = startRow; r <= startRow + visibleRows; r++) {
+      if (r < 0 || r >= GRID_SIZE) continue;
+      const y = offsetY + r * scaledCellSize;
+      ctx.beginPath();
+      ctx.moveTo(0, y + 0.5);
+      ctx.lineTo(width, y + 0.5);
+      ctx.stroke();
     }
 
-    function clampOffsets() {
-      const visibleSquares = Math.floor(CANVAS_SIZE / zoom);
-      offsetX = Math.max(0, Math.min(GRID_SIZE - visibleSquares, offsetX));
-      offsetY = Math.max(0, Math.min(GRID_SIZE - visibleSquares, offsetY));
+    // Highlight hovered cell
+    if(currentCell.x >= 0 && currentCell.x < GRID_SIZE &&
+       currentCell.y >= 0 && currentCell.y < GRID_SIZE) {
+      const highlightX = offsetX + currentCell.x * scaledCellSize;
+      const highlightY = offsetY + currentCell.y * scaledCellSize;
+      ctx.fillStyle = selectedColor + '88'; // semi-transparent fill
+      ctx.fillRect(highlightX + 1, highlightY + 1, scaledCellSize - 2, scaledCellSize - 2);
+    }
+  }
+
+  // Update coordinates display based on mouse position on canvas
+  function updateCoordsDisplay(cellX, cellY) {
+    coordsDisplay.textContent = `X: ${cellX}, Y: ${cellY}`;
+  }
+
+  // Convert canvas pixel coords to cell coords
+  function pixelToCell(x, y) {
+    const scaledCellSize = CELL_SIZE * zoom;
+    const cellX = Math.floor((x - offsetX) / scaledCellSize);
+    const cellY = Math.floor((y - offsetY) / scaledCellSize);
+    return {x: cellX, y: cellY};
+  }
+
+  // Clamp offset so grid does not pan out of bounds
+  function clampOffset() {
+    const scaledCellSize = CELL_SIZE * zoom;
+    const maxOffsetX = 0;
+    const maxOffsetY = 0;
+    const minOffsetX = - (GRID_SIZE * scaledCellSize - canvas.width);
+    const minOffsetY = - (GRID_SIZE * scaledCellSize - canvas.height);
+
+    if (minOffsetX > maxOffsetX) { // if grid smaller than viewport
+      offsetX = (canvas.width - GRID_SIZE * scaledCellSize) / 2;
+    } else {
+      offsetX = Math.min(maxOffsetX, Math.max(minOffsetX, offsetX));
     }
 
-    function coordsFromPixel(px, py) {
-      const cellSize = CANVAS_SIZE / zoom;
-      const x = Math.floor(px / cellSize + offsetX);
-      const y = Math.floor(py / cellSize + offsetY);
-      return { x, y };
+    if (minOffsetY > maxOffsetY) {
+      offsetY = (canvas.height - GRID_SIZE * scaledCellSize) / 2;
+    } else {
+      offsetY = Math.min(maxOffsetY, Math.max(minOffsetY, offsetY));
     }
+  }
 
-    function showCoordsDisplay({ x, y }) {
-      if (x >= 0 && x < GRID_SIZE && y >= 0 && y < GRID_SIZE) {
-        coordsDisplay.textContent = `x: ${x}, y: ${y}`;
-      } else {
-        coordsDisplay.textContent = 'x: –, y: –';
-      }
-    }
+  // Zoom function (centered on canvas center)
+  function zoomGrid(deltaZoom) {
+    const oldZoom = zoom;
+    zoom *= deltaZoom;
+    zoom = Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, zoom));
 
-    function onCanvasClick(e) {
-      const rect = canvas.getBoundingClientRect();
-      const mouseX = e.clientX - rect.left;
-      const mouseY = e.clientY - rect.top;
-      const { x, y } = coordsFromPixel(mouseX, mouseY);
-      if (x < 0 || x >= GRID_SIZE || y < 0 || y >= GRID_SIZE) return;
+    // Adjust offset to keep center fixed
+    const canvasCenterX = canvas.width / 2;
+    const canvasCenterY = canvas.height / 2;
 
-      colorPicker.style.left = `${e.pageX}px`;
-      colorPicker.style.top = `${e.pageY}px`;
-      colorPicker.value = gridData[x][y];
-      colorPicker.style.display = 'block';
+    offsetX = canvasCenterX - ((canvasCenterX - offsetX) * (zoom / oldZoom));
+    offsetY = canvasCenterY - ((canvasCenterY - offsetY) * (zoom / oldZoom));
+    clampOffset();
+  }
 
-      colorPicker.oninput = () => {
-        gridData[x][y] = colorPicker.value;
-        drawGrid();
-        drawMinimap();
-      };
+  // Handle wheel for zoom
+  canvas.addEventListener('wheel', (e) => {
+    e.preventDefault();
+    const zoomStep = 1.1;
+    if(e.deltaY < 0) zoomGrid(zoomStep);
+    else zoomGrid(1 / zoomStep);
+    drawGrid();
+  }, {passive: false});
 
-      colorPicker.onblur = () => {
-        colorPicker.style.display = 'none';
-      };
-
-      colorPicker.focus();
-    }
-
-    document.getElementById('zoomIn').onclick = () => {
-      zoom = Math.min(zoom + ZOOM_STEP, MAX_ZOOM);
-      clampOffsets();
+  // Handle mouse down for panning
+  canvas.addEventListener('mousedown', (e) => {
+    isDragging = true;
+    dragStart.x = e.clientX;
+    dragStart.y = e.clientY;
+    offsetStart.x = offsetX;
+    offsetStart.y = offsetY;
+  });
+  window.addEventListener('mouseup', () => {
+    isDragging = false;
+  });
+  window.addEventListener('mousemove', (e) => {
+    if(!isDragging) return;
+    offsetX = offsetStart.x + (e.clientX - dragStart.x);
+    offsetY = offsetStart.y + (e.clientY - dragStart.y);
+    clampOffset();
+    drawGrid();
+    // Update cell under mouse after pan
+    const rect = canvas.getBoundingClientRect();
+    const mouseX = e.clientX - rect.left;
+    const mouseY = e.clientY - rect.top;
+    const cell = pixelToCell(mouseX, mouseY);
+    if(cell.x !== currentCell.x || cell.y !== currentCell.y) {
+      currentCell = cell;
+      updateCoordsDisplay(cell.x, cell.y);
       drawGrid();
-      drawMinimap();
-    };
-
-    document.getElementById('zoomOut').onclick = () => {
-      zoom = Math.max(zoom - ZOOM_STEP, MIN_ZOOM);
-      clampOffsets();
-      drawGrid();
-      drawMinimap();
-    };
-
-    document.getElementById('fullscreen').onclick = () => {
-      if (document.fullscreenElement) {
-        document.exitFullscreen();
-      } else {
-        canvas.parentElement.requestFullscreen();
-      }
-    };
-
-    minimap.addEventListener('click', e => {
-      const rect = minimap.getBoundingClientRect();
-      const clickX = e.clientX - rect.left;
-      const clickY = e.clientY - rect.top;
-      const visibleSquares = Math.floor(CANVAS_SIZE / zoom);
-      offsetX = (clickX * SCALE_FACTOR) - visibleSquares / 2;
-      offsetY = (clickY * SCALE_FACTOR) - visibleSquares / 2;
-      clampOffsets();
-      drawGrid();
-      drawMinimap();
-    });
-
-    canvas.addEventListener('mousemove', e => {
-      const rect = canvas.getBoundingClientRect();
-      const mouseX = e.clientX - rect.left;
-      const mouseY = e.clientY - rect.top;
-      showCoordsDisplay(coordsFromPixel(mouseX, mouseY));
-    });
-
-    canvas.addEventListener('mouseleave', () => showCoordsDisplay({ x: -1, y: -1 }));
-    canvas.addEventListener('click', onCanvasClick);
-
-    // Mobile gestures
-    let lastTouchDist = null;
-    canvas.addEventListener('touchstart', e => {
-      if (e.touches.length === 2) {
-        lastTouchDist = Math.hypot(
-          e.touches[0].clientX - e.touches[1].clientX,
-          e.touches[0].clientY - e.touches[1].clientY
-        );
-      }
-    });
-
-    canvas.addEventListener('touchmove', e => {
-      if (e.touches.length === 2 && lastTouchDist) {
-        const newDist = Math.hypot(
-          e.touches[0].clientX - e.touches[1].clientX,
-          e.touches[0].clientY - e.touches[1].clientY
-        );
-        if (newDist > lastTouchDist + 10) {
-          zoom = Math.min(zoom + ZOOM_STEP, MAX_ZOOM);
-          lastTouchDist = newDist;
-        } else if (newDist < lastTouchDist - 10) {
-          zoom = Math.max(zoom - ZOOM_STEP, MIN_ZOOM);
-          lastTouchDist = newDist;
-        }
-        clampOffsets();
-        drawGrid();
-        drawMinimap();
-      }
-    });
-
-    canvas.addEventListener('touchend', e => {
-      if (e.touches.length < 2) {
-        lastTouchDist = null;
-      }
-    });
-
-    // Doppio tap per fullscreen
-    let lastTap = 0;
-    canvas.addEventListener('touchend', e => {
-      const now = Date.now();
-      if (now - lastTap < 300) {
-        document.getElementById('fullscreen').click();
-      }
-      lastTap = now;
-    });
-
-    function fetchGridData() {
-      // dummy fill per esempio
-      for (let x = 0; x < GRID_SIZE; x++) {
-        for (let y = 0; y < GRID_SIZE; y++) {
-          gridData[x][y] = '#111';
-        }
-      }
-      drawGrid();
-      drawMinimap();
     }
+  });
 
-    fetchGridData();
-    setInterval(fetchGridData, 10000);
-  </script>
+  // Track mouse move for coordinates update
+  canvas.addEventListener('mousemove', (e) => {
+    if(isDragging) return; // Already handled in dragging
+    const rect = canvas.getBoundingClientRect();
+    const mouseX = e.clientX - rect.left;
+    const mouseY = e.clientY - rect.top;
+    const cell = pixelToCell(mouseX, mouseY);
+    if(cell.x !== currentCell.x || cell.y !== currentCell.y) {
+      currentCell = cell;
+      updateCoordsDisplay(cell.x, cell.y);
+      drawGrid();
+    }
+  });
+
+  // Keyboard navigation for panning by arrow keys
+  frame.addEventListener('keydown', (e) => {
+    const panStep = 40; // pixels to pan
+    switch(e.key) {
+      case 'ArrowUp':
+        offsetY += panStep;
+        break;
+      case 'ArrowDown':
+        offsetY -= panStep;
+        break;
+      case 'ArrowLeft':
+        offsetX += panStep;
+        break;
+      case 'ArrowRight':
+        offsetX -= panStep;
+        break;
+      case '+': // zoom in
+      case '=':
+        zoomGrid(1.1);
+        break;
+      case '-': // zoom out
+        zoomGrid(1/1.1);
+        break;
+      default:
+        return; // do nothing if other key
+    }
+    e.preventDefault();
+    clampOffset();
+    drawGrid();
+  });
+
+  // Initial setup
+  function init() {
+    // Center grid initially
+    const scaledCellSize = CELL_SIZE * zoom;
+    offsetX = (canvas.width - GRID_SIZE * scaledCellSize) / 2;
+    offsetY = (canvas.height - GRID_SIZE * scaledCellSize) / 2;
+    clampOffset();
+
+    // Focus frame to capture keyboard events
+    frame.focus();
+
+    drawGrid();
+  }
+
+  window.addEventListener('resize', () => {
+    // No resize for canvas (fixed size), but could adapt here if wanted
+  });
+
+  init();
+})();
+</script>
+
 </body>
 </html>
