@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Zoomable Grid with Sticky Header/Footer</title>
+<title>Zoomable Grid with Sticky Header/Footer - Arrow Navigation Fixed</title>
 <style>
   /* Reset */
   * {
@@ -100,7 +100,8 @@
   #gridCanvas {
     position: absolute;
     top: 0; left: 0;
-    width: 100%; height: 100%;
+    width: 800px;
+    height: 600px;
     display: block;
     cursor: grab;
     user-select: none;
@@ -178,6 +179,7 @@
   // Color selector change
   colorSelect.addEventListener('change', (e) => {
     selectedColor = e.target.value;
+    drawGrid();
   });
 
   // Draw grid function
@@ -250,8 +252,8 @@
     const scaledCellSize = CELL_SIZE * zoom;
     const maxOffsetX = 0;
     const maxOffsetY = 0;
-    const minOffsetX = - (GRID_SIZE * scaledCellSize - canvas.width);
-    const minOffsetY = - (GRID_SIZE * scaledCellSize - canvas.height);
+    const minOffsetX = Math.min(canvas.width - GRID_SIZE * scaledCellSize, 0);
+    const minOffsetY = Math.min(canvas.height - GRID_SIZE * scaledCellSize, 0);
 
     if (minOffsetX > maxOffsetX) { // if grid smaller than viewport
       offsetX = (canvas.width - GRID_SIZE * scaledCellSize) / 2;
@@ -335,54 +337,58 @@
 
   // Keyboard navigation for panning by arrow keys
   frame.addEventListener('keydown', (e) => {
-    const panStep = 40; // pixels to pan
+    const panStep = 30 * zoom; // one cell in pixels scaled by zoom
     switch(e.key) {
-      case 'ArrowUp':
-        offsetY += panStep;
-        break;
-      case 'ArrowDown':
-        offsetY -= panStep;
-        break;
       case 'ArrowLeft':
         offsetX += panStep;
+        e.preventDefault();
         break;
       case 'ArrowRight':
         offsetX -= panStep;
+        e.preventDefault();
         break;
-      case '+': // zoom in
-      case '=':
+      case 'ArrowUp':
+        offsetY += panStep;
+        e.preventDefault();
+        break;
+      case 'ArrowDown':
+        offsetY -= panStep;
+        e.preventDefault();
+        break;
+      case '+':
+      case '=': // zoom in
         zoomGrid(1.1);
+        e.preventDefault();
         break;
       case '-': // zoom out
         zoomGrid(1/1.1);
+        e.preventDefault();
         break;
-      default:
-        return; // do nothing if other key
     }
-    e.preventDefault();
     clampOffset();
     drawGrid();
+
+    // Update coords to current center cell after pan
+    const centerX = canvas.width / 2;
+    const centerY = canvas.height / 2;
+    currentCell = pixelToCell(centerX, centerY);
+    updateCoordsDisplay(currentCell.x, currentCell.y);
   });
 
-  // Initial setup
-  function init() {
-    // Center grid initially
-    const scaledCellSize = CELL_SIZE * zoom;
-    offsetX = (canvas.width - GRID_SIZE * scaledCellSize) / 2;
-    offsetY = (canvas.height - GRID_SIZE * scaledCellSize) / 2;
-    clampOffset();
-
-    // Focus frame to capture keyboard events
+  // Focus frame on page load to receive keyboard input
+  window.addEventListener('load', () => {
     frame.focus();
-
+    // Initially center grid
+    offsetX = (canvas.width - GRID_SIZE * CELL_SIZE * zoom) / 2;
+    offsetY = (canvas.height - GRID_SIZE * CELL_SIZE * zoom) / 2;
+    clampOffset();
     drawGrid();
-  }
-
-  window.addEventListener('resize', () => {
-    // No resize for canvas (fixed size), but could adapt here if wanted
   });
 
-  init();
+  // Refocus frame if user clicks outside canvas but inside frame container
+  frame.addEventListener('click', () => {
+    frame.focus();
+  });
 })();
 </script>
 
