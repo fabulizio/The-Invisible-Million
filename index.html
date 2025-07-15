@@ -5,49 +5,62 @@
   <title>Invisible Million Grid</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <style>
+    /* 5. Slightly lighter background */
     html, body {
-      background: #000;
+      background: #282828;
       color: #fff;
       margin: 0; padding: 0; height: 100%;
       font-family: Arial, sans-serif;
       width: 100vw; height: 100vh;
     }
+    /* 4. Center header/footer below/above grid */
     header, footer {
-      background: #222;
+      background: transparent;
       color: #fff;
-      padding: 10px 20px;
+      padding: 0;
       z-index: 10;
       display: flex;
       align-items: center;
-      justify-content: space-between;
-      font-size: 1.1em;
+      justify-content: center;
+      font-size: 1.2em;
+      position: relative;
+      min-height: 48px;
     }
-    header { position: sticky; top: 0; }
-    footer { position: sticky; bottom: 0; }
-    main {
-      height: calc(100vh - 120px);
+    header {
+      flex-direction: column;
+      margin-bottom: 10px;
+      border: none;
+    }
+    footer {
+      flex-direction: column;
+      margin-top: 10px;
+      border: none;
+    }
+    .tight-content {
+      text-align: center;
+      width: 100%;
+      padding: 0;
+      margin: 0 auto;
       display: flex;
+      flex-direction: column;
       align-items: center;
       justify-content: center;
-      flex-direction: column;
     }
-    /* 1. SQUARE OUTLINE FRAME */
+    /* 1. Sharp-corner frame */
     #frame {
       outline: 3px solid #fff;
       background: #222;
-      /* Always square: aspect-ratio 1, size based on viewport */
       width: min(80vw, 80vh);
       height: min(80vw, 80vh);
       aspect-ratio: 1;
       position: relative;
       overflow: hidden;
-      touch-action: none;
-      border-radius: 10px;
       margin: auto;
       box-sizing: border-box;
       display: flex;
       align-items: center;
       justify-content: center;
+      /* border-radius removed */
     }
     #gridCanvas {
       width: 100%; height: 100%;
@@ -55,32 +68,80 @@
       user-select: none;
       cursor: pointer;
       background: #222;
-      border-radius: 10px;
       box-sizing: border-box;
       position: absolute;
       left: 0; top: 0;
+      /* border-radius removed */
     }
-    .coords { font-family: monospace; }
-    .zoom-controls button, .jump-btn, .random-btn {
-      background: #444; color: #fff; border: none;
-      border-radius: 4px; margin: 0 3px; padding: 8px 14px; font-size: 1em; cursor: pointer;
+    .coords { font-family: monospace; color: #fff;}
+    .nav-panel, .jump-panel {
+      margin: 12px 0 0 0;
+      display: flex; gap: 10px; align-items: center; justify-content: center;
+      flex-wrap: wrap;
     }
-    .zoom-controls button:focus, .zoom-controls button:hover,
-    .jump-btn:focus, .jump-btn:hover,
-    .random-btn:focus, .random-btn:hover { background: #888; outline: 2px solid #fff; }
-    .counter {
+    /* 6. Arrows and center tool */
+    .arrow-btn, .center-btn, .jump-btn, .random-btn {
+      background: #fff;
+      color: #222;
+      border: none;
+      border-radius: 0; /* sharp */
+      padding: 8px 16px;
+      font-size: 1.2em;
+      cursor: pointer;
+      margin: 0 2px;
+      box-shadow: 0 2px 6px #1114;
       font-weight: bold;
-      letter-spacing: 2px;
-      margin-right: 10px;
+      transition: background 0.1s, color 0.1s;
     }
-    /* Coordinate info box next to cursor */
+    .arrow-btn:active, .center-btn:active, .jump-btn:active, .random-btn:active {
+      background: #f0f0f0;
+      color: #111;
+    }
+    .arrow-btn:focus, .center-btn:focus { outline: 2px solid #FF0070; }
+    /* 2. Color disc picker */
+    .color-picker-modal {
+      position: absolute;
+      z-index: 100;
+      background: rgba(40,40,40,0.80);
+      padding: 8px;
+      display: none;
+      align-items: center;
+      flex-direction: column;
+      border-radius: 0;
+      box-shadow: 0 0 8px #000;
+      border: 2px solid #fff;
+    }
+    .color-picker-modal canvas {
+      width: 180px; height: 180px;
+      border: 2px solid #fff;
+      border-radius: 50%; /* disc */
+      background: transparent;
+      margin-bottom: 10px;
+      display: block;
+    }
+    .color-picker-modal .modal-btns {
+      display: flex; gap: 10px; justify-content: center;
+    }
+    .color-picker-modal button {
+      background: #fff; color: #222; border: none; border-radius: 0;
+      padding: 7px 16px; font-size: 1em; font-weight: bold;
+      margin: 0 8px; cursor: pointer;
+    }
+    .color-picker-modal button:focus { outline: 2px solid #FF0070; }
+    .selected-color {
+      width: 36px; height: 36px; border-radius: 50%;
+      border: 2px solid #fff;
+      margin: 6px auto 3px auto;
+      background: #fff;
+      display: block;
+    }
     .coord-popup {
       position: absolute;
       min-width: 90px;
       background: #111;
       color: #fff;
       border: 2px solid #fff;
-      border-radius: 8px;
+      border-radius: 0;
       padding: 6px 12px;
       font-size: 1em;
       z-index: 50;
@@ -89,108 +150,64 @@
       white-space: nowrap;
       text-align: left;
     }
-    .coord-popup .colored { color: #FF0070; font-weight: bold; }
-    .coord-popup .not-colored { color: #aaa; }
-    /* 5. PALETTE TOOL: absolute, transparent bg */
-    .color-picker-modal {
-      position: absolute;
-      z-index: 100;
-      background: rgba(40,40,40,0.85);
-      border-radius: 12px;
-      padding: 18px 12px;
-      box-shadow: 0 0 8px #000;
-      display: none;
-      align-items: center;
-      flex-direction: column;
-    }
-    .color-picker-modal label {
-      color: #fff;
-      margin-bottom: 8px;
-      font-size: 1.1em;
-      font-weight: bold;
-    }
-    .color-picker-modal input[type="color"] {
-      width: 60px; height: 60px; border: none; border-radius: 8px;
-      margin-bottom: 12px;
-      background: #222;
-      box-shadow: 0 0 4px #888;
-      cursor: pointer;
-    }
-    .color-picker-modal .modal-btns {
-      display: flex; gap: 10px;
-    }
-    .color-picker-modal button {
-      background: #FF0070; color: #fff; border: none; border-radius: 5px;
-      padding: 8px 18px; font-size: 1.1em; margin: 0 8px; cursor: pointer;
-    }
-    /* Responsive */
+    .coord-popup .colored { color: #fff; font-weight: bold; }
+    .coord-popup .not-colored { color: #fff; }
     @media (max-width: 700px) {
-      main { height: calc(100vh - 80px); }
-      #frame { width: min(98vw, 70vh); height: min(98vw, 70vh);}
-      .color-picker-modal { min-width: 160px; padding: 8px 3px; font-size: 1em; }
+      #frame { width: min(99vw, 70vh); height: min(99vw, 70vh);}
+      .color-picker-modal canvas { width: 120px; height: 120px; }
     }
-    /* 3. Editable coordinate jump panel */
-    .jump-panel {
-      margin: 12px 0 0 0;
-      display: flex; gap: 10px; align-items: center; flex-wrap: wrap;
-    }
-    .jump-panel input {
-      width: 60px; padding: 6px;
-      border-radius: 5px; border: 1px solid #aaa; font-size: 1em;
-      margin-right: 6px;
-      background: #222; color: #fff;
-      outline: none;
-    }
-    .jump-panel label { font-weight: bold; margin-right: 4px; }
-    .jump-panel .random-btn { background: #FF0070; }
   </style>
 </head>
 <body>
-  <!-- ======= HEADER ======= -->
+  <!-- 4. Centered header just above grid -->
   <header>
-    <div>
-      <span style="color:#FF0070;font-weight:bold;font-size:1.3em;">Invisible Million Grid</span>
+    <div class="tight-content">
+      <span style="font-weight:bold;font-size:1.4em;">Invisible Million Grid</span>
+      <button id="donateBtn" aria-label="Donate" style="font-weight:bold;" class="center-btn">Donate</button>
     </div>
-    <button id="donateBtn" aria-label="Donate" style="font-weight:bold;">Donate</button>
   </header>
-  <!-- ======= MAIN GRID FRAME ======= -->
   <main>
-    <!-- 1. SQUARE OUTLINE FRAME -->
     <div id="frame" tabindex="0" aria-label="Zoomable grid frame">
       <canvas id="gridCanvas" aria-label="Grid canvas"></canvas>
-      <!-- Coordinate info popup for grid cursor (positioned by JS) -->
       <div id="coordPopup" class="coord-popup"></div>
-      <!-- 5. COLOR PICKER TOOL (absolute, below selected square) -->
+      <!-- 2. Color disc picker modal -->
       <div id="colorPickerModal" class="color-picker-modal">
-        <label for="colorInput">Pick any color</label>
-        <input type="color" id="colorInput" value="#000000" />
+        <canvas id="colorDisc" width="180" height="180"></canvas>
+        <div class="selected-color" id="selectedColorDisc"></div>
         <div class="modal-btns">
           <button id="confirmColorBtn" type="button">OK</button>
           <button id="cancelColorBtn" type="button">Cancel</button>
         </div>
       </div>
     </div>
-    <!-- 3. Editable coordinate panel + 4. Random available button -->
+    <!-- 3. Editable coordinate panel + 6. Arrow navigation and center tool -->
+    <div class="nav-panel">
+      <button class="arrow-btn" id="arrowUpBtn">&#8593;</button>
+      <button class="arrow-btn" id="arrowLeftBtn">&#8592;</button>
+      <button class="center-btn" id="centerBtn">&#9678; Center</button>
+      <button class="arrow-btn" id="arrowRightBtn">&#8594;</button>
+      <button class="arrow-btn" id="arrowDownBtn">&#8595;</button>
+    </div>
     <div class="jump-panel">
-      <label for="jumpX">X:</label>
+      <label for="jumpX" style="color:#fff;">X:</label>
       <input type="number" id="jumpX" min="0" max="1099" value="0" />
-      <label for="jumpY">Y:</label>
+      <label for="jumpY" style="color:#fff;">Y:</label>
       <input type="number" id="jumpY" min="0" max="1099" value="0" />
       <button class="jump-btn" id="jumpBtn">Jump</button>
-      <button class="random-btn" id="randomBtn">Bring me to a random available square</button>
+      <button class="random-btn" id="randomBtn">&#x21bb; Random Square</button>
     </div>
   </main>
-  <!-- ======= FOOTER ======= -->
+  <!-- 4. Centered footer just below grid -->
   <footer>
-    <span class="counter" id="colorCount">Colored: 0</span>
-    <div class="coords" id="footerCoords">X: 0, Y: 0</div>
-    <div class="zoom-controls">
-      <button id="zoomOutBtn" title="Zoom out">−</button>
-      <span id="zoomDisplay" aria-live="polite">100%</span>
-      <button id="zoomInBtn" title="Zoom in">+</button>
+    <div class="tight-content">
+      <div class="coords" id="footerCoords">X: 0, Y: 0</div>
+      <div class="zoom-controls">
+        <button id="zoomOutBtn" class="center-btn" title="Zoom out">−</button>
+        <span id="zoomDisplay" aria-live="polite" style="color:#fff;">100%</span>
+        <button id="zoomInBtn" class="center-btn" title="Zoom in">+</button>
+      </div>
     </div>
   </footer>
-  <!-- ======= JAVASCRIPT ======= -->
   <script>
   // ==== CONFIGURATION ====
   const BACKEND_URL = "https://155ca338-0e90-4f5a-88ec-b6163921baae-00-181dgn4pq10j7.janeway.replit.dev";
@@ -208,7 +225,6 @@
   let offsetStart = {x: 0, y: 0};
   let touchStart = null;
   let hasDonated = false;
-  let colorCount = 0;
 
   // ==== DOM ELEMENTS ====
   const canvas = document.getElementById('gridCanvas');
@@ -219,19 +235,25 @@
   const zoomInBtn = document.getElementById('zoomInBtn');
   const zoomOutBtn = document.getElementById('zoomOutBtn');
   const zoomDisplay = document.getElementById('zoomDisplay');
-  const colorCountElem = document.getElementById('colorCount');
   const coordPopup = document.getElementById('coordPopup');
   const colorPickerModal = document.getElementById('colorPickerModal');
-  const colorInput = document.getElementById('colorInput');
+  const colorDisc = document.getElementById('colorDisc');
+  const selectedColorDisc = document.getElementById('selectedColorDisc');
   const confirmColorBtn = document.getElementById('confirmColorBtn');
   const cancelColorBtn = document.getElementById('cancelColorBtn');
   const jumpX = document.getElementById('jumpX');
   const jumpY = document.getElementById('jumpY');
   const jumpBtn = document.getElementById('jumpBtn');
   const randomBtn = document.getElementById('randomBtn');
+  const arrowUpBtn = document.getElementById('arrowUpBtn');
+  const arrowDownBtn = document.getElementById('arrowDownBtn');
+  const arrowLeftBtn = document.getElementById('arrowLeftBtn');
+  const arrowRightBtn = document.getElementById('arrowRightBtn');
+  const centerBtn = document.getElementById('centerBtn');
 
   // Grid-dedicated cursor (target pointer)
   let gridCursor = { x: Math.floor(GRID_SIZE / 2), y: Math.floor(GRID_SIZE / 2) };
+  let selectedColor = "#ffffff";
   let cursorCellLocked = false;
 
   // ==== CANVAS AND GRID SIZING ====
@@ -239,7 +261,6 @@
     const rect = frame.getBoundingClientRect();
     canvas.width = rect.width;
     canvas.height = rect.height;
-    // Minimal zoom so entire grid fits
     MIN_ZOOM = Math.min(
       canvas.width / (GRID_SIZE * CELL_SIZE),
       canvas.height / (GRID_SIZE * CELL_SIZE)
@@ -261,8 +282,6 @@
   // ==== DRAWING GRID, CELLS, CURSOR, AND COORDS POPUP ====
   function drawGrid() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-    // Grid background (dark grey)
     ctx.fillStyle = "#222";
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
@@ -272,8 +291,8 @@
     const visibleCols = Math.ceil(canvas.width / scaledCellSize) + 2;
     const visibleRows = Math.ceil(canvas.height / scaledCellSize) + 2;
 
-    // Grid lines (light grey)
-    ctx.strokeStyle = "#bbb";
+    // Grid lines (white)
+    ctx.strokeStyle = "#fff";
     ctx.lineWidth = 1;
     for(let c = startCol; c <= startCol + visibleCols; c++) {
       if (c < 0 || c >= GRID_SIZE) continue;
@@ -310,27 +329,26 @@
     const highlightX = offsetX + gridCursor.x * scaledCellSize;
     const highlightY = offsetY + gridCursor.y * scaledCellSize;
     ctx.save();
-    ctx.globalAlpha = 0.35;
-    ctx.fillStyle = "#FF0070";
+    ctx.globalAlpha = 0.4;
+    ctx.fillStyle = "#fff";
     ctx.fillRect(highlightX + 1, highlightY + 1, scaledCellSize - 2, scaledCellSize - 2);
     ctx.globalAlpha = 1.0;
 
-    // Draw rounded target pointer
+    // Draw white target pointer (circle and crosshair)
     const cursorX = highlightX + scaledCellSize / 2;
     const cursorY = highlightY + scaledCellSize / 2;
     ctx.beginPath();
     ctx.arc(cursorX, cursorY, scaledCellSize * 0.4, 0, Math.PI * 2);
-    ctx.strokeStyle = "#FF0070";
+    ctx.strokeStyle = "#fff";
     ctx.lineWidth = Math.max(2, scaledCellSize * 0.08);
     ctx.stroke();
 
-    // Crosshair
     ctx.beginPath();
     ctx.moveTo(cursorX - scaledCellSize*0.25, cursorY);
     ctx.lineTo(cursorX + scaledCellSize*0.25, cursorY);
     ctx.moveTo(cursorX, cursorY - scaledCellSize*0.25);
     ctx.lineTo(cursorX, cursorY + scaledCellSize*0.25);
-    ctx.strokeStyle = "#FF0070";
+    ctx.strokeStyle = "#fff";
     ctx.lineWidth = Math.max(2, scaledCellSize * 0.04);
     ctx.stroke();
     ctx.restore();
@@ -341,10 +359,8 @@
     const scaledCellSize = CELL_SIZE * zoom;
     const highlightX = offsetX + gridCursor.x * scaledCellSize;
     const highlightY = offsetY + gridCursor.y * scaledCellSize;
-    // Place info box right of cursor, or left if near edge
     let boxLeft = highlightX + scaledCellSize + 10;
     let boxTop = highlightY - 10;
-    // Clamp to frame
     boxLeft = Math.min(canvas.width - 150, Math.max(10, boxLeft));
     boxTop = Math.min(canvas.height - 60, Math.max(10, boxTop));
 
@@ -417,7 +433,7 @@
       body: JSON.stringify({x, y, color, locked: true})
     })
     .then(res => res.json())
-    .then(_ => fetchGridState()) // reload grid state
+    .then(_ => fetchGridState())
     .catch(err => {});
   }
 
@@ -427,12 +443,9 @@
       .then(data => {
         if (data && data.cells) {
           coloredCells = {};
-          colorCount = 0;
           data.cells.forEach(cell => {
             coloredCells[`${cell.x},${cell.y}`] = {color: cell.color, locked: !!cell.locked};
-            if (cell.locked) colorCount++;
           });
-          colorCountElem.textContent = `Colored: ${colorCount}`;
           requestRedraw();
         }
       })
@@ -485,7 +498,6 @@
   }, {passive:true});
   canvas.addEventListener('touchend', () => { touchStart = null; });
 
-  // Mouse click: move grid cursor, and if allowed, open color picker
   canvas.addEventListener('click', (e) => {
     const rect = canvas.getBoundingClientRect();
     const mouseX = e.clientX - rect.left;
@@ -505,7 +517,6 @@
     }
   });
 
-  // Keyboard navigation
   frame.addEventListener('keydown', (e) => {
     let moved = false;
     switch(e.key) {
@@ -527,7 +538,6 @@
       case '-':
         setZoom(zoom / 1.1);
         e.preventDefault(); break;
-      // Coloring via keyboard: only after donation and on not-colored cell
       case 'Enter':
       case ' ':
         const key = gridCursor.x + "," + gridCursor.y;
@@ -553,7 +563,6 @@
     updateCoordPopupPosition();
   });
 
-  // ==== DONATE BUTTON ====
   donateBtn.addEventListener('click', () => {
     if (!hasDonated) {
       setTimeout(() => {
@@ -561,27 +570,95 @@
           hasDonated = true;
           donateBtn.textContent = "Donated!";
           donateBtn.disabled = true;
-          donateBtn.style.background = "#FF0070";
         }
       }, 100);
     }
   });
 
-  // ==== 5. COLOR PICKER (absolute, below square) ====
+  // ==== 2. COLOR DISC PICKER ====
+  // Draw a color wheel on the canvas
+  function drawColorDisc() {
+    const cx = colorDisc.width / 2;
+    const cy = colorDisc.height / 2;
+    const radius = colorDisc.width / 2 - 6;
+    const ctxc = colorDisc.getContext('2d');
+    ctxc.clearRect(0, 0, colorDisc.width, colorDisc.height);
+    for (let angle=0; angle<360; angle+=1) {
+      const rad = angle * Math.PI / 180;
+      const grad = ctxc.createLinearGradient(
+        cx, cy,
+        cx + radius * Math.cos(rad), cy + radius * Math.sin(rad)
+      );
+      grad.addColorStop(0, 'white');
+      grad.addColorStop(1, `hsl(${angle},100%,50%)`);
+      ctxc.beginPath();
+      ctxc.moveTo(cx, cy);
+      ctxc.arc(cx, cy, radius, rad, rad+Math.PI/180, false);
+      ctxc.closePath();
+      ctxc.fillStyle = grad;
+      ctxc.fill();
+    }
+    // Overlay transparency for value (brightness)
+    ctxc.globalAlpha = 0.3;
+    ctxc.beginPath();
+    ctxc.arc(cx, cy, radius, 0, 2*Math.PI);
+    ctxc.fillStyle = 'black';
+    ctxc.fill();
+    ctxc.globalAlpha = 1.0;
+  }
+  drawColorDisc();
+
+  let previewColor = "#ffffff";
+  colorDisc.addEventListener('click', function(e){
+    const rect = colorDisc.getBoundingClientRect();
+    const x = e.clientX - rect.left - colorDisc.width/2;
+    const y = e.clientY - rect.top - colorDisc.height/2;
+    const r = Math.sqrt(x*x + y*y);
+    const radius = colorDisc.width / 2 - 6;
+    if (r > radius) return;
+    const hue = (Math.atan2(y,x)*180/Math.PI+360)%360;
+    const sat = r / radius;
+    // Value (brightness) is fixed at 1 for simplicity
+    const rgb = hsvToRgb(hue/360, sat, 1);
+    previewColor = rgbToHex(rgb[0], rgb[1], rgb[2]);
+    selectedColorDisc.style.background = previewColor;
+  });
+
+  function hsvToRgb(h, s, v) {
+    let r, g, b;
+    let i = Math.floor(h * 6);
+    let f = h * 6 - i;
+    let p = v * (1 - s);
+    let q = v * (1 - f * s);
+    let t = v * (1 - (1 - f) * s);
+    switch (i % 6) {
+      case 0: r = v, g = t, b = p; break;
+      case 1: r = q, g = v, b = p; break;
+      case 2: r = p, g = v, b = t; break;
+      case 3: r = p, g = q, b = v; break;
+      case 4: r = t, g = p, b = v; break;
+      case 5: r = v, g = p, b = q; break;
+    }
+    return [Math.round(r*255), Math.round(g*255), Math.round(b*255)];
+  }
+  function rgbToHex(r,g,b){
+    return "#" + ((1<<24)+(r<<16)+(g<<8)+b).toString(16).slice(1);
+  }
+
   function showColorPickerModal() {
-    // Set position below selected square
+    selectedColorDisc.style.background = "#fff";
+    previewColor = "#fff";
+    // Place below selected square
     const scaledCellSize = CELL_SIZE * zoom;
     const highlightX = offsetX + gridCursor.x * scaledCellSize;
     const highlightY = offsetY + gridCursor.y * scaledCellSize;
-    colorPickerModal.style.left = (highlightX - scaledCellSize/2) + "px";
+    colorPickerModal.style.left = (highlightX - colorDisc.width/2) + "px";
     colorPickerModal.style.top = (highlightY + scaledCellSize + 16) + "px";
     colorPickerModal.style.display = "flex";
-    // Default color is black, but user can choose any
-    colorInput.value = "#000000";
   }
   confirmColorBtn.onclick = function() {
     colorPickerModal.style.display = "none";
-    const color = colorInput.value;
+    const color = previewColor;
     const key = gridCursor.x + "," + gridCursor.y;
     coloredCells[key] = {color: color, locked: true};
     sendCellColor(gridCursor.x, gridCursor.y, color);
@@ -592,7 +669,6 @@
     colorPickerModal.style.display = "none";
   };
 
-  // Hide modal on outside click
   document.addEventListener('mousedown', function(e) {
     if (colorPickerModal.style.display === "flex" && !colorPickerModal.contains(e.target)) {
       colorPickerModal.style.display = "none";
@@ -623,10 +699,50 @@
     if(e.key === "Enter") jumpBtn.click();
   });
 
+  // ==== 6. ARROWS AND CENTER TOOL ====
+  arrowUpBtn.onclick = function() {
+    if(gridCursor.y > 0) gridCursor.y--;
+    jumpY.value = gridCursor.y;
+    updateFooterCoords();
+    ensureCellVisible(gridCursor.x, gridCursor.y);
+    requestRedraw();
+  };
+  arrowDownBtn.onclick = function() {
+    if(gridCursor.y < GRID_SIZE-1) gridCursor.y++;
+    jumpY.value = gridCursor.y;
+    updateFooterCoords();
+    ensureCellVisible(gridCursor.x, gridCursor.y);
+    requestRedraw();
+  };
+  arrowLeftBtn.onclick = function() {
+    if(gridCursor.x > 0) gridCursor.x--;
+    jumpX.value = gridCursor.x;
+    updateFooterCoords();
+    ensureCellVisible(gridCursor.x, gridCursor.y);
+    requestRedraw();
+  };
+  arrowRightBtn.onclick = function() {
+    if(gridCursor.x < GRID_SIZE-1) gridCursor.x++;
+    jumpX.value = gridCursor.x;
+    updateFooterCoords();
+    ensureCellVisible(gridCursor.x, gridCursor.y);
+    requestRedraw();
+  };
+  centerBtn.onclick = function() {
+    gridCursor.x = Math.floor(GRID_SIZE / 2);
+    gridCursor.y = Math.floor(GRID_SIZE / 2);
+    jumpX.value = gridCursor.x;
+    jumpY.value = gridCursor.y;
+    offsetX = 0;
+    offsetY = 0;
+    setZoom(MIN_ZOOM);
+    updateFooterCoords();
+    requestRedraw();
+  };
+
   // ==== 4. RANDOM AVAILABLE SQUARE BUTTON ====
   randomBtn.addEventListener('click', () => {
-    // Try up to 1000 random attempts to find a free square
-    let tries = 1000;
+    let tries = 2000;
     let found = false;
     while(tries-- > 0) {
       const x = Math.floor(Math.random()*GRID_SIZE);
@@ -647,7 +763,6 @@
     if (!found) { alert("No available squares left!"); }
   });
 
-  // ==== INIT ====
   window.addEventListener('load', () => {
     setCanvasSize();
     frame.focus();
@@ -658,7 +773,6 @@
     requestRedraw();
   });
   window.addEventListener('resize', setCanvasSize);
-
   </script>
 </body>
 </html>
