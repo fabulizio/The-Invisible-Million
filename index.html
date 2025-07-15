@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Zoomable Grid with Sticky Header/Footer - Improved</title>
+<title>Zoomable Grid with Backend</title>
 <style>
   * { box-sizing: border-box; }
   body, html {
@@ -69,7 +69,6 @@
   footer .zoom-controls button:focus, footer .zoom-controls button:hover {
     background: #888; outline: 2px solid #fff;
   }
-  /* Central block with fixed outline */
   main {
     flex: 1 1 auto;
     background: #f0f0f0;
@@ -139,6 +138,8 @@
 
 <script>
 (() => {
+  const BACKEND_URL = "https://155ca338-0e90-4f5a-88ec-b6163921baae-00-181dgn4pq10j7.janeway.replit.dev";
+
   // DOM elements
   const canvas = document.getElementById('gridCanvas');
   const ctx = canvas.getContext('2d');
@@ -165,6 +166,7 @@
   let offsetStart = {x: 0, y: 0};
   let currentCell = {x: 0, y: 0};
   let selectedColor = colorSelect.value;
+  let coloredCells = {}; // { "x,y": color }
 
   // Redraw throttling
   let redrawPending = false;
@@ -173,7 +175,6 @@
   let touchStart = null;
 
   function setCanvasSize() {
-    // Make canvas fill the frame
     const rect = frame.getBoundingClientRect();
     canvas.width = rect.width;
     canvas.height = rect.height;
@@ -213,6 +214,22 @@
       ctx.lineTo(width, y + 0.5);
       ctx.stroke();
     }
+
+    // Draw colored cells from backend
+    for (const key in coloredCells) {
+      const [x, y] = key.split(',').map(Number);
+      // Only draw if visible
+      if (
+        x >= startCol && x <= startCol + visibleCols &&
+        y >= startRow && y <= startRow + visibleRows
+      ) {
+        const cellX = offsetX + x * scaledCellSize;
+        const cellY = offsetY + y * scaledCellSize;
+        ctx.fillStyle = coloredCells[key];
+        ctx.fillRect(cellX + 1, cellY + 1, scaledCellSize - 2, scaledCellSize - 2);
+      }
+    }
+
     // Highlight hovered cell
     if(currentCell.x >= 0 && currentCell.x < GRID_SIZE &&
       currentCell.y >= 0 && currentCell.y < GRID_SIZE) {
@@ -274,6 +291,40 @@
     clampOffset();
     zoomDisplay.textContent = Math.round(zoom * 100) + '%';
     requestRedraw();
+  }
+
+  // Backend communication
+  function sendCellColor(x, y, color) {
+    fetch(`${BACKEND_URL}/cell`, {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({x, y, color})
+    })
+    .then(res => res.json())
+    .then(data => {
+      // Optionally handle response
+      // console.log('Backend response:', data);
+    })
+    .catch(err => {
+      console.error('Backend error:', err);
+    });
+  }
+
+  function fetchGridState() {
+    fetch(`${BACKEND_URL}/grid`)
+      .then(res => res.json())
+      .then(data => {
+        if (data && data.cells) {
+          coloredCells = {};
+          data.cells.forEach(cell => {
+            coloredCells[`${cell.x},${cell.y}`] = cell.color;
+          });
+          requestRedraw();
+        }
+      })
+      .catch(err => {
+        console.error('Failed to fetch grid state:', err);
+      });
   }
 
   // Wheel zoom
@@ -401,6 +452,22 @@
   zoomInBtn.addEventListener('click', () => setZoom(zoom * 1.1));
   zoomOutBtn.addEventListener('click', () => setZoom(zoom / 1.1));
 
+  // Canvas click for coloring cell and backend sync
+  canvas.addEventListener('click', (e) => {
+    const rect = canvas.getBoundingClientRect();
+    const mouseX = e.clientX - rect.left;
+    const mouseY = e.clientY - rect.top;
+    const cell = pixelToCell(mouseX, mouseY);
+    if (
+      cell.x >= 0 && cell.y >= 0 &&
+      cell.x < GRID_SIZE && cell.y < GRID_SIZE
+    ) {
+      coloredCells[`${cell.x},${cell.y}`] = selectedColor;
+      requestRedraw();
+      sendCellColor(cell.x, cell.y, selectedColor);
+    }
+  });
+
   // Focus frame for keyboard input
   window.addEventListener('load', () => {
     setCanvasSize();
@@ -410,6 +477,7 @@
     clampOffset();
     drawGrid();
     zoomDisplay.textContent = Math.round(zoom * 100) + '%';
+    fetchGridState();
   });
   window.addEventListener('resize', setCanvasSize);
 
