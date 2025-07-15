@@ -633,26 +633,24 @@
       });
     }
     function sendCellColor(x, y, color) {
-      fetch(`https://155ca338-0e90-4f5a-88ec-b6163921baae-00-181dgn4pq10j7.janeway.replit.dev/cell`, {
+      fetch(`https://155ca338-0e90-4f5a-88ec-b6163921baae-00-181dgn4pq10j7.janeway.replit.dev/paint`, {
         method: "POST",
         headers: {"Content-Type": "application/json"},
-        body: JSON.stringify({x, y, color, locked: true})
+        body: JSON.stringify({x, y, color})
       })
       .then(res => res.json())
       .then(_ => fetchGridState())
       .catch(err => {});
     }
     function fetchGridState() {
-      fetch(`https://155ca338-0e90-4f5a-88ec-b6163921baae-00-181dgn4pq10j7.janeway.replit.dev/grid`)
+      fetch(`https://155ca338-0e90-4f5a-88ec-b6163921baae-00-181dgn4pq10j7.janeway.replit.dev/painted`)
         .then(res => res.json())
         .then(data => {
-          if (data && data.cells) {
-            coloredCells = {};
-            data.cells.forEach(cell => {
-              coloredCells[`${cell.x},${cell.y}`] = {color: cell.color, locked: !!cell.locked};
-            });
-            requestRedraw();
+          coloredCells = {};
+          for (const key in data) {
+            coloredCells[key] = {color: data[key].color, locked: true};
           }
+          requestRedraw();
         })
         .catch(err => {});
     }
