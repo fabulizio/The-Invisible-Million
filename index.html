@@ -2,39 +2,26 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Invisible Million Grid</title>
+  <title>The Invisible Million Grid</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <style>
-    /* 5. Slightly lighter background */
     html, body {
-      background: #282828;
+      background: #282828; /* web background - darkest */
       color: #fff;
       margin: 0; padding: 0; height: 100%;
       font-family: Arial, sans-serif;
       width: 100vw; height: 100vh;
     }
-    /* 4. Center header/footer below/above grid */
     header, footer {
       background: transparent;
       color: #fff;
       padding: 0;
-      z-index: 10;
+      min-height: 40px;
       display: flex;
       align-items: center;
       justify-content: center;
+      text-align: center;
       font-size: 1.2em;
-      position: relative;
-      min-height: 48px;
-    }
-    header {
-      flex-direction: column;
-      margin-bottom: 10px;
-      border: none;
-    }
-    footer {
-      flex-direction: column;
-      margin-top: 10px;
-      border: none;
     }
     .tight-content {
       text-align: center;
@@ -46,10 +33,9 @@
       align-items: center;
       justify-content: center;
     }
-    /* 1. Sharp-corner frame */
     #frame {
-      outline: 3px solid #fff;
-      background: #222;
+      outline: 3px solid #ccc; /* frame outline - least intense */
+      background: #333;        /* grid background - more intense */
       width: min(80vw, 80vh);
       height: min(80vw, 80vh);
       aspect-ratio: 1;
@@ -57,48 +43,70 @@
       overflow: hidden;
       margin: auto;
       box-sizing: border-box;
+      /* sharp corners, no border-radius */
       display: flex;
       align-items: center;
       justify-content: center;
-      /* border-radius removed */
     }
     #gridCanvas {
-      width: 100%; height: 100%;
-      display: block;
+      width: 100%; height: 100%; display: block;
       user-select: none;
       cursor: pointer;
-      background: #222;
-      box-sizing: border-box;
+      background: #333;
       position: absolute;
       left: 0; top: 0;
-      /* border-radius removed */
     }
     .coords { font-family: monospace; color: #fff;}
-    .nav-panel, .jump-panel {
-      margin: 12px 0 0 0;
-      display: flex; gap: 10px; align-items: center; justify-content: center;
-      flex-wrap: wrap;
+    /* Arrow nav in bottom-right */
+    .nav-panel {
+      position: absolute;
+      right: 16px;
+      bottom: 16px;
+      z-index: 90;
+      flex-direction: row;
+      background: none;
+      display: flex; gap: 8px;
+      pointer-events:auto;
     }
-    /* 6. Arrows and center tool */
-    .arrow-btn, .center-btn, .jump-btn, .random-btn {
+    .arrow-btn, .center-btn {
       background: #fff;
       color: #222;
       border: none;
-      border-radius: 0; /* sharp */
+      border-radius: 6px;
       padding: 8px 16px;
       font-size: 1.2em;
       cursor: pointer;
-      margin: 0 2px;
-      box-shadow: 0 2px 6px #1114;
       font-weight: bold;
+      box-shadow: 0 2px 6px #1114;
       transition: background 0.1s, color 0.1s;
     }
-    .arrow-btn:active, .center-btn:active, .jump-btn:active, .random-btn:active {
-      background: #f0f0f0;
-      color: #111;
-    }
+    .arrow-btn:active, .center-btn:active { background: #f0f0f0; color: #111; }
     .arrow-btn:focus, .center-btn:focus { outline: 2px solid #FF0070; }
-    /* 2. Color disc picker */
+    /* Fancy light grey buttons */
+    .fancy-btn {
+      background: linear-gradient(160deg, #f0f0f0 70%, #bdbdbd 100%);
+      color: #222;
+      border: none;
+      border-radius: 22px;
+      padding: 8px 18px;
+      font-size: 1.1em;
+      cursor: pointer;
+      margin: 0 4px;
+      font-weight: bold;
+      box-shadow: 0 2px 8px #8883;
+      transition: background 0.2s, color 0.2s;
+    }
+    .fancy-btn:active, .fancy-btn:focus {
+      background: #e0e0e0;
+      color: #111;
+      outline: 2px solid #FF0070;
+    }
+    .jump-panel {
+      margin: 12px 0 0 0;
+      display: flex; gap: 10px; align-items: center;
+      justify-content: center; flex-wrap: wrap;
+    }
+    /* Palette modal styling */
     .color-picker-modal {
       position: absolute;
       z-index: 100;
@@ -114,7 +122,7 @@
     .color-picker-modal canvas {
       width: 180px; height: 180px;
       border: 2px solid #fff;
-      border-radius: 50%; /* disc */
+      border-radius: 50%;
       background: transparent;
       margin-bottom: 10px;
       display: block;
@@ -123,7 +131,8 @@
       display: flex; gap: 10px; justify-content: center;
     }
     .color-picker-modal button {
-      background: #fff; color: #222; border: none; border-radius: 0;
+      background: linear-gradient(160deg, #f0f0f0 70%, #bdbdbd 100%);
+      color: #222; border: none; border-radius: 22px;
       padding: 7px 16px; font-size: 1em; font-weight: bold;
       margin: 0 8px; cursor: pointer;
     }
@@ -150,629 +159,564 @@
       white-space: nowrap;
       text-align: left;
     }
-    .coord-popup .colored { color: #fff; font-weight: bold; }
-    .coord-popup .not-colored { color: #fff; }
+    .coord-popup .colored, .coord-popup .not-colored { color: #fff; font-weight: bold; }
     @media (max-width: 700px) {
-      #frame { width: min(99vw, 70vh); height: min(99vw, 70vh);}
+      #frame { width: min(98vw, 70vh); height: min(98vw, 70vh);}
       .color-picker-modal canvas { width: 120px; height: 120px; }
     }
   </style>
 </head>
 <body>
-  <!-- 4. Centered header just above grid -->
+  <!-- Centered header, minimal -->
   <header>
     <div class="tight-content">
       <span style="font-weight:bold;font-size:1.4em;">Invisible Million Grid</span>
-      <button id="donateBtn" aria-label="Donate" style="font-weight:bold;" class="center-btn">Donate</button>
+      <button id="donateBtn" class="fancy-btn">Donate</button>
     </div>
   </header>
   <main>
-    <div id="frame" tabindex="0" aria-label="Zoomable grid frame">
-      <canvas id="gridCanvas" aria-label="Grid canvas"></canvas>
+    <div id="frame" tabindex="0">
+      <canvas id="gridCanvas"></canvas>
       <div id="coordPopup" class="coord-popup"></div>
-      <!-- 2. Color disc picker modal -->
+      <!-- Arrow nav/center tool in bottom-right -->
+      <div class="nav-panel">
+        <button class="arrow-btn" id="arrowUpBtn">&#8593;</button>
+        <button class="arrow-btn" id="arrowLeftBtn">&#8592;</button>
+        <button class="center-btn" id="centerBtn">&#9678; Center</button>
+        <button class="arrow-btn" id="arrowRightBtn">&#8594;</button>
+        <button class="arrow-btn" id="arrowDownBtn">&#8595;</button>
+      </div>
+      <!-- Palette tool (disappears on zoom/nav) -->
       <div id="colorPickerModal" class="color-picker-modal">
         <canvas id="colorDisc" width="180" height="180"></canvas>
         <div class="selected-color" id="selectedColorDisc"></div>
         <div class="modal-btns">
-          <button id="confirmColorBtn" type="button">OK</button>
-          <button id="cancelColorBtn" type="button">Cancel</button>
+          <button id="confirmColorBtn" type="button" class="fancy-btn">OK</button>
+          <button id="cancelColorBtn" type="button" class="fancy-btn">Cancel</button>
         </div>
       </div>
     </div>
-    <!-- 3. Editable coordinate panel + 6. Arrow navigation and center tool -->
-    <div class="nav-panel">
-      <button class="arrow-btn" id="arrowUpBtn">&#8593;</button>
-      <button class="arrow-btn" id="arrowLeftBtn">&#8592;</button>
-      <button class="center-btn" id="centerBtn">&#9678; Center</button>
-      <button class="arrow-btn" id="arrowRightBtn">&#8594;</button>
-      <button class="arrow-btn" id="arrowDownBtn">&#8595;</button>
-    </div>
+    <!-- Editable jump + random -->
     <div class="jump-panel">
-      <label for="jumpX" style="color:#fff;">X:</label>
+      <label for="jumpX">X:</label>
       <input type="number" id="jumpX" min="0" max="1099" value="0" />
-      <label for="jumpY" style="color:#fff;">Y:</label>
+      <label for="jumpY">Y:</label>
       <input type="number" id="jumpY" min="0" max="1099" value="0" />
-      <button class="jump-btn" id="jumpBtn">Jump</button>
-      <button class="random-btn" id="randomBtn">&#x21bb; Random Square</button>
+      <button class="fancy-btn" id="jumpBtn">Jump</button>
+      <button class="fancy-btn" id="randomBtn">&#x21bb; Random Square</button>
     </div>
   </main>
-  <!-- 4. Centered footer just below grid -->
   <footer>
     <div class="tight-content">
       <div class="coords" id="footerCoords">X: 0, Y: 0</div>
       <div class="zoom-controls">
-        <button id="zoomOutBtn" class="center-btn" title="Zoom out">−</button>
-        <span id="zoomDisplay" aria-live="polite" style="color:#fff;">100%</span>
-        <button id="zoomInBtn" class="center-btn" title="Zoom in">+</button>
+        <button id="zoomOutBtn" class="fancy-btn" title="Zoom out">−</button>
+        <span id="zoomDisplay" style="color:#fff;">100%</span>
+        <button id="zoomInBtn" class="fancy-btn" title="Zoom in">+</button>
       </div>
     </div>
   </footer>
   <script>
-  // ==== CONFIGURATION ====
-  const BACKEND_URL = "https://155ca338-0e90-4f5a-88ec-b6163921baae-00-181dgn4pq10j7.janeway.replit.dev";
-  const GRID_SIZE = 1100;
-  const CELL_SIZE = 30;
-  let MIN_ZOOM = 0.1;
-  const MAX_ZOOM = 3;
-  let zoom = 1;
-  let offsetX = 0;
-  let offsetY = 0;
-  let coloredCells = {}; // { "x,y": {color, locked} }
-  let redrawPending = false;
-  let isDragging = false;
-  let dragStart = {x: 0, y: 0};
-  let offsetStart = {x: 0, y: 0};
-  let touchStart = null;
-  let hasDonated = false;
+    // ==== CONFIGURATION ====
+    const BACKEND_URL = "https://155ca338-0e90-4f5a-88ec-b6163921baae-00-181dgn4pq10j7.janeway.replit.dev";
+    const GRID_SIZE = 1100;
+    const CELL_SIZE = 30;
+    let MIN_ZOOM = 0.1;
+    const MAX_ZOOM = 3;
+    let zoom = 1;
+    let offsetX = 0;
+    let offsetY = 0;
+    let coloredCells = {}; // { "x,y": {color, locked} }
+    let redrawPending = false;
+    let isDragging = false;
+    let dragStart = {x: 0, y: 0};
+    let offsetStart = {x: 0, y: 0};
+    let touchStart = null;
+    let hasDonated = false;
 
-  // ==== DOM ELEMENTS ====
-  const canvas = document.getElementById('gridCanvas');
-  const ctx = canvas.getContext('2d');
-  const frame = document.getElementById('frame');
-  const footerCoords = document.getElementById('footerCoords');
-  const donateBtn = document.getElementById('donateBtn');
-  const zoomInBtn = document.getElementById('zoomInBtn');
-  const zoomOutBtn = document.getElementById('zoomOutBtn');
-  const zoomDisplay = document.getElementById('zoomDisplay');
-  const coordPopup = document.getElementById('coordPopup');
-  const colorPickerModal = document.getElementById('colorPickerModal');
-  const colorDisc = document.getElementById('colorDisc');
-  const selectedColorDisc = document.getElementById('selectedColorDisc');
-  const confirmColorBtn = document.getElementById('confirmColorBtn');
-  const cancelColorBtn = document.getElementById('cancelColorBtn');
-  const jumpX = document.getElementById('jumpX');
-  const jumpY = document.getElementById('jumpY');
-  const jumpBtn = document.getElementById('jumpBtn');
-  const randomBtn = document.getElementById('randomBtn');
-  const arrowUpBtn = document.getElementById('arrowUpBtn');
-  const arrowDownBtn = document.getElementById('arrowDownBtn');
-  const arrowLeftBtn = document.getElementById('arrowLeftBtn');
-  const arrowRightBtn = document.getElementById('arrowRightBtn');
-  const centerBtn = document.getElementById('centerBtn');
+    // ==== DOM ELEMENTS ====
+    const canvas = document.getElementById('gridCanvas');
+    const ctx = canvas.getContext('2d');
+    const frame = document.getElementById('frame');
+    const footerCoords = document.getElementById('footerCoords');
+    const donateBtn = document.getElementById('donateBtn');
+    const zoomInBtn = document.getElementById('zoomInBtn');
+    const zoomOutBtn = document.getElementById('zoomOutBtn');
+    const zoomDisplay = document.getElementById('zoomDisplay');
+    const coordPopup = document.getElementById('coordPopup');
+    const colorPickerModal = document.getElementById('colorPickerModal');
+    const colorDisc = document.getElementById('colorDisc');
+    const selectedColorDisc = document.getElementById('selectedColorDisc');
+    const confirmColorBtn = document.getElementById('confirmColorBtn');
+    const cancelColorBtn = document.getElementById('cancelColorBtn');
+    const jumpX = document.getElementById('jumpX');
+    const jumpY = document.getElementById('jumpY');
+    const jumpBtn = document.getElementById('jumpBtn');
+    const randomBtn = document.getElementById('randomBtn');
+    const arrowUpBtn = document.getElementById('arrowUpBtn');
+    const arrowDownBtn = document.getElementById('arrowDownBtn');
+    const arrowLeftBtn = document.getElementById('arrowLeftBtn');
+    const arrowRightBtn = document.getElementById('arrowRightBtn');
+    const centerBtn = document.getElementById('centerBtn');
 
-  // Grid-dedicated cursor (target pointer)
-  let gridCursor = { x: Math.floor(GRID_SIZE / 2), y: Math.floor(GRID_SIZE / 2) };
-  let selectedColor = "#ffffff";
-  let cursorCellLocked = false;
+    let gridCursor = { x: Math.floor(GRID_SIZE / 2), y: Math.floor(GRID_SIZE / 2) };
+    let selectedColor = "#ffffff";
+    let cursorCellLocked = false;
 
-  // ==== CANVAS AND GRID SIZING ====
-  function setCanvasSize() {
-    const rect = frame.getBoundingClientRect();
-    canvas.width = rect.width;
-    canvas.height = rect.height;
-    MIN_ZOOM = Math.min(
-      canvas.width / (GRID_SIZE * CELL_SIZE),
-      canvas.height / (GRID_SIZE * CELL_SIZE)
-    );
-    zoom = Math.max(zoom, MIN_ZOOM);
-    clampOffset();
-    drawGrid();
-    updateCoordPopupPosition();
-  }
-
-  function clampOffset() {
-    const scaledCellSize = CELL_SIZE * zoom;
-    const gridWidthPx = GRID_SIZE * scaledCellSize;
-    const gridHeightPx = GRID_SIZE * scaledCellSize;
-    offsetX = Math.min(0, Math.max(canvas.width - gridWidthPx, offsetX));
-    offsetY = Math.min(0, Math.max(canvas.height - gridHeightPx, offsetY));
-  }
-
-  // ==== DRAWING GRID, CELLS, CURSOR, AND COORDS POPUP ====
-  function drawGrid() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    ctx.fillStyle = "#222";
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-    const scaledCellSize = CELL_SIZE * zoom;
-    const startCol = Math.floor(-offsetX / scaledCellSize);
-    const startRow = Math.floor(-offsetY / scaledCellSize);
-    const visibleCols = Math.ceil(canvas.width / scaledCellSize) + 2;
-    const visibleRows = Math.ceil(canvas.height / scaledCellSize) + 2;
-
-    // Grid lines (white)
-    ctx.strokeStyle = "#fff";
-    ctx.lineWidth = 1;
-    for(let c = startCol; c <= startCol + visibleCols; c++) {
-      if (c < 0 || c >= GRID_SIZE) continue;
-      const x = offsetX + c * scaledCellSize;
-      ctx.beginPath();
-      ctx.moveTo(x + 0.5, 0);
-      ctx.lineTo(x + 0.5, canvas.height);
-      ctx.stroke();
-    }
-    for(let r = startRow; r <= startRow + visibleRows; r++) {
-      if (r < 0 || r >= GRID_SIZE) continue;
-      const y = offsetY + r * scaledCellSize;
-      ctx.beginPath();
-      ctx.moveTo(0, y + 0.5);
-      ctx.lineTo(canvas.width, y + 0.5);
-      ctx.stroke();
-    }
-
-    // Colored cells
-    for (const key in coloredCells) {
-      const [x, y] = key.split(',').map(Number);
-      if (
-        x >= startCol-1 && x <= startCol + visibleCols+1 &&
-        y >= startRow-1 && y <= startRow + visibleRows+1
-      ) {
-        const cellX = offsetX + x * scaledCellSize;
-        const cellY = offsetY + y * scaledCellSize;
-        ctx.fillStyle = coloredCells[key].color;
-        ctx.fillRect(cellX + 1, cellY + 1, scaledCellSize - 2, scaledCellSize - 2);
-      }
-    }
-
-    // Highlight grid cursor cell
-    const highlightX = offsetX + gridCursor.x * scaledCellSize;
-    const highlightY = offsetY + gridCursor.y * scaledCellSize;
-    ctx.save();
-    ctx.globalAlpha = 0.4;
-    ctx.fillStyle = "#fff";
-    ctx.fillRect(highlightX + 1, highlightY + 1, scaledCellSize - 2, scaledCellSize - 2);
-    ctx.globalAlpha = 1.0;
-
-    // Draw white target pointer (circle and crosshair)
-    const cursorX = highlightX + scaledCellSize / 2;
-    const cursorY = highlightY + scaledCellSize / 2;
-    ctx.beginPath();
-    ctx.arc(cursorX, cursorY, scaledCellSize * 0.4, 0, Math.PI * 2);
-    ctx.strokeStyle = "#fff";
-    ctx.lineWidth = Math.max(2, scaledCellSize * 0.08);
-    ctx.stroke();
-
-    ctx.beginPath();
-    ctx.moveTo(cursorX - scaledCellSize*0.25, cursorY);
-    ctx.lineTo(cursorX + scaledCellSize*0.25, cursorY);
-    ctx.moveTo(cursorX, cursorY - scaledCellSize*0.25);
-    ctx.lineTo(cursorX, cursorY + scaledCellSize*0.25);
-    ctx.strokeStyle = "#fff";
-    ctx.lineWidth = Math.max(2, scaledCellSize * 0.04);
-    ctx.stroke();
-    ctx.restore();
-  }
-
-  // ==== COORDINATE POPUP NEXT TO CURSOR ====
-  function updateCoordPopupPosition() {
-    const scaledCellSize = CELL_SIZE * zoom;
-    const highlightX = offsetX + gridCursor.x * scaledCellSize;
-    const highlightY = offsetY + gridCursor.y * scaledCellSize;
-    let boxLeft = highlightX + scaledCellSize + 10;
-    let boxTop = highlightY - 10;
-    boxLeft = Math.min(canvas.width - 150, Math.max(10, boxLeft));
-    boxTop = Math.min(canvas.height - 60, Math.max(10, boxTop));
-
-    const key = gridCursor.x + "," + gridCursor.y;
-    let info = `<span>X: ${gridCursor.x}, Y: ${gridCursor.y}</span><br>`;
-    if (coloredCells[key] && coloredCells[key].locked) {
-      info += `<span class="colored">Colored</span>`;
-      cursorCellLocked = true;
-    } else {
-      info += `<span class="not-colored">Not colored</span>`;
-      cursorCellLocked = false;
-    }
-    coordPopup.innerHTML = info;
-    coordPopup.style.left = boxLeft + "px";
-    coordPopup.style.top = boxTop + "px";
-    coordPopup.style.display = "block";
-  }
-
-  function pixelToCell(x, y) {
-    const scaledCellSize = CELL_SIZE * zoom;
-    const cellX = Math.floor((x - offsetX) / scaledCellSize);
-    const cellY = Math.floor((y - offsetY) / scaledCellSize);
-    return {x: cellX, y: cellY};
-  }
-
-  function ensureCellVisible(cellX, cellY) {
-    const scaledCellSize = CELL_SIZE * zoom;
-    const cellLeft = offsetX + cellX * scaledCellSize;
-    const cellRight = cellLeft + scaledCellSize;
-    const cellTop = offsetY + cellY * scaledCellSize;
-    const cellBottom = cellTop + scaledCellSize;
-    let changed = false;
-    if (cellLeft < 0) { offsetX += -cellLeft; changed = true; }
-    if (cellRight > canvas.width) { offsetX -= cellRight - canvas.width; changed = true; }
-    if (cellTop < 0) { offsetY += -cellTop; changed = true; }
-    if (cellBottom > canvas.height) { offsetY -= cellBottom - canvas.height; changed = true; }
-    if (changed) { clampOffset(); requestRedraw(); }
-  }
-
-  function setZoom(newZoom, centerX, centerY) {
-    const oldZoom = zoom;
-    zoom = Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, newZoom));
-    if (centerX === undefined || centerY === undefined) {
-      centerX = canvas.width / 2;
-      centerY = canvas.height / 2;
-    }
-    offsetX = centerX - ((centerX - offsetX) * (zoom / oldZoom));
-    offsetY = centerY - ((centerY - offsetY) * (zoom / oldZoom));
-    clampOffset();
-    zoomDisplay.textContent = Math.round(zoom * 100) + '%';
-    requestRedraw();
-    updateCoordPopupPosition();
-  }
-
-  function requestRedraw() {
-    if (redrawPending) return;
-    redrawPending = true;
-    requestAnimationFrame(() => {
+    // ==== CANVAS AND GRID SIZING ====
+    function setCanvasSize() {
+      const rect = frame.getBoundingClientRect();
+      canvas.width = rect.width;
+      canvas.height = rect.height;
+      MIN_ZOOM = Math.min(
+        canvas.width / (GRID_SIZE * CELL_SIZE),
+        canvas.height / (GRID_SIZE * CELL_SIZE)
+      );
+      zoom = Math.max(zoom, MIN_ZOOM);
+      clampOffset();
       drawGrid();
-      redrawPending = false;
       updateCoordPopupPosition();
-    });
-  }
+    }
+    function clampOffset() {
+      const scaledCellSize = CELL_SIZE * zoom;
+      const gridWidthPx = GRID_SIZE * scaledCellSize;
+      const gridHeightPx = GRID_SIZE * scaledCellSize;
+      offsetX = Math.min(0, Math.max(canvas.width - gridWidthPx, offsetX));
+      offsetY = Math.min(0, Math.max(canvas.height - gridHeightPx, offsetY));
+    }
+    function drawGrid() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.fillStyle = "#333"; // grid background
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-  // ==== BACKEND COMMUNICATION ====
-  function sendCellColor(x, y, color) {
-    fetch(`${BACKEND_URL}/cell`, {
-      method: "POST",
-      headers: {"Content-Type": "application/json"},
-      body: JSON.stringify({x, y, color, locked: true})
-    })
-    .then(res => res.json())
-    .then(_ => fetchGridState())
-    .catch(err => {});
-  }
+      const scaledCellSize = CELL_SIZE * zoom;
+      const startCol = Math.floor(-offsetX / scaledCellSize);
+      const startRow = Math.floor(-offsetY / scaledCellSize);
+      const visibleCols = Math.ceil(canvas.width / scaledCellSize) + 2;
+      const visibleRows = Math.ceil(canvas.height / scaledCellSize) + 2;
 
-  function fetchGridState() {
-    fetch(`${BACKEND_URL}/grid`)
-      .then(res => res.json())
-      .then(data => {
-        if (data && data.cells) {
-          coloredCells = {};
-          data.cells.forEach(cell => {
-            coloredCells[`${cell.x},${cell.y}`] = {color: cell.color, locked: !!cell.locked};
-          });
-          requestRedraw();
+      // Grid lines (frame < grid)
+      ctx.strokeStyle = "#bbb"; // grid lines
+      ctx.lineWidth = 1;
+      for(let c = startCol; c <= startCol + visibleCols; c++) {
+        if (c < 0 || c >= GRID_SIZE) continue;
+        const x = offsetX + c * scaledCellSize;
+        ctx.beginPath();
+        ctx.moveTo(x + 0.5, 0);
+        ctx.lineTo(x + 0.5, canvas.height);
+        ctx.stroke();
+      }
+      for(let r = startRow; r <= startRow + visibleRows; r++) {
+        if (r < 0 || r >= GRID_SIZE) continue;
+        const y = offsetY + r * scaledCellSize;
+        ctx.beginPath();
+        ctx.moveTo(0, y + 0.5);
+        ctx.lineTo(canvas.width, y + 0.5);
+        ctx.stroke();
+      }
+
+      // Colored cells
+      for (const key in coloredCells) {
+        const [x, y] = key.split(',').map(Number);
+        if (
+          x >= startCol-1 && x <= startCol + visibleCols+1 &&
+          y >= startRow-1 && y <= startRow + visibleRows+1
+        ) {
+          const cellX = offsetX + x * scaledCellSize;
+          const cellY = offsetY + y * scaledCellSize;
+          ctx.fillStyle = coloredCells[key].color;
+          ctx.fillRect(cellX + 1, cellY + 1, scaledCellSize - 2, scaledCellSize - 2);
         }
+      }
+
+      // Highlight grid cursor cell
+      const highlightX = offsetX + gridCursor.x * scaledCellSize;
+      const highlightY = offsetY + gridCursor.y * scaledCellSize;
+      ctx.save();
+      ctx.globalAlpha = 0.4;
+      ctx.fillStyle = "#fff";
+      ctx.fillRect(highlightX + 1, highlightY + 1, scaledCellSize - 2, scaledCellSize - 2);
+      ctx.globalAlpha = 1.0;
+
+      // Draw white target pointer (circle and crosshair)
+      const cursorX = highlightX + scaledCellSize / 2;
+      const cursorY = highlightY + scaledCellSize / 2;
+      ctx.beginPath();
+      ctx.arc(cursorX, cursorY, scaledCellSize * 0.4, 0, Math.PI * 2);
+      ctx.strokeStyle = "#fff";
+      ctx.lineWidth = Math.max(2, scaledCellSize * 0.08);
+      ctx.stroke();
+
+      ctx.beginPath();
+      ctx.moveTo(cursorX - scaledCellSize*0.25, cursorY);
+      ctx.lineTo(cursorX + scaledCellSize*0.25, cursorY);
+      ctx.moveTo(cursorX, cursorY - scaledCellSize*0.25);
+      ctx.lineTo(cursorX, cursorY + scaledCellSize*0.25);
+      ctx.strokeStyle = "#fff";
+      ctx.lineWidth = Math.max(2, scaledCellSize * 0.04);
+      ctx.stroke();
+      ctx.restore();
+    }
+    function updateCoordPopupPosition() {
+      const scaledCellSize = CELL_SIZE * zoom;
+      const highlightX = offsetX + gridCursor.x * scaledCellSize;
+      const highlightY = offsetY + gridCursor.y * scaledCellSize;
+      let boxLeft = highlightX + scaledCellSize + 10;
+      let boxTop = highlightY - 10;
+      boxLeft = Math.min(canvas.width - 150, Math.max(10, boxLeft));
+      boxTop = Math.min(canvas.height - 60, Math.max(10, boxTop));
+      const key = gridCursor.x + "," + gridCursor.y;
+      let info = `<span>X: ${gridCursor.x}, Y: ${gridCursor.y}</span><br>`;
+      if (coloredCells[key] && coloredCells[key].locked) {
+        info += `<span class="colored">Colored</span>`;
+        cursorCellLocked = true;
+      } else {
+        info += `<span class="not-colored">Not colored</span>`;
+        cursorCellLocked = false;
+      }
+      coordPopup.innerHTML = info;
+      coordPopup.style.left = boxLeft + "px";
+      coordPopup.style.top = boxTop + "px";
+      coordPopup.style.display = "block";
+    }
+    function pixelToCell(x, y) {
+      const scaledCellSize = CELL_SIZE * zoom;
+      const cellX = Math.floor((x - offsetX) / scaledCellSize);
+      const cellY = Math.floor((y - offsetY) / scaledCellSize);
+      return {x: cellX, y: cellY};
+    }
+    function ensureCellVisible(cellX, cellY) {
+      const scaledCellSize = CELL_SIZE * zoom;
+      const cellLeft = offsetX + cellX * scaledCellSize;
+      const cellRight = cellLeft + scaledCellSize;
+      const cellTop = offsetY + cellY * scaledCellSize;
+      const cellBottom = cellTop + scaledCellSize;
+      let changed = false;
+      if (cellLeft < 0) { offsetX += -cellLeft; changed = true; }
+      if (cellRight > canvas.width) { offsetX -= cellRight - canvas.width; changed = true; }
+      if (cellTop < 0) { offsetY += -cellTop; changed = true; }
+      if (cellBottom > canvas.height) { offsetY -= cellBottom - canvas.height; changed = true; }
+      if (changed) { clampOffset(); requestRedraw(); }
+    }
+    function setZoom(newZoom, centerX, centerY) {
+      hidePalette();
+      const oldZoom = zoom;
+      zoom = Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, newZoom));
+      if (centerX === undefined || centerY === undefined) {
+        centerX = canvas.width / 2;
+        centerY = canvas.height / 2;
+      }
+      offsetX = centerX - ((centerX - offsetX) * (zoom / oldZoom));
+      offsetY = centerY - ((centerY - offsetY) * (zoom / oldZoom));
+      clampOffset();
+      zoomDisplay.textContent = Math.round(zoom * 100) + '%';
+      requestRedraw();
+      updateCoordPopupPosition();
+    }
+    function requestRedraw() {
+      if (redrawPending) return;
+      redrawPending = true;
+      requestAnimationFrame(() => {
+        drawGrid();
+        redrawPending = false;
+        updateCoordPopupPosition();
+      });
+    }
+    // ==== Backend communication ====
+    function sendCellColor(x, y, color) {
+      fetch(`${BACKEND_URL}/cell`, {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({x, y, color, locked: true})
       })
+      .then(res => res.json())
+      .then(_ => fetchGridState())
       .catch(err => {});
-  }
-
-  // ==== EVENT HANDLERS ====
-  canvas.addEventListener('wheel', (e) => {
-    e.preventDefault();
-    const zoomStep = 1.1;
-    if(e.deltaY < 0) setZoom(zoom * zoomStep, e.offsetX, e.offsetY);
-    else setZoom(zoom / zoomStep, e.offsetX, e.offsetY);
-  }, {passive: false});
-
-  canvas.addEventListener('mousedown', (e) => {
-    isDragging = true;
-    dragStart.x = e.clientX;
-    dragStart.y = e.clientY;
-    offsetStart.x = offsetX;
-    offsetStart.y = offsetY;
-    canvas.setPointerCapture(e.pointerId || 0);
-  });
-  window.addEventListener('mouseup', () => { isDragging = false; });
-  window.addEventListener('mousemove', (e) => {
-    if(!isDragging) return;
-    offsetX = offsetStart.x + (e.clientX - dragStart.x);
-    offsetY = offsetStart.y + (e.clientY - dragStart.y);
-    clampOffset();
-    requestRedraw();
-  });
-
-  canvas.addEventListener('touchstart', (e) => {
-    if (e.touches.length === 1) {
-      touchStart = {
-        x: e.touches[0].clientX,
-        y: e.touches[0].clientY,
-        offsetX,
-        offsetY
-      };
     }
-  }, {passive:true});
-  canvas.addEventListener('touchmove', (e) => {
-    if (!touchStart || e.touches.length !== 1) return;
-    const dx = e.touches[0].clientX - touchStart.x;
-    const dy = e.touches[0].clientY - touchStart.y;
-    offsetX = touchStart.offsetX + dx;
-    offsetY = touchStart.offsetY + dy;
-    clampOffset();
-    requestRedraw();
-  }, {passive:true});
-  canvas.addEventListener('touchend', () => { touchStart = null; });
-
-  canvas.addEventListener('click', (e) => {
-    const rect = canvas.getBoundingClientRect();
-    const mouseX = e.clientX - rect.left;
-    const mouseY = e.clientY - rect.top;
-    const cell = pixelToCell(mouseX, mouseY);
-    gridCursor.x = Math.max(0, Math.min(GRID_SIZE - 1, cell.x));
-    gridCursor.y = Math.max(0, Math.min(GRID_SIZE - 1, cell.y));
-    jumpX.value = gridCursor.x;
-    jumpY.value = gridCursor.y;
-    updateFooterCoords();
-    ensureCellVisible(gridCursor.x, gridCursor.y);
-    requestRedraw();
-
-    const key = gridCursor.x + "," + gridCursor.y;
-    if (hasDonated && (!coloredCells[key] || !coloredCells[key].locked)) {
-      showColorPickerModal();
+    function fetchGridState() {
+      fetch(`${BACKEND_URL}/grid`)
+        .then(res => res.json())
+        .then(data => {
+          if (data && data.cells) {
+            coloredCells = {};
+            data.cells.forEach(cell => {
+              coloredCells[`${cell.x},${cell.y}`] = {color: cell.color, locked: !!cell.locked};
+            });
+            requestRedraw();
+          }
+        })
+        .catch(err => {});
     }
-  });
-
-  frame.addEventListener('keydown', (e) => {
-    let moved = false;
-    switch(e.key) {
-      case 'ArrowLeft':
-        if (gridCursor.x > 0) { gridCursor.x--; moved = true; }
-        e.preventDefault(); break;
-      case 'ArrowRight':
-        if (gridCursor.x < GRID_SIZE - 1) { gridCursor.x++; moved = true; }
-        e.preventDefault(); break;
-      case 'ArrowUp':
-        if (gridCursor.y > 0) { gridCursor.y--; moved = true; }
-        e.preventDefault(); break;
-      case 'ArrowDown':
-        if (gridCursor.y < GRID_SIZE - 1) { gridCursor.y++; moved = true; }
-        e.preventDefault(); break;
-      case '+': case '=':
-        setZoom(zoom * 1.1);
-        e.preventDefault(); break;
-      case '-':
-        setZoom(zoom / 1.1);
-        e.preventDefault(); break;
-      case 'Enter':
-      case ' ':
-        const key = gridCursor.x + "," + gridCursor.y;
-        if (hasDonated && (!coloredCells[key] || !coloredCells[key].locked)) {
-          showColorPickerModal();
+    // ==== Event handlers ====
+    function hidePalette() {
+      colorPickerModal.style.display = "none";
+    }
+    zoomInBtn.addEventListener('click', () => { setZoom(zoom * 1.1); hidePalette(); });
+    zoomOutBtn.addEventListener('click', () => { setZoom(zoom / 1.1); hidePalette(); });
+    arrowUpBtn.onclick = function() { gridCursor.y = Math.max(0, gridCursor.y-1); jumpY.value = gridCursor.y; updateFooterCoords(); ensureCellVisible(gridCursor.x, gridCursor.y); requestRedraw(); hidePalette(); };
+    arrowDownBtn.onclick = function() { gridCursor.y = Math.min(GRID_SIZE-1, gridCursor.y+1); jumpY.value = gridCursor.y; updateFooterCoords(); ensureCellVisible(gridCursor.x, gridCursor.y); requestRedraw(); hidePalette(); };
+    arrowLeftBtn.onclick = function() { gridCursor.x = Math.max(0, gridCursor.x-1); jumpX.value = gridCursor.x; updateFooterCoords(); ensureCellVisible(gridCursor.x, gridCursor.y); requestRedraw(); hidePalette(); };
+    arrowRightBtn.onclick = function() { gridCursor.x = Math.min(GRID_SIZE-1, gridCursor.x+1); jumpX.value = gridCursor.x; updateFooterCoords(); ensureCellVisible(gridCursor.x, gridCursor.y); requestRedraw(); hidePalette(); };
+    centerBtn.onclick = function() {
+      gridCursor.x = Math.floor(GRID_SIZE / 2);
+      gridCursor.y = Math.floor(GRID_SIZE / 2);
+      jumpX.value = gridCursor.x;
+      jumpY.value = gridCursor.y;
+      offsetX = 0;
+      offsetY = 0;
+      setZoom(MIN_ZOOM);
+      updateFooterCoords();
+      requestRedraw();
+      hidePalette();
+    };
+    jumpBtn.addEventListener('click', () => {
+      gridCursor.x = Math.min(GRID_SIZE-1, Math.max(0, Number(jumpX.value)));
+      gridCursor.y = Math.min(GRID_SIZE-1, Math.max(0, Number(jumpY.value)));
+      updateFooterCoords();
+      ensureCellVisible(gridCursor.x, gridCursor.y);
+      requestRedraw();
+      hidePalette();
+    });
+    randomBtn.addEventListener('click', () => {
+      let tries = 2000;
+      let found = false;
+      while(tries-- > 0) {
+        const x = Math.floor(Math.random()*GRID_SIZE);
+        const y = Math.floor(Math.random()*GRID_SIZE);
+        const key = x + "," + y;
+        if (!coloredCells[key] || !coloredCells[key].locked) {
+          gridCursor.x = x;
+          gridCursor.y = y;
+          jumpX.value = x;
+          jumpY.value = y;
+          updateFooterCoords();
+          ensureCellVisible(x, y);
+          requestRedraw();
+          found = true;
+          break;
         }
-        e.preventDefault(); break;
-    }
-    if (moved) {
+      }
+      hidePalette();
+      if (!found) { alert("No available squares left!"); }
+    });
+    canvas.addEventListener('wheel', function() { hidePalette(); }, {passive:false});
+    canvas.addEventListener('mousedown', (e) => {
+      isDragging = true;
+      dragStart.x = e.clientX;
+      dragStart.y = e.clientY;
+      offsetStart.x = offsetX;
+      offsetStart.y = offsetY;
+      canvas.setPointerCapture(e.pointerId || 0);
+      hidePalette();
+    });
+    window.addEventListener('mouseup', () => { isDragging = false; });
+    window.addEventListener('mousemove', (e) => {
+      if(!isDragging) return;
+      offsetX = offsetStart.x + (e.clientX - dragStart.x);
+      offsetY = offsetStart.y + (e.clientY - dragStart.y);
+      clampOffset();
+      requestRedraw();
+      hidePalette();
+    });
+    // Mobile/touch support
+    canvas.addEventListener('touchstart', (e) => {
+      if (e.touches.length === 1) {
+        touchStart = {
+          x: e.touches[0].clientX,
+          y: e.touches[0].clientY,
+          offsetX,
+          offsetY
+        };
+      }
+      hidePalette();
+    }, {passive:true});
+    canvas.addEventListener('touchmove', (e) => {
+      if (!touchStart || e.touches.length !== 1) return;
+      const dx = e.touches[0].clientX - touchStart.x;
+      const dy = e.touches[0].clientY - touchStart.y;
+      offsetX = touchStart.offsetX + dx;
+      offsetY = touchStart.offsetY + dy;
+      clampOffset();
+      requestRedraw();
+      hidePalette();
+    }, {passive:true});
+    canvas.addEventListener('touchend', () => { touchStart = null; hidePalette(); });
+
+    canvas.addEventListener('click', (e) => {
+      const rect = canvas.getBoundingClientRect();
+      const mouseX = e.clientX - rect.left;
+      const mouseY = e.clientY - rect.top;
+      const cell = pixelToCell(mouseX, mouseY);
+      gridCursor.x = Math.max(0, Math.min(GRID_SIZE - 1, cell.x));
+      gridCursor.y = Math.max(0, Math.min(GRID_SIZE - 1, cell.y));
       jumpX.value = gridCursor.x;
       jumpY.value = gridCursor.y;
       updateFooterCoords();
       ensureCellVisible(gridCursor.x, gridCursor.y);
       requestRedraw();
-    }
-  });
-
-  function updateFooterCoords() {
-    footerCoords.textContent = `X: ${gridCursor.x}, Y: ${gridCursor.y}`;
-  }
-
-  canvas.addEventListener('mousemove', () => {
-    updateCoordPopupPosition();
-  });
-
-  donateBtn.addEventListener('click', () => {
-    if (!hasDonated) {
-      setTimeout(() => {
-        if (confirm("Simulated donation: proceed to color a square?")) {
-          hasDonated = true;
-          donateBtn.textContent = "Donated!";
-          donateBtn.disabled = true;
-        }
-      }, 100);
-    }
-  });
-
-  // ==== 2. COLOR DISC PICKER ====
-  // Draw a color wheel on the canvas
-  function drawColorDisc() {
-    const cx = colorDisc.width / 2;
-    const cy = colorDisc.height / 2;
-    const radius = colorDisc.width / 2 - 6;
-    const ctxc = colorDisc.getContext('2d');
-    ctxc.clearRect(0, 0, colorDisc.width, colorDisc.height);
-    for (let angle=0; angle<360; angle+=1) {
-      const rad = angle * Math.PI / 180;
-      const grad = ctxc.createLinearGradient(
-        cx, cy,
-        cx + radius * Math.cos(rad), cy + radius * Math.sin(rad)
-      );
-      grad.addColorStop(0, 'white');
-      grad.addColorStop(1, `hsl(${angle},100%,50%)`);
-      ctxc.beginPath();
-      ctxc.moveTo(cx, cy);
-      ctxc.arc(cx, cy, radius, rad, rad+Math.PI/180, false);
-      ctxc.closePath();
-      ctxc.fillStyle = grad;
-      ctxc.fill();
-    }
-    // Overlay transparency for value (brightness)
-    ctxc.globalAlpha = 0.3;
-    ctxc.beginPath();
-    ctxc.arc(cx, cy, radius, 0, 2*Math.PI);
-    ctxc.fillStyle = 'black';
-    ctxc.fill();
-    ctxc.globalAlpha = 1.0;
-  }
-  drawColorDisc();
-
-  let previewColor = "#ffffff";
-  colorDisc.addEventListener('click', function(e){
-    const rect = colorDisc.getBoundingClientRect();
-    const x = e.clientX - rect.left - colorDisc.width/2;
-    const y = e.clientY - rect.top - colorDisc.height/2;
-    const r = Math.sqrt(x*x + y*y);
-    const radius = colorDisc.width / 2 - 6;
-    if (r > radius) return;
-    const hue = (Math.atan2(y,x)*180/Math.PI+360)%360;
-    const sat = r / radius;
-    // Value (brightness) is fixed at 1 for simplicity
-    const rgb = hsvToRgb(hue/360, sat, 1);
-    previewColor = rgbToHex(rgb[0], rgb[1], rgb[2]);
-    selectedColorDisc.style.background = previewColor;
-  });
-
-  function hsvToRgb(h, s, v) {
-    let r, g, b;
-    let i = Math.floor(h * 6);
-    let f = h * 6 - i;
-    let p = v * (1 - s);
-    let q = v * (1 - f * s);
-    let t = v * (1 - (1 - f) * s);
-    switch (i % 6) {
-      case 0: r = v, g = t, b = p; break;
-      case 1: r = q, g = v, b = p; break;
-      case 2: r = p, g = v, b = t; break;
-      case 3: r = p, g = q, b = v; break;
-      case 4: r = t, g = p, b = v; break;
-      case 5: r = v, g = p, b = q; break;
-    }
-    return [Math.round(r*255), Math.round(g*255), Math.round(b*255)];
-  }
-  function rgbToHex(r,g,b){
-    return "#" + ((1<<24)+(r<<16)+(g<<8)+b).toString(16).slice(1);
-  }
-
-  function showColorPickerModal() {
-    selectedColorDisc.style.background = "#fff";
-    previewColor = "#fff";
-    // Place below selected square
-    const scaledCellSize = CELL_SIZE * zoom;
-    const highlightX = offsetX + gridCursor.x * scaledCellSize;
-    const highlightY = offsetY + gridCursor.y * scaledCellSize;
-    colorPickerModal.style.left = (highlightX - colorDisc.width/2) + "px";
-    colorPickerModal.style.top = (highlightY + scaledCellSize + 16) + "px";
-    colorPickerModal.style.display = "flex";
-  }
-  confirmColorBtn.onclick = function() {
-    colorPickerModal.style.display = "none";
-    const color = previewColor;
-    const key = gridCursor.x + "," + gridCursor.y;
-    coloredCells[key] = {color: color, locked: true};
-    sendCellColor(gridCursor.x, gridCursor.y, color);
-    fetchGridState();
-    requestRedraw();
-  };
-  cancelColorBtn.onclick = function() {
-    colorPickerModal.style.display = "none";
-  };
-
-  document.addEventListener('mousedown', function(e) {
-    if (colorPickerModal.style.display === "flex" && !colorPickerModal.contains(e.target)) {
-      colorPickerModal.style.display = "none";
-    }
-  });
-
-  // ==== ZOOM CONTROLS ====
-  zoomInBtn.addEventListener('click', () => setZoom(zoom * 1.1));
-  zoomOutBtn.addEventListener('click', () => setZoom(zoom / 1.1));
-
-  frame.addEventListener('click', () => { frame.focus(); });
-  frame.addEventListener('touchend', () => { frame.focus(); });
-
-  // ==== 3. EDITABLE COORDINATE PANEL ====
-  jumpBtn.addEventListener('click', () => {
-    const x = Math.min(GRID_SIZE-1, Math.max(0, Number(jumpX.value)));
-    const y = Math.min(GRID_SIZE-1, Math.max(0, Number(jumpY.value)));
-    gridCursor.x = x;
-    gridCursor.y = y;
-    updateFooterCoords();
-    ensureCellVisible(gridCursor.x, gridCursor.y);
-    requestRedraw();
-  });
-  jumpX.addEventListener('keydown', function(e){
-    if(e.key === "Enter") jumpBtn.click();
-  });
-  jumpY.addEventListener('keydown', function(e){
-    if(e.key === "Enter") jumpBtn.click();
-  });
-
-  // ==== 6. ARROWS AND CENTER TOOL ====
-  arrowUpBtn.onclick = function() {
-    if(gridCursor.y > 0) gridCursor.y--;
-    jumpY.value = gridCursor.y;
-    updateFooterCoords();
-    ensureCellVisible(gridCursor.x, gridCursor.y);
-    requestRedraw();
-  };
-  arrowDownBtn.onclick = function() {
-    if(gridCursor.y < GRID_SIZE-1) gridCursor.y++;
-    jumpY.value = gridCursor.y;
-    updateFooterCoords();
-    ensureCellVisible(gridCursor.x, gridCursor.y);
-    requestRedraw();
-  };
-  arrowLeftBtn.onclick = function() {
-    if(gridCursor.x > 0) gridCursor.x--;
-    jumpX.value = gridCursor.x;
-    updateFooterCoords();
-    ensureCellVisible(gridCursor.x, gridCursor.y);
-    requestRedraw();
-  };
-  arrowRightBtn.onclick = function() {
-    if(gridCursor.x < GRID_SIZE-1) gridCursor.x++;
-    jumpX.value = gridCursor.x;
-    updateFooterCoords();
-    ensureCellVisible(gridCursor.x, gridCursor.y);
-    requestRedraw();
-  };
-  centerBtn.onclick = function() {
-    gridCursor.x = Math.floor(GRID_SIZE / 2);
-    gridCursor.y = Math.floor(GRID_SIZE / 2);
-    jumpX.value = gridCursor.x;
-    jumpY.value = gridCursor.y;
-    offsetX = 0;
-    offsetY = 0;
-    setZoom(MIN_ZOOM);
-    updateFooterCoords();
-    requestRedraw();
-  };
-
-  // ==== 4. RANDOM AVAILABLE SQUARE BUTTON ====
-  randomBtn.addEventListener('click', () => {
-    let tries = 2000;
-    let found = false;
-    while(tries-- > 0) {
-      const x = Math.floor(Math.random()*GRID_SIZE);
-      const y = Math.floor(Math.random()*GRID_SIZE);
-      const key = x + "," + y;
-      if (!coloredCells[key] || !coloredCells[key].locked) {
-        gridCursor.x = x;
-        gridCursor.y = y;
-        jumpX.value = x;
-        jumpY.value = y;
-        updateFooterCoords();
-        ensureCellVisible(x, y);
-        requestRedraw();
-        found = true;
-        break;
+      const key = gridCursor.x + "," + gridCursor.y;
+      if (hasDonated && (!coloredCells[key] || !coloredCells[key].locked)) {
+        showColorPickerModal();
       }
+    });
+    frame.addEventListener('keydown', (e) => {
+      let moved = false;
+      switch(e.key) {
+        case 'ArrowLeft':
+          if (gridCursor.x > 0) { gridCursor.x--; moved = true; }
+          e.preventDefault(); break;
+        case 'ArrowRight':
+          if (gridCursor.x < GRID_SIZE - 1) { gridCursor.x++; moved = true; }
+          e.preventDefault(); break;
+        case 'ArrowUp':
+          if (gridCursor.y > 0) { gridCursor.y--; moved = true; }
+          e.preventDefault(); break;
+        case 'ArrowDown':
+          if (gridCursor.y < GRID_SIZE - 1) { gridCursor.y++; moved = true; }
+          e.preventDefault(); break;
+        case '+': case '=':
+          setZoom(zoom * 1.1); hidePalette();
+          e.preventDefault(); break;
+        case '-':
+          setZoom(zoom / 1.1); hidePalette();
+          e.preventDefault(); break;
+        case 'Enter':
+        case ' ':
+          const key = gridCursor.x + "," + gridCursor.y;
+          if (hasDonated && (!coloredCells[key] || !coloredCells[key].locked)) {
+            showColorPickerModal();
+          }
+          e.preventDefault(); break;
+      }
+      if (moved) {
+        jumpX.value = gridCursor.x;
+        jumpY.value = gridCursor.y;
+        updateFooterCoords();
+        ensureCellVisible(gridCursor.x, gridCursor.y);
+        requestRedraw();
+        hidePalette();
+      }
+    });
+    function updateFooterCoords() {
+      footerCoords.textContent = `X: ${gridCursor.x}, Y: ${gridCursor.y}`;
     }
-    if (!found) { alert("No available squares left!"); }
-  });
+    canvas.addEventListener('mousemove', () => { updateCoordPopupPosition(); });
 
-  window.addEventListener('load', () => {
-    setCanvasSize();
-    frame.focus();
-    zoomDisplay.textContent = Math.round(zoom * 100) + '%';
-    fetchGridState();
-    updateFooterCoords();
-    updateCoordPopupPosition();
-    requestRedraw();
-  });
-  window.addEventListener('resize', setCanvasSize);
+    donateBtn.addEventListener('click', () => {
+      if (!hasDonated) {
+        setTimeout(() => {
+          if (confirm("Simulated donation: proceed to color a square?")) {
+            hasDonated = true;
+            donateBtn.textContent = "Donated!";
+            donateBtn.disabled = true;
+          }
+        }, 100);
+      }
+    });
+
+    // ==== Color disc picker ====
+    function drawColorDisc() {
+      const cx = colorDisc.width / 2;
+      const cy = colorDisc.height / 2;
+      const radius = colorDisc.width / 2 - 6;
+      const ctxc = colorDisc.getContext('2d');
+      ctxc.clearRect(0, 0, colorDisc.width, colorDisc.height);
+      for (let angle=0; angle<360; angle+=1) {
+        const rad = angle * Math.PI / 180;
+        const grad = ctxc.createLinearGradient(
+          cx, cy,
+          cx + radius * Math.cos(rad), cy + radius * Math.sin(rad)
+        );
+        grad.addColorStop(0, 'white');
+        grad.addColorStop(1, `hsl(${angle},100%,50%)`);
+        ctxc.beginPath();
+        ctxc.moveTo(cx, cy);
+        ctxc.arc(cx, cy, radius, rad, rad+Math.PI/180, false);
+        ctxc.closePath();
+        ctxc.fillStyle = grad;
+        ctxc.fill();
+      }
+      ctxc.globalAlpha = 0.3;
+      ctxc.beginPath();
+      ctxc.arc(cx, cy, radius, 0, 2*Math.PI);
+      ctxc.fillStyle = 'black';
+      ctxc.fill();
+      ctxc.globalAlpha = 1.0;
+    }
+    drawColorDisc();
+    let previewColor = "#ffffff";
+    colorDisc.addEventListener('click', function(e){
+      const rect = colorDisc.getBoundingClientRect();
+      const x = e.clientX - rect.left - colorDisc.width/2;
+      const y = e.clientY - rect.top - colorDisc.height/2;
+      const r = Math.sqrt(x*x + y*y);
+      const radius = colorDisc.width / 2 - 6;
+      if (r > radius) return;
+      const hue = (Math.atan2(y,x)*180/Math.PI+360)%360;
+      const sat = r / radius;
+      const rgb = hsvToRgb(hue/360, sat, 1);
+      previewColor = rgbToHex(rgb[0], rgb[1], rgb[2]);
+      selectedColorDisc.style.background = previewColor;
+    });
+    function hsvToRgb(h, s, v) {
+      let r, g, b;
+      let i = Math.floor(h * 6);
+      let f = h * 6 - i;
+      let p = v * (1 - s);
+      let q = v * (1 - f * s);
+      let t = v * (1 - (1 - f) * s);
+      switch (i % 6) {
+        case 0: r = v, g = t, b = p; break;
+        case 1: r = q, g = v, b = p; break;
+        case 2: r = p, g = v, b = t; break;
+        case 3: r = p, g = q, b = v; break;
+        case 4: r = t, g = p, b = v; break;
+        case 5: r = v, g = p, b = q; break;
+      }
+      return [Math.round(r*255), Math.round(g*255), Math.round(b*255)];
+    }
+    function rgbToHex(r,g,b){
+      return "#" + ((1<<24)+(r<<16)+(g<<8)+b).toString(16).slice(1);
+    }
+    function showColorPickerModal() {
+      selectedColorDisc.style.background = "#fff";
+      previewColor = "#fff";
+      // Place below selected square
+      const scaledCellSize = CELL_SIZE * zoom;
+      const highlightX = offsetX + gridCursor.x * scaledCellSize;
+      const highlightY = offsetY + gridCursor.y * scaledCellSize;
+      colorPickerModal.style.left = (highlightX - colorDisc.width/2) + "px";
+      colorPickerModal.style.top = (highlightY + scaledCellSize + 16) + "px";
+      colorPickerModal.style.display = "flex";
+    }
+    confirmColorBtn.onclick = function() {
+      colorPickerModal.style.display = "none";
+      const color = previewColor;
+      const key = gridCursor.x + "," + gridCursor.y;
+      coloredCells[key] = {color: color, locked: true};
+      sendCellColor(gridCursor.x, gridCursor.y, color);
+      fetchGridState();
+      requestRedraw();
+    };
+    cancelColorBtn.onclick = function() {
+      colorPickerModal.style.display = "none";
+    };
+    document.addEventListener('mousedown', function(e) {
+      if (colorPickerModal.style.display === "flex" && !colorPickerModal.contains(e.target)) {
+        colorPickerModal.style.display = "none";
+      }
+    });
+
+    window.addEventListener('load', () => {
+      setCanvasSize();
+      frame.focus();
+      zoomDisplay.textContent = Math.round(zoom * 100) + '%';
+      fetchGridState();
+      updateFooterCoords();
+      updateCoordPopupPosition();
+      requestRedraw();
+    });
+    window.addEventListener('resize', setCanvasSize);
   </script>
 </body>
 </html>
