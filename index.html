@@ -119,6 +119,7 @@
       display: flex;
       align-items: center;
       justify-content: center;
+      touch-action: none;
     }
     #gridCanvas {
       width: 100%; height: 100%;
@@ -129,6 +130,7 @@
       left: 0; top: 0;
       transition: cursor .15s;
       cursor: pointer;
+      touch-action: none;
     }
     #gridCanvas.grabbing, #frame.grabbing { cursor: grabbing !important; }
     .nav-panel {
@@ -267,14 +269,13 @@
       border-radius: 18px;
       box-shadow: 0 0 24px #000;
       border: 2px solid #fff;
-      min-width: 220px;
-      min-height: 220px;
+      min-width: 260px;
+      min-height: 260px;
       justify-content: center;
-      padding: 10px 18px 10px 18px;
-      /* width/height will be set dynamically */
+      padding: 18px 20px 18px 20px;
     }
     .color-picker-modal canvas {
-      width: 114px; height: 114px;
+      width: 228px; height: 228px;
       border: 2px solid #fff;
       border-radius: 50%;
       background: transparent;
@@ -284,7 +285,7 @@
     .color-picker-modal .modal-btns {
       display: flex; flex-direction: column; gap: 14px; justify-content: center;
       align-items: center;
-      margin-top: 8px;
+      margin-top: 10px;
       width: 100%;
     }
     .palette-error, .palette-message {
@@ -341,8 +342,8 @@
     @media (max-width: 700px) {
       header, footer { min-height: 40px; height: 40px; }
       #frame { width: min(98vw, 70vh); height: min(98vw, 70vh);}
-      .color-picker-modal canvas { width: 66px; height: 66px; }
-      .color-picker-modal { min-width: 120px; min-height: 120px; }
+      .color-picker-modal canvas { width: 114px; height: 114px; }
+      .color-picker-modal { min-width: 130px; min-height: 130px; }
       .big-title { font-size: 1.3em !important; }
       .arrow-btn, .center-btn, .fancy-btn, .jump-panel, .footer-content { font-size: 0.8em; height: 20px; min-width: 20px; }
       .jump-panel input[type="number"] { height: 15px; width: 28px; font-size: 0.7em; }
@@ -380,7 +381,7 @@
           </div>
         </div>
         <div id="colorPickerModal" class="color-picker-modal">
-          <canvas id="colorDisc" width="114" height="114"></canvas>
+          <canvas id="colorDisc" width="228" height="228"></canvas>
           <div class="modal-btns">
             <button id="randomColorBtn" type="button" class="fancy-btn">Random</button>
             <button id="confirmColorBtn" type="button" class="fancy-btn">OK</button>
@@ -438,7 +439,9 @@
     let palettePreviewCell = null;
     let showCursor = true;
     let hasDonated = false;
-
+    let pinch2Last = null;
+    let pinch2Mode = null;
+    let pinch2Origin = null;
     const canvas = document.getElementById('gridCanvas');
     const ctx = canvas.getContext('2d');
     const frame = document.getElementById('frame');
@@ -700,6 +703,70 @@
       if (!found) { alert("No available squares left!"); }
     });
 
+    // Mouse wheel zoom/ctrl only for grid
+    canvas.addEventListener('wheel', function(e) {
+      if (colorPickerModal.style.display === "flex") return;
+      if (e.ctrlKey || e.metaKey) {
+        e.preventDefault();
+        setZoom(zoom * (e.deltaY < 0 ? 1.1 : 0.9), e.offsetX, e.offsetY);
+      }
+    }, {passive:false});
+
+    // Two finger: pinch and move
+    canvas.addEventListener('touchstart', function(e) {
+      if (e.touches.length === 2) {
+        pinch2Last = {
+          x1: e.touches[0].clientX, y1: e.touches[0].clientY,
+          x2: e.touches[1].clientX, y2: e.touches[1].clientY
+        };
+        pinch2Mode = null;
+        pinch2Origin = {offsetX, offsetY, zoom};
+        e.preventDefault();
+      }
+    }, {passive:false});
+    canvas.addEventListener('touchmove', function(e) {
+      if (e.touches.length === 2 && pinch2Last) {
+        const x1 = e.touches[0].clientX, y1 = e.touches[0].clientY;
+        const x2 = e.touches[1].clientX, y2 = e.touches[1].clientY;
+        // Distance
+        const lastDist = Math.hypot(
+          pinch2Last.x1 - pinch2Last.x2,
+          pinch2Last.y1 - pinch2Last.y2
+        );
+        const newDist = Math.hypot(x1 - x2, y1 - y2);
+        if (pinch2Mode === null) {
+          // Decide if pinch (zoom) or move
+          if (Math.abs(newDist - lastDist) > 10) {
+            pinch2Mode = "zoom";
+          } else {
+            pinch2Mode = "move";
+          }
+        }
+        if (pinch2Mode === "zoom") {
+          // Pinch zoom
+          const delta = newDist / lastDist;
+          setZoom(pinch2Origin.zoom * delta);
+        } else {
+          // Move grid x-y
+          const lastCx = (pinch2Last.x1 + pinch2Last.x2) / 2;
+          const lastCy = (pinch2Last.y1 + pinch2Last.y2) / 2;
+          const newCx = (x1 + x2) / 2;
+          const newCy = (y1 + y2) / 2;
+          offsetX = pinch2Origin.offsetX + (newCx - lastCx);
+          offsetY = pinch2Origin.offsetY + (newCy - lastCy);
+          clampOffset();
+          requestRedraw();
+        }
+        pinch2Last = {x1, y1, x2, y2};
+        e.preventDefault();
+      }
+    }, {passive:false});
+    canvas.addEventListener('touchend', function(e) {
+      pinch2Last = null;
+      pinch2Mode = null;
+    });
+
+    // Mouse drag
     canvas.addEventListener('mousedown', (e) => {
       isDragging = true;
       dragStart.x = e.clientX;
@@ -722,56 +789,6 @@
       requestRedraw();
       hidePalette();
     });
-
-    canvas.addEventListener('touchstart', (e) => {
-      if (e.touches.length === 1) {
-        touchStart = {
-          x: e.touches[0].clientX,
-          y: e.touches[0].clientY,
-          offsetX,
-          offsetY
-        };
-      }
-      if (e.touches.length === 2) {
-        pinchStartDist = Math.hypot(
-          e.touches[0].clientX - e.touches[1].clientX,
-          e.touches[0].clientY - e.touches[1].clientY
-        );
-        pinchStartZoom = zoom;
-      }
-      hidePalette();
-    }, {passive:false});
-    canvas.addEventListener('touchmove', function(e) {
-      if(e.touches.length === 2 && pinchStartDist) {
-        const d = Math.hypot(
-          e.touches[0].clientX - e.touches[1].clientX,
-          e.touches[0].clientY - e.touches[1].clientY
-        );
-        const scale = d / pinchStartDist;
-        setZoom(pinchStartZoom * scale);
-        e.preventDefault();
-      } else if(e.touches.length === 1 && touchStart) {
-        const dx = e.touches[0].clientX - touchStart.x;
-        const dy = e.touches[0].clientY - touchStart.y;
-        offsetX = touchStart.offsetX + dx;
-        offsetY = touchStart.offsetY + dy;
-        clampOffset();
-        requestRedraw();
-        hidePalette();
-      }
-    }, {passive:false});
-    canvas.addEventListener('touchend', () => {
-      touchStart = null;
-      pinchStartDist = null;
-      pinchStartZoom = null;
-      hidePalette();
-    });
-
-    canvas.addEventListener('wheel', function(e) {
-      if (e.ctrlKey || e.metaKey) {
-        return; // Let browser do default zoom of whole page
-      }
-    }, {passive:false});
 
     canvas.addEventListener('click', (e) => {
       paletteError.style.display = "none";
