@@ -27,8 +27,8 @@
       justify-content: center;
       width: 100%;
       height: 100%;
-      gap: 16px;
       position: relative;
+      gap: 16px;
     }
     .big-title {
       font-size: 3em;
@@ -39,58 +39,73 @@
       flex: none;
       z-index: 2;
     }
+
+    /* --- Menu Icon --- */
     .menu-icon {
-      margin-left: 18px;
-      width: 48px; height: 48px;
+      position: absolute;
+      top: -60px; /* above grid */
+      right: -60px; /* right of grid */
+      width: 54px;
+      height: 54px;
+      min-width: 54px;
+      min-height: 54px;
       display: flex;
       flex-direction: column;
       justify-content: center;
       align-items: center;
       gap: 10px;
       cursor: pointer;
-      z-index: 100;
-      background: none;
-      outline: 2px solid #ccc;
-      border-radius: 8px;
-    }
-    .menu-icon:focus {
-      outline: 3px solid #FF0070;
+      z-index: 5001;
+      background: #333;
+      border-radius: 14px;
+      outline: 2px solid #fff;
+      box-shadow: 0 2px 12px #111b;
     }
     .menu-icon span {
       display: block;
-      width: 36px;
-      height: 6px;
+      width: 38px;
+      height: 7px;
       background: #fff;
-      border-radius: 3px;
+      border-radius: 4px;
       margin: 0 auto;
       transition: background 0.2s;
     }
+    /* --- Popup Menu Overlay --- */
+    .popup-menu-bg {
+      position: fixed;
+      top: 0; left: 0; width: 100vw; height: 100vh;
+      background: rgba(40, 40, 40, 0.5); /* alpha 0.5 */
+      z-index: 5000;
+      display: none;
+    }
+    .popup-menu-bg.active { display: block; }
     .popup-menu {
       position: fixed;
-      top: 0; right: 0; left: 0; bottom: 0;
-      width: 100vw; height: 100vh;
-      background: rgba(30,30,30,0.98);
-      z-index: 5000;
+      top: 0; left: 0; width: 100vw; height: 100vh;
+      background: transparent;
+      z-index: 5001;
       display: none;
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      gap: 32px;
-      font-size: 2em;
+      gap: 36px;
+      font-size: 2.3em;
+      pointer-events: none;
     }
-    .popup-menu.active { display: flex; }
+    .popup-menu.active { display: flex; pointer-events: auto; }
     .popup-menu a,
     .popup-menu .close-menu {
-      outline: 2px solid #ccc;
+      outline: 2px solid #fff;
       border-radius: 12px;
     }
     .popup-menu a {
       color: #fff !important;
       text-decoration: none;
-      padding: 18px 42px;
-      font-size: 1.1em;
-      background: #444;
-      margin: 10px 0;
+      padding: 24px 56px;
+      font-size: 1.2em;
+      font-weight: bold;
+      background: rgba(60, 60, 60, 0.95);
+      margin: 18px 0;
       border: 2px solid #fff;
       transition: background 0.2s, color 0.2s;
       display: flex;
@@ -112,6 +127,8 @@
       cursor: pointer;
       z-index: 5100;
     }
+
+    /* --- Grid & Canvas --- */
     #frame {
       outline: 3px solid #ccc;
       background: #333;
@@ -134,84 +151,13 @@
       background: #333;
       position: absolute;
       left: 0; top: 0;
-      transition: cursor .15s;
       cursor: pointer;
+      transition: cursor .15s;
       touch-action: none;
     }
     #gridCanvas.grabbing, #frame.grabbing { cursor: grabbing !important; }
-    .nav-panel {
-      position: absolute;
-      left: 0; right: 0;
-      bottom: 0;
-      width: 100%;
-      z-index: 90;
-      display: flex;
-      gap: 0;
-      align-items: center;
-      justify-content: space-between;
-      background: none;
-      padding: 0 8px 8px 8px;
-      box-sizing: border-box;
-    }
-    .nav-btn-group {
-      display: flex;
-      gap: 8px;
-      flex: 1 1 0;
-      justify-content: center;
-      align-items: center;
-    }
-    .arrow-btn, .center-btn {
-      background: #fff;
-      color: #222;
-      border: none;
-      border-radius: 6px;
-      padding: 6px 14px;
-      font-size: 1em;
-      cursor: pointer;
-      font-weight: bold;
-      box-shadow: 0 1px 4px #1114;
-      transition: background 0.1s, color 0.1s;
-      height: 38px;
-      min-width: 38px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      outline: 2px solid #ccc;
-    }
-    .arrow-btn:active, .center-btn:active { background: #f0f0f0; color: #111; }
-    .arrow-btn:focus, .center-btn:focus { outline: 3px solid #FF0070; }
-    .zoom-controls {
-      display: flex; gap: 8px;
-      align-items: center;
-      height: 38px;
-    }
-    .fancy-btn, .color-picker-modal button, .dummy-btn {
-      background: linear-gradient(160deg, #f0f0f0 70%, #bdbdbd 100%);
-      color: #222;
-      border: none;
-      border-radius: 9px;
-      padding: 7px 18px;
-      font-size: 1.06em;
-      cursor: pointer;
-      margin: 0 4px;
-      font-weight: bold;
-      box-shadow: 0 1px 4px #8883;
-      transition: background 0.2s, color 0.2s;
-      height: 32px;
-      min-width: 32px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      outline: 2px solid #ccc;
-    }
-    .fancy-btn:active, .fancy-btn:focus,
-    .color-picker-modal button:active,
-    .color-picker-modal button:focus,
-    .dummy-btn:active, .dummy-btn:focus {
-      background: #e0e0e0;
-      color: #111;
-      outline: 3px solid #FF0070;
-    }
+
+    /* --- Footer --- */
     footer {
       width: 100vw;
       background: transparent;
@@ -268,6 +214,8 @@
       -webkit-appearance: none;
       margin: 0;
     }
+
+    /* --- Palette Tool --- */
     .color-picker-modal {
       position: fixed;
       z-index: 9999;
@@ -297,12 +245,60 @@
       margin-top: 10px;
       width: 100%;
     }
+    .fancy-btn, .color-picker-modal button, .dummy-btn {
+      background: linear-gradient(160deg, #f0f0f0 70%, #bdbdbd 100%);
+      color: #222;
+      border: none;
+      border-radius: 9px;
+      padding: 9px 24px;
+      font-size: 1.33em;
+      cursor: pointer;
+      margin: 0 4px;
+      font-weight: bold;
+      box-shadow: 0 1px 4px #8883;
+      transition: background 0.2s, color 0.2s;
+      height: 40px;
+      min-width: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      outline: 2px solid #ccc;
+    }
+    .fancy-btn:active, .fancy-btn:focus,
+    .color-picker-modal button:active,
+    .color-picker-modal button:focus,
+    .dummy-btn:active, .dummy-btn:focus {
+      background: #e0e0e0;
+      color: #111;
+      outline: 3px solid #FF0070;
+    }
+
+    /* --- Navigation Panel --- */
+    .nav-panel {
+      font-size: 1.25em;
+      font-weight: bold;
+    }
+    .arrow-btn, .center-btn, .zoom-controls button {
+      font-size: 1.25em;
+      font-weight: bold;
+      height: 48px !important;
+      min-width: 48px !important;
+      padding: 10px 20px !important;
+    }
+    .zoom-controls span {
+      font-size: 1.25em;
+      font-weight: bold;
+      margin: 0 10px;
+    }
+
+    /* --- Messages --- */
     .palette-error, .palette-message {
       color: #fff;
       background: #ff0070;
       border-radius: 14px;
-      padding: 22px 52px;
-      font-size: 2.4em;
+      padding: 44px 104px;
+      font-size: 4.8em;
+      font-weight: bold;
       margin-bottom: 20px;
       margin-top: 24px;
       text-align: center;
@@ -314,29 +310,15 @@
       transform: translate(-50%, 0);
       outline: 2px solid #ccc;
     }
-    #coordPopup {
-      pointer-events: none;
-      position: fixed;
-      background: #111;
-      color: #fff;
-      border: 2px solid #fff;
-      border-radius: 0;
-      padding: 8px 14px;
-      font-size: 1em;
-      z-index: 1200;
-      box-shadow: 0 0 11px #000;
-      white-space: nowrap;
-      text-align: left;
-      display: none;
-    }
     #congratsMessage {
       position: fixed;
       background: #fff;
       color: #222;
       border-radius: 20px;
       border: 2px solid #ff0070;
-      padding: 56px 72px;
-      font-size: 2.6em;
+      padding: 112px 144px;
+      font-size: 5.2em;
+      font-weight: bold;
       z-index: 10001;
       text-align: center;
       box-shadow: 0 0 44px #000;
@@ -352,16 +334,21 @@
       font-size: 1em;
       color: #fff;
     }
-    @media (max-width: 700px) {
-      header, footer { min-height: 40px; height: 40px; }
-      #frame { width: min(98vw, 70vh); height: min(98vw, 70vh);}
-      .color-picker-modal canvas { width: 114px; height: 114px; }
-      .color-picker-modal { min-width: 130px; min-height: 130px; }
-      .big-title { font-size: 1.3em !important; }
-      .arrow-btn, .center-btn, .fancy-btn, .jump-panel, .footer-content { font-size: 0.8em; height: 20px; min-width: 20px; }
-      .jump-panel input[type="number"] { height: 15px; width: 28px; font-size: 0.7em; }
-      #congratsMessage { padding: 18px 24px; font-size: 1.3em;}
-      .palette-error { font-size: 1.1em; padding: 12px 18px; }
+    @media (max-width: 900px) {
+      .menu-icon { width: 36px; height: 36px; min-width: 36px; min-height: 36px; top: -40px; right: -40px; }
+      .menu-icon span { width: 26px; height: 5px; }
+      .big-title { font-size: 2em; }
+      #congratsMessage { padding: 36px 48px; font-size: 2.6em;}
+      .palette-error { font-size: 2.2em; padding: 24px 52px; }
+      .arrow-btn, .center-btn, .zoom-controls button { font-size: 1em; height: 36px !important; min-width: 36px !important; padding: 7px 13px !important; }
+      .zoom-controls span { font-size: 1em; }
+    }
+    @media (max-width: 650px) {
+      .big-title { font-size: 1.2em; }
+      .palette-error { font-size: 1em; padding: 10px 14px; }
+      #congratsMessage { padding: 18px 24px; font-size: 1.1em;}
+      .arrow-btn, .center-btn, .zoom-controls button { font-size: .8em; height: 24px !important; min-width: 24px !important; padding: 3px 7px !important; }
+      .zoom-controls span { font-size: .8em; }
     }
   </style>
 </head>
@@ -407,6 +394,7 @@
         <div id="congratsMessage"></div>
       </div>
     </div>
+    <div class="popup-menu-bg" id="popupMenuBg"></div>
     <div class="popup-menu" id="popupMenu">
       <button class="close-menu" id="closeMenuBtn" title="Close Menu">&times;</button>
       <a href="manifesto.html">Manifesto</a>
@@ -432,11 +420,25 @@
     // --- MENU ---
     const menuIcon = document.getElementById('menuIcon');
     const popupMenu = document.getElementById('popupMenu');
+    const popupMenuBg = document.getElementById('popupMenuBg');
     const closeMenuBtn = document.getElementById('closeMenuBtn');
-    menuIcon.addEventListener('click', () => popupMenu.classList.add('active'));
-    closeMenuBtn.addEventListener('click', () => popupMenu.classList.remove('active'));
+    menuIcon.addEventListener('click', () => {
+      popupMenu.classList.add('active');
+      popupMenuBg.classList.add('active');
+    });
+    closeMenuBtn.addEventListener('click', () => {
+      popupMenu.classList.remove('active');
+      popupMenuBg.classList.remove('active');
+    });
+    popupMenuBg.addEventListener('click', () => {
+      popupMenu.classList.remove('active');
+      popupMenuBg.classList.remove('active');
+    });
     popupMenu.addEventListener('click', (e) => {
-      if (e.target === popupMenu) popupMenu.classList.remove('active');
+      if (e.target === popupMenu) {
+        popupMenu.classList.remove('active');
+        popupMenuBg.classList.remove('active');
+      }
     });
 
     // --- GRID ---
