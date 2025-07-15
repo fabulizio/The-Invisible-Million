@@ -31,7 +31,7 @@
       position: relative;
     }
     .big-title {
-      font-size: 3.5em;
+      font-size: 4.2em; /* Match index page size */
       font-weight: bold;
       letter-spacing: 2px;
       line-height: 1.2;
@@ -52,6 +52,7 @@
       background: none;
       outline: 2px solid #ccc;
       border-radius: 8px;
+      transition: outline 0.2s;
     }
     .menu-icon:focus {
       outline: 3px solid #eee;
@@ -171,18 +172,25 @@
   <header>
     <div class="header-content">
       <span class="big-title">Manifesto</span>
-      <div class="menu-icon" tabindex="0" title="Menu">
+      <div class="menu-icon" tabindex="0" title="Menu" aria-label="Open menu">
         <span></span>
         <span></span>
         <span></span>
       </div>
     </div>
   </header>
+  <nav class="popup-menu" id="popupMenu" aria-hidden="true">
+    <button class="close-menu" id="closeMenu" title="Close menu" aria-label="Close menu">&times;</button>
+    <a href="index.html">Home</a>
+    <a href="Manifesto.html">Manifesto</a>
+    <a href="about.html">About</a>
+    <a href="contact.html">Contact</a>
+  </nav>
   <main>
     <h1>Our Manifesto</h1>
     <p>
-      We envision a world where every individual—no matter how visible or invisible—counts.  
-      The (In)Visible Million Project is dedicated to shining a light on those overlooked by society,  
+      We envision a world where every individual—no matter how visible or invisible—counts.<br>
+      The (In)Visible Million Project is dedicated to shining a light on those overlooked by society,
       fostering inclusion, transparency, and collective action.
     </p>
     <h2>Principles</h2>
@@ -193,7 +201,7 @@
     </p>
     <h2>Join Us</h2>
     <p>
-      Stand with us in making the invisible visible.  
+      Stand with us in making the invisible visible.<br>
       Learn more, contribute, and spread the word!
     </p>
   </main>
@@ -202,5 +210,45 @@
       &copy; 2025 The (In)Visible Million Project
     </div>
   </footer>
+  <script>
+    // Menu functionality
+    const menuIcon = document.querySelector('.menu-icon');
+    const popupMenu = document.getElementById('popupMenu');
+    const closeMenuBtn = document.getElementById('closeMenu');
+
+    function openMenu() {
+      popupMenu.classList.add('active');
+      popupMenu.setAttribute('aria-hidden', 'false');
+      closeMenuBtn.focus();
+    }
+
+    function closeMenu() {
+      popupMenu.classList.remove('active');
+      popupMenu.setAttribute('aria-hidden', 'true');
+      menuIcon.focus();
+    }
+
+    menuIcon.addEventListener('click', openMenu);
+    menuIcon.addEventListener('keydown', function(e) {
+      if (e.key === 'Enter' || e.key === ' ') openMenu();
+    });
+
+    closeMenuBtn.addEventListener('click', closeMenu);
+    closeMenuBtn.addEventListener('keydown', function(e) {
+      if (e.key === 'Enter' || e.key === ' ') closeMenu();
+    });
+
+    // Close menu on Escape key
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape' && popupMenu.classList.contains('active')) {
+        closeMenu();
+      }
+    });
+
+    // Optional: Close menu when clicking outside
+    popupMenu.addEventListener('click', function(e) {
+      if (e.target === popupMenu) closeMenu();
+    });
+  </script>
 </body>
 </html>
