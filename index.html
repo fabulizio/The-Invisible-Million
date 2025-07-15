@@ -15,14 +15,21 @@
     header, footer {
       background: transparent;
       color: #fff;
-      padding: 0;
-      min-height: 40px;
       display: flex;
       align-items: center;
       justify-content: center;
       text-align: center;
-      gap: 20px;
+      height: 120px; /* triple typical height */
+      min-height: 120px;
+    }
+    .header-content, .footer-content {
+      display: flex;
       flex-direction: row;
+      width: 100%;
+      height: 100%;
+      align-items: center;
+      justify-content: center;
+      gap: 24px;
     }
     #frame {
       outline: 3px solid #ccc;
@@ -49,43 +56,53 @@
     }
     .nav-panel {
       position: absolute;
-      right: 14px;
-      bottom: 14px;
+      right: 18px;
+      bottom: 18px;
       z-index: 90;
       display: flex;
-      gap: 7px;
-      background: none;
+      gap: 10px;
       align-items: center;
+      background: none;
     }
     .arrow-btn, .center-btn {
       background: #fff;
       color: #222;
       border: none;
-      border-radius: 6px;
-      padding: 8px 16px;
-      font-size: 1.2em;
+      border-radius: 8px;
+      padding: 12px 18px;
+      font-size: 1.4em;
       cursor: pointer;
       font-weight: bold;
-      box-shadow: 0 2px 6px #1114;
+      box-shadow: 0 2px 8px #1114;
       transition: background 0.1s, color 0.1s;
+      height: 56px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
     .arrow-btn:active, .center-btn:active { background: #f0f0f0; color: #111; }
     .arrow-btn:focus, .center-btn:focus { outline: 2px solid #FF0070; }
     .zoom-controls {
-      display: flex; gap: 8px; margin-left: 12px;
+      display: flex; gap: 12px; margin-left: 18px;
+      align-items: center;
+      height: 56px;
     }
     .fancy-btn {
       background: linear-gradient(160deg, #f0f0f0 70%, #bdbdbd 100%);
       color: #222;
       border: none;
       border-radius: 22px;
-      padding: 8px 18px;
-      font-size: 1.1em;
+      padding: 12px 24px;
+      font-size: 1.25em;
       cursor: pointer;
       margin: 0 4px;
       font-weight: bold;
       box-shadow: 0 2px 8px #8883;
       transition: background 0.2s, color 0.2s;
+      height: 56px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
     .fancy-btn:active, .fancy-btn:focus {
       background: #e0e0e0;
@@ -93,24 +110,23 @@
       outline: 2px solid #FF0070;
     }
     .jump-panel {
-      margin: 0;
       display: flex;
-      gap: 10px;
+      gap: 12px;
       align-items: center;
       justify-content: center;
       flex-wrap: wrap;
+      height: 56px;
     }
     .color-picker-modal {
       position: absolute;
-      left: 50%; top: 50%;
-      transform: translate(-50%, -50%);
-      z-index: 1000;
-      background: rgba(40,40,40,0.85);
+      z-index: 2000;
+      background: rgba(40,40,40,0.95);
+      padding: 12px;
       display: none;
-      align-items: center;
       flex-direction: column;
+      align-items: center;
       border-radius: 0;
-      box-shadow: 0 0 8px #000;
+      box-shadow: 0 0 18px #000;
       border: 2px solid #fff;
     }
     .color-picker-modal canvas {
@@ -122,19 +138,21 @@
       display: block;
     }
     .color-picker-modal .modal-btns {
-      display: flex; gap: 10px; justify-content: center;
+      display: flex; gap: 18px; justify-content: center;
     }
     .color-picker-modal button {
       background: linear-gradient(160deg, #f0f0f0 70%, #bdbdbd 100%);
       color: #222; border: none; border-radius: 22px;
-      padding: 7px 16px; font-size: 1em; font-weight: bold;
+      padding: 10px 26px; font-size: 1.1em; font-weight: bold;
       margin: 0 8px; cursor: pointer;
+      height: 46px;
+      align-items: center; display: flex;
     }
     .color-picker-modal button:focus { outline: 2px solid #FF0070; }
     .selected-color {
-      width: 36px; height: 36px; border-radius: 50%;
+      width: 38px; height: 38px; border-radius: 50%;
       border: 2px solid #fff;
-      margin: 6px auto 3px auto;
+      margin: 8px auto 3px auto;
       background: #fff;
       display: block;
     }
@@ -146,15 +164,47 @@
       color: #fff;
       border: 2px solid #fff;
       border-radius: 0;
-      padding: 6px 12px;
-      font-size: 1em;
-      z-index: 200;
-      box-shadow: 0 0 6px #000;
+      padding: 8px 14px;
+      font-size: 1.1em;
+      z-index: 1200;
+      box-shadow: 0 0 10px #000;
       white-space: nowrap;
       text-align: left;
       display: none;
     }
+    #congratsMessage {
+      position: fixed;
+      left: 50%; top: 25%;
+      transform: translate(-50%, -50%);
+      background: #fff;
+      color: #222;
+      border-radius: 18px;
+      border: 2px solid #FF0070;
+      padding: 38px 46px;
+      font-size: 2em;
+      z-index: 2200;
+      text-align: center;
+      box-shadow: 0 0 22px #000;
+      display: none;
+    }
+    input[type='number'] {
+      font-size: 1.1em;
+      width: 60px;
+      height: 36px;
+      border-radius: 6px;
+      border: 1px solid #bbb;
+      padding: 2px 8px;
+      background: #f8f8f8;
+      color: #222;
+      text-align: center;
+    }
+    label {
+      font-weight: bold;
+      font-size: 1.2em;
+      color: #fff;
+    }
     @media (max-width: 700px) {
+      header, footer { min-height: 60px; height: 60px; }
       #frame { width: min(98vw, 70vh); height: min(98vw, 70vh);}
       .color-picker-modal canvas { width: 120px; height: 120px; }
     }
@@ -162,8 +212,9 @@
 </head>
 <body>
   <header>
-    <span style="font-weight:bold;font-size:1.4em;">Invisible Million Grid</span>
-    <button id="donateBtn" class="fancy-btn">Donate</button>
+    <div class="header-content">
+      <span style="font-weight:bold;font-size:2.2em;flex:1;display:flex;align-items:center;justify-content:center;">Invisible Million Grid</span>
+    </div>
   </header>
   <main>
     <div id="frame" tabindex="0">
@@ -182,7 +233,7 @@
           <button id="zoomInBtn" class="fancy-btn" title="Zoom in">+</button>
         </div>
       </div>
-      <!-- Palette tool overlays the frame -->
+      <!-- Palette tool overlays the frame, positioned below selected square -->
       <div id="colorPickerModal" class="color-picker-modal">
         <canvas id="colorDisc" width="180" height="180"></canvas>
         <div class="selected-color" id="selectedColorDisc"></div>
@@ -191,16 +242,20 @@
           <button id="cancelColorBtn" type="button" class="fancy-btn">Cancel</button>
         </div>
       </div>
+      <div id="congratsMessage">🎉 Congratulations!<br>You have participated in The Invisible Million.<br>Thank you!</div>
     </div>
-    <!-- Footer only has X/Y selectors and jump/random -->
+    <!-- Footer: Donate button first, then X/Y selectors and jump/random -->
     <footer>
-      <div class="jump-panel">
-        <label for="jumpX">X:</label>
-        <input type="number" id="jumpX" min="0" max="1099" value="0" />
-        <label for="jumpY">Y:</label>
-        <input type="number" id="jumpY" min="0" max="1099" value="0" />
-        <button class="fancy-btn" id="jumpBtn">Jump</button>
-        <button class="fancy-btn" id="randomBtn">&#x21bb; Random Square</button>
+      <div class="footer-content">
+        <button id="donateBtn" class="fancy-btn">Donate</button>
+        <div class="jump-panel">
+          <label for="jumpX">X:</label>
+          <input type="number" id="jumpX" min="0" max="1099" value="0" />
+          <label for="jumpY">Y:</label>
+          <input type="number" id="jumpY" min="0" max="1099" value="0" />
+          <button class="fancy-btn" id="jumpBtn">Jump</button>
+          <button class="fancy-btn" id="randomBtn">&#x21bb; Random Square</button>
+        </div>
       </div>
     </footer>
   </main>
@@ -245,6 +300,7 @@
     const arrowRightBtn = document.getElementById('arrowRightBtn');
     const centerBtn = document.getElementById('centerBtn');
     const coordPopup = document.getElementById('coordPopup');
+    const congratsMessage = document.getElementById('congratsMessage');
 
     let gridCursor = { x: Math.floor(GRID_SIZE / 2), y: Math.floor(GRID_SIZE / 2) };
     let selectedColor = "#ffffff";
@@ -315,7 +371,7 @@
         }
       }
 
-      // Target cursor outline only, no opacity fill
+      // Target cursor: outline only, no opacity fill
       const highlightX = offsetX + gridCursor.x * scaledCellSize;
       const highlightY = offsetY + gridCursor.y * scaledCellSize;
       ctx.save();
@@ -525,7 +581,7 @@
       requestRedraw();
       const key = gridCursor.x + "," + gridCursor.y;
       if (hasDonated && (!coloredCells[key] || !coloredCells[key].locked)) {
-        showColorPickerModal();
+        showColorPickerModalBelowSquare();
       }
     });
     frame.addEventListener('keydown', (e) => {
@@ -539,7 +595,7 @@
         case ' ':
           const key = gridCursor.x + "," + gridCursor.y;
           if (hasDonated && (!coloredCells[key] || !coloredCells[key].locked)) {
-            showColorPickerModal();
+            showColorPickerModalBelowSquare();
           }
           e.preventDefault(); break;
       }
@@ -552,6 +608,7 @@
       }
     });
 
+    // Donate button
     donateBtn.addEventListener('click', () => {
       if (!hasDonated) {
         setTimeout(() => {
@@ -628,13 +685,25 @@
     function rgbToHex(r,g,b){
       return "#" + ((1<<24)+(r<<16)+(g<<8)+b).toString(16).slice(1);
     }
-    function showColorPickerModal() {
+    // Palette tool overlays below selected grid square
+    function showColorPickerModalBelowSquare() {
       selectedColorDisc.style.background = "#fff";
       previewColor = "#fff";
-      colorPickerModal.style.left = "50%";
-      colorPickerModal.style.top = "50%";
-      colorPickerModal.style.transform = "translate(-50%, -50%)";
+      // Position below selected square, but keep within frame bounds if near bottom
+      const scaledCellSize = CELL_SIZE * zoom;
+      const highlightX = offsetX + gridCursor.x * scaledCellSize;
+      const highlightY = offsetY + gridCursor.y * scaledCellSize;
+      const frameRect = frame.getBoundingClientRect();
+      let left = highlightX + scaledCellSize/2 - colorPickerModal.offsetWidth/2;
+      let top = highlightY + scaledCellSize + 10;
+      // Keep within frame
+      left = Math.max(0, Math.min(canvas.width - colorPickerModal.offsetWidth, left));
+      top = Math.max(0, Math.min(canvas.height - colorPickerModal.offsetHeight, top));
+      colorPickerModal.style.left = left + "px";
+      colorPickerModal.style.top = top + "px";
+      colorPickerModal.style.transform = "none";
       colorPickerModal.style.display = "flex";
+      colorPickerModal.style.position = "absolute";
     }
     confirmColorBtn.onclick = function() {
       colorPickerModal.style.display = "none";
@@ -644,6 +713,8 @@
       sendCellColor(gridCursor.x, gridCursor.y, color);
       fetchGridState();
       requestRedraw();
+      showCongratsMessage();
+      saveParticipation();
     };
     cancelColorBtn.onclick = function() {
       colorPickerModal.style.display = "none";
@@ -654,11 +725,27 @@
       }
     });
 
+    // Participation message
+    function showCongratsMessage() {
+      congratsMessage.style.display = "block";
+      setTimeout(()=>{ congratsMessage.style.display = "none"; }, 4000);
+    }
+    function saveParticipation() {
+      localStorage.setItem("invisibleMillionParticipation", "true");
+    }
+    function checkParticipation() {
+      if(localStorage.getItem("invisibleMillionParticipation") === "true") {
+        donateBtn.textContent = "Donated!";
+        donateBtn.disabled = true;
+      }
+    }
+
     window.addEventListener('load', () => {
       setCanvasSize();
       frame.focus();
       zoomDisplay.textContent = Math.round(zoom * 100) + '%';
       fetchGridState();
+      checkParticipation();
       requestRedraw();
     });
     window.addEventListener('resize', setCanvasSize);
