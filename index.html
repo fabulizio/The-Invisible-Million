@@ -33,6 +33,10 @@
       position: relative;
     }
     .menu-icon {
+      position: absolute;
+      top: -62px; /* above top right of frame */
+      right: -62px;
+      z-index: 9999;
       width: 48px;
       height: 48px;
       min-width: 48px;
@@ -43,12 +47,6 @@
       align-items: center;
       gap: 7px;
       cursor: pointer;
-      margin-right: 22px;
-      position: absolute;
-      left: 0;
-      top: 50%;
-      transform: translateY(-50%);
-      z-index: 120;
     }
     .menu-icon span {
       display: block;
@@ -61,10 +59,8 @@
     }
     .popup-menu {
       position: fixed;
-      top: 0;
-      left: 0;
-      width: 100vw;
-      height: 100vh;
+      top: 0; left: 0;
+      width: 100vw; height: 100vh;
       background: rgba(30,30,30,0.98);
       z-index: 5000;
       display: none;
@@ -123,7 +119,9 @@
       background: #333;
       position: absolute;
       left: 0; top: 0;
+      transition: cursor .15s;
     }
+    #gridCanvas.grabbing, #frame.grabbing { cursor: grabbing !important; }
     .nav-panel {
       position: absolute;
       right: 9px;
@@ -139,14 +137,14 @@
       color: #222;
       border: none;
       border-radius: 6px;
-      padding: 3px 8px;
-      font-size: 0.7em;
+      padding: 6px 16px;
+      font-size: 1.05em;
       cursor: pointer;
       font-weight: bold;
       box-shadow: 0 1px 4px #1114;
       transition: background 0.1s, color 0.1s;
-      height: 28px;
-      min-width: 28px;
+      height: 42px;
+      min-width: 42px;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -154,24 +152,24 @@
     .arrow-btn:active, .center-btn:active { background: #f0f0f0; color: #111; }
     .arrow-btn:focus, .center-btn:focus { outline: 2px solid #FF0070; }
     .zoom-controls {
-      display: flex; gap: 6px; margin-left: 9px;
+      display: flex; gap: 12px; margin-left: 9px;
       align-items: center;
-      height: 28px;
+      height: 42px;
     }
     .fancy-btn, .color-picker-modal button {
       background: linear-gradient(160deg, #f0f0f0 70%, #bdbdbd 100%);
       color: #222;
       border: none;
       border-radius: 11px;
-      padding: 3px 12px;
-      font-size: 0.62em;
+      padding: 6px 24px;
+      font-size: 0.93em;
       cursor: pointer;
-      margin: 0 2px;
+      margin: 0 4px;
       font-weight: bold;
       box-shadow: 0 1px 4px #8883;
       transition: background 0.2s, color 0.2s;
-      height: 23px;
-      min-width: 23px;
+      height: 42px;
+      min-width: 42px;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -185,17 +183,17 @@
     }
     .jump-panel {
       display: flex;
-      gap: 6px;
+      gap: 12px;
       align-items: center;
       justify-content: center;
       flex-wrap: wrap;
-      height: 28px;
+      height: 42px;
     }
     .color-picker-modal {
       position: fixed;
       z-index: 9999;
       background: rgba(40,40,40,0.97);
-      padding: 6px;
+      padding: 12px;
       display: none;
       flex-direction: column;
       align-items: center;
@@ -213,13 +211,13 @@
       display: block;
     }
     .color-picker-modal .modal-btns {
-      display: flex; gap: 9px; justify-content: center;
+      display: flex; gap: 18px; justify-content: center;
       align-items: center;
     }
     .selected-color {
-      width: 19px; height: 19px; border-radius: 50%;
+      width: 38px; height: 38px; border-radius: 50%;
       border: 2px solid #fff;
-      margin: 4px auto 2px auto;
+      margin: 8px auto 4px auto;
       background: #fff;
       display: block;
     }
@@ -232,7 +230,7 @@
       border: 2px solid #fff;
       border-radius: 0;
       padding: 4px 7px;
-      font-size: 0.6em;
+      font-size: 0.9em;
       z-index: 1200;
       box-shadow: 0 0 5px #000;
       white-space: nowrap;
@@ -245,29 +243,30 @@
       transform: translate(-50%, -50%);
       background: #fff;
       color: #222;
-      border-radius: 9px;
+      border-radius: 18px;
       border: 2px solid #FF0070;
-      padding: 19px 23px;
-      font-size: 1em;
+      padding: 38px 46px;
+      font-size: 2em; /* 100% larger */
       z-index: 10001;
       text-align: center;
-      box-shadow: 0 0 11px #000;
+      box-shadow: 0 0 22px #000;
       display: none;
+      max-width: 90vw;
     }
     input[type='number'] {
-      font-size: 0.6em;
-      width: 30px;
-      height: 18px;
-      border-radius: 3px;
+      font-size: 1em;
+      width: 45px;
+      height: 30px;
+      border-radius: 6px;
       border: 1px solid #bbb;
-      padding: 1px 4px;
+      padding: 2px 8px;
       background: #f8f8f8;
       color: #222;
       text-align: center;
     }
     label {
       font-weight: bold;
-      font-size: 0.6em;
+      font-size: 1em;
       color: #fff;
     }
     .big-title {
@@ -282,7 +281,7 @@
       text-shadow: 0 2px 6px #111a;
     }
     @media (max-width: 700px) {
-      header, footer { min-height: 40px; height: 40px; }
+      header, footer { min-height: 60px; height: 60px; }
       #frame { width: min(98vw, 70vh); height: min(98vw, 70vh);}
       .color-picker-modal canvas { width: 60px; height: 60px; }
       .color-picker-modal { min-width: 120px; }
@@ -290,52 +289,57 @@
       .menu-icon { width: 32px; height: 32px; min-width: 32px; min-height: 32px;}
       .menu-icon span { width: 24px; height: 4px; }
       .popup-menu { font-size: 1.2em; }
+      .arrow-btn, .center-btn, .fancy-btn { font-size: 0.9em; height: 30px; min-width: 30px; }
+      .jump-panel, .footer-content { height: 30px; font-size: 1em; }
+      input[type="number"] { height: 20px; width: 30px; font-size: 0.8em; }
     }
   </style>
 </head>
 <body>
   <header>
     <div class="header-content">
+      <span class="big-title">Invisible Million Grid</span>
+    </div>
+  </header>
+  <main>
+    <div style="position:relative">
       <div class="menu-icon" id="menuIcon" title="Menu">
         <span></span>
         <span></span>
         <span></span>
       </div>
-      <span class="big-title">Invisible Million Grid</span>
+      <div id="frame" tabindex="0">
+        <canvas id="gridCanvas"></canvas>
+        <div id="coordPopup"></div>
+        <div class="nav-panel">
+          <button class="arrow-btn" id="arrowUpBtn">&#8593;</button>
+          <button class="arrow-btn" id="arrowLeftBtn">&#8592;</button>
+          <button class="center-btn" id="centerBtn">&#9678; Center</button>
+          <button class="arrow-btn" id="arrowRightBtn">&#8594;</button>
+          <button class="arrow-btn" id="arrowDownBtn">&#8595;</button>
+          <div class="zoom-controls">
+            <button id="zoomOutBtn" class="fancy-btn" title="Zoom out">−</button>
+            <span id="zoomDisplay" style="color:#fff;">100%</span>
+            <button id="zoomInBtn" class="fancy-btn" title="Zoom in">+</button>
+          </div>
+        </div>
+        <div id="colorPickerModal" class="color-picker-modal">
+          <canvas id="colorDisc" width="90" height="90"></canvas>
+          <div class="selected-color" id="selectedColorDisc"></div>
+          <div class="modal-btns">
+            <button id="confirmColorBtn" type="button" class="fancy-btn">OK</button>
+            <button id="cancelColorBtn" type="button" class="fancy-btn">Cancel</button>
+          </div>
+        </div>
+        <div id="congratsMessage"></div>
+      </div>
     </div>
-  </header>
-  <div class="popup-menu" id="popupMenu">
-    <button class="close-menu" id="closeMenuBtn" title="Close Menu">&times;</button>
-    <a href="manifesto.html">Manifesto</a>
-    <a href="about.html">About the Project</a>
-    <a href="collective.html">About the Collective</a>
-    <a href="next.html">Next Steps</a>
-  </div>
-  <main>
-    <div id="frame" tabindex="0">
-      <canvas id="gridCanvas"></canvas>
-      <div id="coordPopup"></div>
-      <div class="nav-panel">
-        <button class="arrow-btn" id="arrowUpBtn">&#8593;</button>
-        <button class="arrow-btn" id="arrowLeftBtn">&#8592;</button>
-        <button class="center-btn" id="centerBtn">&#9678; Center</button>
-        <button class="arrow-btn" id="arrowRightBtn">&#8594;</button>
-        <button class="arrow-btn" id="arrowDownBtn">&#8595;</button>
-        <div class="zoom-controls">
-          <button id="zoomOutBtn" class="fancy-btn" title="Zoom out">−</button>
-          <span id="zoomDisplay" style="color:#fff;">100%</span>
-          <button id="zoomInBtn" class="fancy-btn" title="Zoom in">+</button>
-        </div>
-      </div>
-      <div id="colorPickerModal" class="color-picker-modal">
-        <canvas id="colorDisc" width="90" height="90"></canvas>
-        <div class="selected-color" id="selectedColorDisc"></div>
-        <div class="modal-btns">
-          <button id="confirmColorBtn" type="button" class="fancy-btn">OK</button>
-          <button id="cancelColorBtn" type="button" class="fancy-btn">Cancel</button>
-        </div>
-      </div>
-      <div id="congratsMessage">🎉 Congratulations!<br>You have participated in The Invisible Million.<br>Thank you!</div>
+    <div class="popup-menu" id="popupMenu">
+      <button class="close-menu" id="closeMenuBtn" title="Close Menu">&times;</button>
+      <a href="manifesto.html">Manifesto</a>
+      <a href="about.html">About the Project</a>
+      <a href="collective.html">About the Collective</a>
+      <a href="next.html">Next Steps</a>
     </div>
     <footer>
       <div class="footer-content">
@@ -355,7 +359,7 @@
     // ==== CONFIGURATION ====
     const BACKEND_URL = "https://155ca338-0e90-4f5a-88ec-b6163921baae-00-181dgn4pq10j7.janeway.replit.dev";
     const GRID_SIZE = 1100;
-    const CELL_SIZE = 24; // 20% smaller than 30
+    const CELL_SIZE = 24;
     let MIN_ZOOM = 0.1;
     const MAX_ZOOM = 3;
     let zoom = 1;
@@ -367,6 +371,8 @@
     let dragStart = {x: 0, y: 0};
     let offsetStart = {x: 0, y: 0};
     let touchStart = null;
+    let pinchStartDist = null;
+    let pinchStartZoom = null;
     let hasDonated = false;
 
     // ==== DOM ELEMENTS ====
@@ -477,16 +483,12 @@
         }
       }
 
-      // Target cursor: outline only, no opacity fill
+      // Grid cursor: only draw crosshair (+)
       const highlightX = offsetX + gridCursor.x * scaledCellSize;
       const highlightY = offsetY + gridCursor.y * scaledCellSize;
       ctx.save();
       ctx.strokeStyle = "#fff";
       ctx.lineWidth = Math.max(2, scaledCellSize * 0.08);
-      ctx.beginPath();
-      ctx.arc(highlightX + scaledCellSize / 2, highlightY + scaledCellSize / 2, scaledCellSize * 0.4, 0, Math.PI * 2);
-      ctx.stroke();
-      // Crosshair
       ctx.beginPath();
       ctx.moveTo(highlightX + scaledCellSize / 2 - scaledCellSize*0.25, highlightY + scaledCellSize / 2);
       ctx.lineTo(highlightX + scaledCellSize / 2 + scaledCellSize*0.25, highlightY + scaledCellSize / 2);
@@ -632,17 +634,22 @@
       hidePalette();
       if (!found) { alert("No available squares left!"); }
     });
-    canvas.addEventListener('wheel', function() { hidePalette(); }, {passive:false});
+
+    // Grabbing hand cursor while dragging
     canvas.addEventListener('mousedown', (e) => {
       isDragging = true;
       dragStart.x = e.clientX;
       dragStart.y = e.clientY;
       offsetStart.x = offsetX;
       offsetStart.y = offsetY;
+      canvas.classList.add('grabbing');
       canvas.setPointerCapture(e.pointerId || 0);
       hidePalette();
     });
-    window.addEventListener('mouseup', () => { isDragging = false; });
+    window.addEventListener('mouseup', () => {
+      isDragging = false;
+      canvas.classList.remove('grabbing');
+    });
     window.addEventListener('mousemove', (e) => {
       if(!isDragging) return;
       offsetX = offsetStart.x + (e.clientX - dragStart.x);
@@ -651,6 +658,8 @@
       requestRedraw();
       hidePalette();
     });
+
+    // Touch: single finger pan, two finger pinch zoom
     canvas.addEventListener('touchstart', (e) => {
       if (e.touches.length === 1) {
         touchStart = {
@@ -660,19 +669,49 @@
           offsetY
         };
       }
+      if (e.touches.length === 2) {
+        pinchStartDist = Math.hypot(
+          e.touches[0].clientX - e.touches[1].clientX,
+          e.touches[0].clientY - e.touches[1].clientY
+        );
+        pinchStartZoom = zoom;
+      }
       hidePalette();
-    }, {passive:true});
-    canvas.addEventListener('touchmove', (e) => {
-      if (!touchStart || e.touches.length !== 1) return;
-      const dx = e.touches[0].clientX - touchStart.x;
-      const dy = e.touches[0].clientY - touchStart.y;
-      offsetX = touchStart.offsetX + dx;
-      offsetY = touchStart.offsetY + dy;
-      clampOffset();
-      requestRedraw();
+    }, {passive:false});
+    canvas.addEventListener('touchmove', function(e) {
+      if(e.touches.length === 2 && pinchStartDist) {
+        const d = Math.hypot(
+          e.touches[0].clientX - e.touches[1].clientX,
+          e.touches[0].clientY - e.touches[1].clientY
+        );
+        const scale = d / pinchStartDist;
+        setZoom(pinchStartZoom * scale);
+        e.preventDefault();
+      } else if(e.touches.length === 1 && touchStart) {
+        const dx = e.touches[0].clientX - touchStart.x;
+        const dy = e.touches[0].clientY - touchStart.y;
+        offsetX = touchStart.offsetX + dx;
+        offsetY = touchStart.offsetY + dy;
+        clampOffset();
+        requestRedraw();
+        hidePalette();
+      }
+    }, {passive:false});
+    canvas.addEventListener('touchend', () => {
+      touchStart = null;
+      pinchStartDist = null;
+      pinchStartZoom = null;
       hidePalette();
-    }, {passive:true});
-    canvas.addEventListener('touchend', () => { touchStart = null; hidePalette(); });
+    });
+
+    // Mouse wheel zoom
+    canvas.addEventListener('wheel', function(e) {
+      if (e.ctrlKey || e.metaKey) {
+        e.preventDefault();
+        setZoom(zoom * (e.deltaY < 0 ? 1.1 : 0.9), e.offsetX, e.offsetY);
+        hidePalette();
+      }
+    }, {passive:false});
 
     canvas.addEventListener('click', (e) => {
       const rect = canvas.getBoundingClientRect();
@@ -726,6 +765,7 @@
       donateBtn.textContent = "Donate";
       donateBtn.disabled = false;
       hasDonated = false;
+      localStorage.removeItem("invisibleMillionHasDonated");
     }
 
     // ==== Color disc picker ====
@@ -817,10 +857,9 @@
       coloredCells[key] = {color: color, locked: true};
       sendCellColor(gridCursor.x, gridCursor.y, color);
       fetchGridState();
-      requestRedraw();
+      requestRedraw(); // Preview is immediately visible
       showCongratsMessage();
       saveParticipation();
-      // Reset donate button for another simulation after participation
       setTimeout(resetDonateButton, 5000);
     };
     cancelColorBtn.onclick = function() {
@@ -834,8 +873,12 @@
 
     // Participation message
     function showCongratsMessage() {
+      congratsMessage.innerHTML = `🎉 Congratulations!<br>You have participated in The Invisible Million.<br>Thank you!<br><br>
+      <span style="font-size:0.8em;">Proof of participation is saved in your browser's local storage.<br>
+      See key <b>"invisibleMillionParticipation"</b> in <b>localStorage</b>.<br>
+      (You can view this in your browser's developer tools > Application > Local Storage)</span>`;
       congratsMessage.style.display = "block";
-      setTimeout(()=>{ congratsMessage.style.display = "none"; }, 4000);
+      setTimeout(()=>{ congratsMessage.style.display = "none"; }, 5000);
     }
     function saveParticipation() {
       localStorage.setItem("invisibleMillionParticipation", "true");
