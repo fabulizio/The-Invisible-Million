@@ -1,131 +1,224 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>The Invisible Million Grid</title>
-<style>
-  html, body {
-    margin: 0; padding: 0; height: 100%;
-    font-family: Arial, sans-serif;
-    background: #f0f0f0;
-    width: 100vw; height: 100vh;
-  }
-  header, footer {
-    position: sticky;
-    background: #222;
-    color: white;
-    padding: 10px 20px;
-    z-index: 10;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-  }
-  header { top: 0; }
-  footer { bottom: 0; }
-  main {
-    height: calc(100vh - 100px);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: #f0f0f0;
-  }
-  #frame {
-    outline: 3px solid #333;
-    background: white;
-    width: 90vw; max-width: 1000px;
-    height: 70vh; max-height: 800px;
-    position: relative;
-    overflow: hidden;
-    touch-action: none;
-  }
-  #gridCanvas {
-    width: 100%; height: 100%;
-    display: block;
-    user-select: none;
-    cursor: pointer;
-  }
-  .coords { font-family: monospace; }
-  .zoom-controls button {
-    background: #555; color: #fff; border: none;
-    border-radius: 3px; margin: 0 2px; padding: 5px 10px; font-size: 1em; cursor: pointer;
-  }
-  .zoom-controls button:focus, .zoom-controls button:hover { background: #888; outline: 2px solid #fff; }
-  label, select { margin-right: 10px; }
-  select { padding: 4px 8px; border-radius: 3px; border: none; font-size: 1em; }
-</style>
+  <meta charset="UTF-8" />
+  <title>The Invisible Million Grid</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <!-- ======= STYLES ======= -->
+  <style>
+    /* Website background and text color */
+    html, body {
+      background: #000;
+      color: #fff;
+      margin: 0; padding: 0; height: 100%;
+      font-family: Arial, sans-serif;
+      width: 100vw; height: 100vh;
+    }
+    header, footer {
+      background: #222;
+      color: #fff;
+      padding: 10px 20px;
+      z-index: 10;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 1.1em;
+    }
+    header { position: sticky; top: 0; }
+    footer { position: sticky; bottom: 0; }
+    main {
+      height: calc(100vh - 120px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    #frame {
+      outline: 3px solid #fff;
+      background: #222;
+      width: 95vw; max-width: 1000px;
+      height: 75vh; max-height: 900px;
+      position: relative;
+      overflow: hidden;
+      touch-action: none;
+      border-radius: 10px;
+      margin: auto;
+      box-sizing: border-box;
+    }
+    #gridCanvas {
+      width: 100%; height: 100%;
+      display: block;
+      user-select: none;
+      cursor: pointer;
+      background: #222;
+      border-radius: 10px;
+      box-sizing: border-box;
+    }
+    .coords { font-family: monospace; }
+    .zoom-controls button {
+      background: #444; color: #fff; border: none;
+      border-radius: 4px; margin: 0 3px; padding: 8px 14px; font-size: 1em; cursor: pointer;
+    }
+    .zoom-controls button:focus, .zoom-controls button:hover { background: #888; outline: 2px solid #fff; }
+    .counter {
+      font-weight: bold;
+      letter-spacing: 2px;
+      margin-right: 10px;
+    }
+    /* Modal for color picker */
+    .modal-bg {
+      position: fixed;
+      left: 0; top: 0; width: 100vw; height: 100vh;
+      background: rgba(0,0,0,0.85);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 100;
+    }
+    .modal {
+      background: #222;
+      color: #fff;
+      border: 3px solid #fff;
+      border-radius: 14px;
+      padding: 24px 18px;
+      min-width: 300px;
+      max-width: 90vw;
+      box-shadow: 0 0 18px #000;
+      text-align: center;
+      position: relative;
+      font-size: 1.1em;
+    }
+    .modal h2 { margin: 0 0 12px 0; }
+    /* Simple color palette for picker */
+    .palette {
+      display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin-bottom: 20px;
+    }
+    .palette div {
+      width: 40px; height: 40px; border-radius: 50%;
+      border: 3px solid #fff; cursor: pointer;
+      transition: transform 0.1s;
+    }
+    .palette .selected {
+      border: 3px solid #FF0070;
+      box-shadow: 0 0 8px #FF0070;
+      transform: scale(1.1);
+    }
+    .modal button {
+      background: #FF0070; color: #fff; border: none; border-radius: 5px;
+      padding: 8px 18px; font-size: 1.1em; margin: 0 8px; cursor: pointer;
+    }
+    /* Responsive adjustments for mobile */
+    @media (max-width: 700px) {
+      main { height: calc(100vh - 80px); }
+      #frame { width: 99vw; max-width: none; height: 68vh; max-height: none; }
+      .modal { min-width: 200px; padding: 14px 6px; font-size: 1em; }
+      .palette div { width: 32px; height: 32px; }
+    }
+    /* Coordinate info box next to cursor */
+    .coord-popup {
+      position: absolute;
+      min-width: 90px;
+      background: #111;
+      color: #fff;
+      border: 2px solid #fff;
+      border-radius: 8px;
+      padding: 6px 12px;
+      font-size: 1em;
+      z-index: 50;
+      pointer-events: none;
+      box-shadow: 0 0 6px #000;
+      white-space: nowrap;
+      text-align: left;
+    }
+    .coord-popup .colored { color: #FF0070; font-weight: bold; }
+    .coord-popup .not-colored { color: #aaa; }
+  </style>
 </head>
 <body>
-<header>
-  <div>
-    <a href="#stati1" style="color:#aaf; margin-right:15px; text-decoration:none;">Stati Page 1</a>
-    <a href="#stati2" style="color:#aaf; text-decoration:none;">Stati Page 2</a>
-  </div>
-  <button id="donateBtn" aria-label="Donate">Donate</button>
-</header>
-<main>
-  <div id="frame" tabindex="0" aria-label="Zoomable grid frame">
-    <canvas id="gridCanvas" aria-label="Grid canvas"></canvas>
-  </div>
-</main>
-<footer>
-  <div class="coords" aria-live="polite" aria-atomic="true">X: 0, Y: 0</div>
-  <div>
-    <label for="colorSelect">Select Color:</label>
-    <select id="colorSelect" aria-label="Select drawing color">
-      <option value="#000000" selected>Black</option>
-      <option value="#FF0000">Red</option>
-      <option value="#00AA00">Green</option>
-      <option value="#0000FF">Blue</option>
-      <option value="#FFA500">Orange</option>
-      <option value="#800080">Purple</option>
-    </select>
-  </div>
-  <div class="zoom-controls">
-    <button id="zoomOutBtn" title="Zoom out">−</button>
-    <span id="zoomDisplay" aria-live="polite">100%</span>
-    <button id="zoomInBtn" title="Zoom in">+</button>
-  </div>
-</footer>
-<script>
-(() => {
+  <!-- ======= HEADER ======= -->
+  <header>
+    <div>
+      <span style="color:#FF0070;font-weight:bold;font-size:1.3em;">Invisible Million Grid</span>
+    </div>
+    <button id="donateBtn" aria-label="Donate" style="font-weight:bold;">Donate</button>
+  </header>
+  <!-- ======= MAIN GRID FRAME ======= -->
+  <main>
+    <div id="frame" tabindex="0" aria-label="Zoomable grid frame">
+      <canvas id="gridCanvas" aria-label="Grid canvas"></canvas>
+      <!-- Coordinate info popup for grid cursor (positioned by JS) -->
+      <div id="coordPopup" class="coord-popup"></div>
+    </div>
+    <!-- Color picker modal (hidden by default) -->
+    <div id="modalBg" class="modal-bg">
+      <div class="modal" id="colorModal">
+        <h2>Pick your color</h2>
+        <div class="palette" id="palette"></div>
+        <button id="confirmColorBtn">OK</button>
+        <button id="cancelColorBtn">Cancel</button>
+      </div>
+    </div>
+  </main>
+  <!-- ======= FOOTER ======= -->
+  <footer>
+    <span class="counter" id="colorCount">Colored: 0</span>
+    <div class="coords" id="footerCoords">X: 0, Y: 0</div>
+    <div class="zoom-controls">
+      <button id="zoomOutBtn" title="Zoom out">−</button>
+      <span id="zoomDisplay" aria-live="polite">100%</span>
+      <button id="zoomInBtn" title="Zoom in">+</button>
+    </div>
+  </footer>
+  <!-- ======= JAVASCRIPT ======= -->
+  <script>
+  // ==== CONFIGURATION ====
   const BACKEND_URL = "https://155ca338-0e90-4f5a-88ec-b6163921baae-00-181dgn4pq10j7.janeway.replit.dev";
   const GRID_SIZE = 1100;
   const CELL_SIZE = 30;
-  let MIN_ZOOM = 0.1; // will be calculated dynamically
+  let MIN_ZOOM = 0.1; // calculated per device
   const MAX_ZOOM = 3;
   let zoom = 1;
   let offsetX = 0;
   let offsetY = 0;
-
-  // DOM elements
-  const canvas = document.getElementById('gridCanvas');
-  const ctx = canvas.getContext('2d');
-  const frame = document.getElementById('frame');
-  const coordsDisplay = document.querySelector('.coords');
-  const colorSelect = document.getElementById('colorSelect');
-  const donateBtn = document.getElementById('donateBtn');
-  const zoomInBtn = document.getElementById('zoomInBtn');
-  const zoomOutBtn = document.getElementById('zoomOutBtn');
-  const zoomDisplay = document.getElementById('zoomDisplay');
-
-  let coloredCells = {}; // { "x,y": color }
+  let coloredCells = {}; // { "x,y": {color, locked} }
   let redrawPending = false;
   let isDragging = false;
   let dragStart = {x: 0, y: 0};
   let offsetStart = {x: 0, y: 0};
   let touchStart = null;
-  let selectedColor = colorSelect.value;
+  let hasDonated = false; // Only allow coloring after donation
+  let colorCount = 0; // Total colored squares
+  // Colors for the palette (photoshop-like)
+  const PALETTE_COLORS = [
+    "#000000", "#FF0000", "#00AA00", "#0000FF", "#FFFF00", "#FFA500", "#800080", "#FFFFFF", "#FF0070", "#00FFFF", "#FFD700", "#008080"
+  ];
 
-  // Dedicated grid cursor
-  let gridCursor = {x: Math.floor(GRID_SIZE / 2), y: Math.floor(GRID_SIZE / 2)};
+  // ==== DOM ELEMENTS ====
+  const canvas = document.getElementById('gridCanvas');
+  const ctx = canvas.getContext('2d');
+  const frame = document.getElementById('frame');
+  const footerCoords = document.getElementById('footerCoords');
+  const donateBtn = document.getElementById('donateBtn');
+  const zoomInBtn = document.getElementById('zoomInBtn');
+  const zoomOutBtn = document.getElementById('zoomOutBtn');
+  const zoomDisplay = document.getElementById('zoomDisplay');
+  const colorCountElem = document.getElementById('colorCount');
+  const coordPopup = document.getElementById('coordPopup');
+  const modalBg = document.getElementById('modalBg');
+  const paletteElem = document.getElementById('palette');
+  const confirmColorBtn = document.getElementById('confirmColorBtn');
+  const cancelColorBtn = document.getElementById('cancelColorBtn');
 
-  // --- Functions ---
+  // Grid-dedicated cursor (target pointer)
+  let gridCursor = { x: Math.floor(GRID_SIZE / 2), y: Math.floor(GRID_SIZE / 2) };
+  let selectedColor = PALETTE_COLORS[0]; // default for modal
+  let cursorCellLocked = false; // used for info popup
+
+  // ==== CANVAS AND GRID SIZING ====
   function setCanvasSize() {
     const rect = frame.getBoundingClientRect();
     canvas.width = rect.width;
     canvas.height = rect.height;
-    // Calculate minimal zoom to fit whole grid
+    // Minimal zoom so entire grid fits
     MIN_ZOOM = Math.min(
       canvas.width / (GRID_SIZE * CELL_SIZE),
       canvas.height / (GRID_SIZE * CELL_SIZE)
@@ -133,23 +226,25 @@
     zoom = Math.max(zoom, MIN_ZOOM);
     clampOffset();
     drawGrid();
+    updateCoordPopupPosition();
   }
 
   function clampOffset() {
     const scaledCellSize = CELL_SIZE * zoom;
     const gridWidthPx = GRID_SIZE * scaledCellSize;
     const gridHeightPx = GRID_SIZE * scaledCellSize;
-    // Clamp so grid doesn't move out of frame
     offsetX = Math.min(0, Math.max(canvas.width - gridWidthPx, offsetX));
     offsetY = Math.min(0, Math.max(canvas.height - gridHeightPx, offsetY));
   }
 
-  // Draw grid, colored cells, and the target cursor
+  // ==== DRAWING GRID, CELLS, CURSOR, AND COORDS POPUP ====
   function drawGrid() {
     const width = canvas.width;
     const height = canvas.height;
     ctx.clearRect(0, 0, width, height);
-    ctx.fillStyle = '#fff';
+
+    // Grid background (dark grey)
+    ctx.fillStyle = "#222";
     ctx.fillRect(0, 0, width, height);
 
     const scaledCellSize = CELL_SIZE * zoom;
@@ -158,8 +253,8 @@
     const visibleCols = Math.ceil(width / scaledCellSize) + 2;
     const visibleRows = Math.ceil(height / scaledCellSize) + 2;
 
-    // Draw grid lines
-    ctx.strokeStyle = '#ccc';
+    // Draw grid lines (light grey)
+    ctx.strokeStyle = "#bbb";
     ctx.lineWidth = 1;
     for(let c = startCol; c <= startCol + visibleCols; c++) {
       if (c < 0 || c >= GRID_SIZE) continue;
@@ -187,7 +282,7 @@
       ) {
         const cellX = offsetX + x * scaledCellSize;
         const cellY = offsetY + y * scaledCellSize;
-        ctx.fillStyle = coloredCells[key];
+        ctx.fillStyle = coloredCells[key].color;
         ctx.fillRect(cellX + 1, cellY + 1, scaledCellSize - 2, scaledCellSize - 2);
       }
     }
@@ -195,16 +290,18 @@
     // Highlight grid cursor cell
     const highlightX = offsetX + gridCursor.x * scaledCellSize;
     const highlightY = offsetY + gridCursor.y * scaledCellSize;
-    ctx.fillStyle = selectedColor + '33';
+    ctx.save();
+    ctx.globalAlpha = 0.35;
+    ctx.fillStyle = "#FF0070";
     ctx.fillRect(highlightX + 1, highlightY + 1, scaledCellSize - 2, scaledCellSize - 2);
+    ctx.globalAlpha = 1.0;
 
-    // Draw "rounded target pointer" at cursor
+    // Draw rounded target pointer at cursor
     const cursorX = highlightX + scaledCellSize / 2;
     const cursorY = highlightY + scaledCellSize / 2;
-    ctx.save();
     ctx.beginPath();
     ctx.arc(cursorX, cursorY, scaledCellSize * 0.4, 0, Math.PI * 2);
-    ctx.strokeStyle = '#FF0070';
+    ctx.strokeStyle = "#FF0070";
     ctx.lineWidth = Math.max(2, scaledCellSize * 0.08);
     ctx.stroke();
 
@@ -214,26 +311,41 @@
     ctx.lineTo(cursorX + scaledCellSize*0.25, cursorY);
     ctx.moveTo(cursorX, cursorY - scaledCellSize*0.25);
     ctx.lineTo(cursorX, cursorY + scaledCellSize*0.25);
-    ctx.strokeStyle = '#FF0070';
+    ctx.strokeStyle = "#FF0070";
     ctx.lineWidth = Math.max(2, scaledCellSize * 0.04);
     ctx.stroke();
-
     ctx.restore();
   }
 
-  function requestRedraw() {
-    if (redrawPending) return;
-    redrawPending = true;
-    requestAnimationFrame(() => {
-      drawGrid();
-      redrawPending = false;
-    });
+  // ==== COORDINATE POPUP NEXT TO CURSOR ====
+  function updateCoordPopupPosition() {
+    const scaledCellSize = CELL_SIZE * zoom;
+    const highlightX = offsetX + gridCursor.x * scaledCellSize;
+    const highlightY = offsetY + gridCursor.y * scaledCellSize;
+    // Place info box right of cursor, or left if near edge
+    let boxLeft = highlightX + scaledCellSize + 10;
+    let boxTop = highlightY - 10;
+    // Clamp to frame
+    boxLeft = Math.min(canvas.width - 150, Math.max(10, boxLeft));
+    boxTop = Math.min(canvas.height - 60, Math.max(10, boxTop));
+
+    // Info for cell
+    const key = gridCursor.x + "," + gridCursor.y;
+    let info = `<span>X: ${gridCursor.x}, Y: ${gridCursor.y}</span><br>`;
+    if (coloredCells[key] && coloredCells[key].locked) {
+      info += `<span class="colored">Colored</span>`;
+      cursorCellLocked = true;
+    } else {
+      info += `<span class="not-colored">Not colored</span>`;
+      cursorCellLocked = false;
+    }
+    coordPopup.innerHTML = info;
+    coordPopup.style.left = boxLeft + "px";
+    coordPopup.style.top = boxTop + "px";
+    coordPopup.style.display = "block";
   }
 
-  function updateCoordsDisplay(cellX, cellY) {
-    coordsDisplay.textContent = `X: ${cellX}, Y: ${cellY}`;
-  }
-
+  // ==== HELPER FUNCTIONS ====
   function pixelToCell(x, y) {
     const scaledCellSize = CELL_SIZE * zoom;
     const cellX = Math.floor((x - offsetX) / scaledCellSize);
@@ -267,34 +379,53 @@
     clampOffset();
     zoomDisplay.textContent = Math.round(zoom * 100) + '%';
     requestRedraw();
+    updateCoordPopupPosition();
   }
 
+  function requestRedraw() {
+    if (redrawPending) return;
+    redrawPending = true;
+    requestAnimationFrame(() => {
+      drawGrid();
+      redrawPending = false;
+      updateCoordPopupPosition();
+    });
+  }
+
+  // ==== BACKEND COMMUNICATION ====
+  // Store cell color and lock status
   function sendCellColor(x, y, color) {
     fetch(`${BACKEND_URL}/cell`, {
       method: "POST",
       headers: {"Content-Type": "application/json"},
-      body: JSON.stringify({x, y, color})
+      body: JSON.stringify({x, y, color, locked: true})
     })
     .then(res => res.json())
+    .then(_ => fetchGridState()) // reload grid state
     .catch(err => {});
   }
 
+  // Load all colored cells and total count
   function fetchGridState() {
     fetch(`${BACKEND_URL}/grid`)
       .then(res => res.json())
       .then(data => {
         if (data && data.cells) {
           coloredCells = {};
+          colorCount = 0;
           data.cells.forEach(cell => {
-            coloredCells[`${cell.x},${cell.y}`] = cell.color;
+            coloredCells[`${cell.x},${cell.y}`] = {color: cell.color, locked: !!cell.locked};
+            if (cell.locked) colorCount++;
           });
+          colorCountElem.textContent = `Colored: ${colorCount}`;
           requestRedraw();
         }
       })
       .catch(err => {});
   }
 
-  // --- Events ---
+  // ==== EVENT HANDLERS ====
+  // Mouse wheel zoom
   canvas.addEventListener('wheel', (e) => {
     e.preventDefault();
     const zoomStep = 1.1;
@@ -320,61 +451,7 @@
     requestRedraw();
   });
 
-  // Mouse click: move grid cursor
-  canvas.addEventListener('click', (e) => {
-    const rect = canvas.getBoundingClientRect();
-    const mouseX = e.clientX - rect.left;
-    const mouseY = e.clientY - rect.top;
-    const cell = pixelToCell(mouseX, mouseY);
-    gridCursor.x = Math.max(0, Math.min(GRID_SIZE - 1, cell.x));
-    gridCursor.y = Math.max(0, Math.min(GRID_SIZE - 1, cell.y));
-    updateCoordsDisplay(gridCursor.x, gridCursor.y);
-    ensureCellVisible(gridCursor.x, gridCursor.y);
-    requestRedraw();
-  });
-
-  // Keyboard navigation and coloring
-  frame.addEventListener('keydown', (e) => {
-    let moved = false;
-    switch(e.key) {
-      case 'ArrowLeft':
-        if (gridCursor.x > 0) { gridCursor.x--; moved = true; }
-        e.preventDefault(); break;
-      case 'ArrowRight':
-        if (gridCursor.x < GRID_SIZE - 1) { gridCursor.x++; moved = true; }
-        e.preventDefault(); break;
-      case 'ArrowUp':
-        if (gridCursor.y > 0) { gridCursor.y--; moved = true; }
-        e.preventDefault(); break;
-      case 'ArrowDown':
-        if (gridCursor.y < GRID_SIZE - 1) { gridCursor.y++; moved = true; }
-        e.preventDefault(); break;
-      case '+': case '=':
-        setZoom(zoom * 1.1);
-        e.preventDefault(); break;
-      case '-':
-        setZoom(zoom / 1.1);
-        e.preventDefault(); break;
-      case 'Enter':
-      case ' ':
-        coloredCells[`${gridCursor.x},${gridCursor.y}`] = selectedColor;
-        sendCellColor(gridCursor.x, gridCursor.y, selectedColor);
-        requestRedraw();
-        e.preventDefault(); break;
-    }
-    if (moved) {
-      updateCoordsDisplay(gridCursor.x, gridCursor.y);
-      ensureCellVisible(gridCursor.x, gridCursor.y);
-      requestRedraw();
-    }
-  });
-
-  // Mouse move: update coordinate display to grid cursor
-  canvas.addEventListener('mousemove', () => {
-    updateCoordsDisplay(gridCursor.x, gridCursor.y);
-  });
-
-  // Touch support for pan
+  // Mobile/touch: pan
   canvas.addEventListener('touchstart', (e) => {
     if (e.touches.length === 1) {
       touchStart = {
@@ -396,32 +473,142 @@
   }, {passive:true});
   canvas.addEventListener('touchend', () => { touchStart = null; });
 
-  donateBtn.addEventListener('click', () => {
-    alert('Thank you for your intention to donate! (Functionality to be implemented)');
-    donateBtn.focus();
-  });
-
-  colorSelect.addEventListener('change', (e) => {
-    selectedColor = e.target.value;
+  // Mouse click: move grid cursor, and if allowed, open color picker
+  canvas.addEventListener('click', (e) => {
+    const rect = canvas.getBoundingClientRect();
+    const mouseX = e.clientX - rect.left;
+    const mouseY = e.clientY - rect.top;
+    const cell = pixelToCell(mouseX, mouseY);
+    gridCursor.x = Math.max(0, Math.min(GRID_SIZE - 1, cell.x));
+    gridCursor.y = Math.max(0, Math.min(GRID_SIZE - 1, cell.y));
+    updateFooterCoords();
+    ensureCellVisible(gridCursor.x, gridCursor.y);
     requestRedraw();
+
+    // After donation, allow coloring via modal (if square not colored)
+    const key = gridCursor.x + "," + gridCursor.y;
+    if (hasDonated && (!coloredCells[key] || !coloredCells[key].locked)) {
+      showColorModal();
+    }
   });
 
+  // Keyboard navigation
+  frame.addEventListener('keydown', (e) => {
+    let moved = false;
+    switch(e.key) {
+      case 'ArrowLeft':
+        if (gridCursor.x > 0) { gridCursor.x--; moved = true; }
+        e.preventDefault(); break;
+      case 'ArrowRight':
+        if (gridCursor.x < GRID_SIZE - 1) { gridCursor.x++; moved = true; }
+        e.preventDefault(); break;
+      case 'ArrowUp':
+        if (gridCursor.y > 0) { gridCursor.y--; moved = true; }
+        e.preventDefault(); break;
+      case 'ArrowDown':
+        if (gridCursor.y < GRID_SIZE - 1) { gridCursor.y++; moved = true; }
+        e.preventDefault(); break;
+      case '+': case '=':
+        setZoom(zoom * 1.1);
+        e.preventDefault(); break;
+      case '-':
+        setZoom(zoom / 1.1);
+        e.preventDefault(); break;
+      // Coloring via keyboard: only after donation and on not-colored cell
+      case 'Enter':
+      case ' ':
+        const key = gridCursor.x + "," + gridCursor.y;
+        if (hasDonated && (!coloredCells[key] || !coloredCells[key].locked)) {
+          showColorModal();
+        }
+        e.preventDefault(); break;
+    }
+    if (moved) {
+      updateFooterCoords();
+      ensureCellVisible(gridCursor.x, gridCursor.y);
+      requestRedraw();
+    }
+  });
+
+  // Update coordinate display in footer
+  function updateFooterCoords() {
+    footerCoords.textContent = `X: ${gridCursor.x}, Y: ${gridCursor.y}`;
+  }
+
+  // Mouse move: update coordinate popup position
+  canvas.addEventListener('mousemove', () => {
+    updateCoordPopupPosition();
+  });
+
+  // ==== DONATE BUTTON AND WORKFLOW ====
+  donateBtn.addEventListener('click', () => {
+    // Simulate donation (replace with real integration as needed)
+    if (!hasDonated) {
+      setTimeout(() => {
+        if (confirm("Simulated donation: proceed to color a square?")) {
+          hasDonated = true;
+          donateBtn.textContent = "Donated!";
+          donateBtn.disabled = true;
+          donateBtn.style.background = "#FF0070";
+        }
+      }, 100);
+    }
+  });
+
+  // ==== MODAL COLOR PICKER WORKFLOW ====
+  function showColorModal() {
+    // Setup palette
+    paletteElem.innerHTML = "";
+    PALETTE_COLORS.forEach((color, i) => {
+      const div = document.createElement("div");
+      div.style.background = color;
+      div.className = (color === selectedColor) ? "selected" : "";
+      div.onclick = () => {
+        selectedColor = color;
+        Array.from(paletteElem.children).forEach((d) => d.classList.remove("selected"));
+        div.classList.add("selected");
+      };
+      paletteElem.appendChild(div);
+    });
+    modalBg.style.display = "flex";
+  }
+  confirmColorBtn.onclick = function() {
+    modalBg.style.display = "none";
+    // Actually color the cell and lock it
+    const key = gridCursor.x + "," + gridCursor.y;
+    coloredCells[key] = {color: selectedColor, locked: true};
+    sendCellColor(gridCursor.x, gridCursor.y, selectedColor);
+    fetchGridState(); // reload and update counter
+    requestRedraw();
+  };
+  cancelColorBtn.onclick = function() {
+    modalBg.style.display = "none";
+  };
+  // Hide modal on outside click
+  modalBg.onclick = function(e) {
+    if (e.target === modalBg) modalBg.style.display = "none";
+  };
+
+  // ==== ZOOM CONTROLS ====
   zoomInBtn.addEventListener('click', () => setZoom(zoom * 1.1));
   zoomOutBtn.addEventListener('click', () => setZoom(zoom / 1.1));
 
-  // --- Init ---
+  // Focus frame for keyboard input on click/touch
+  frame.addEventListener('click', () => { frame.focus(); });
+  frame.addEventListener('touchend', () => { frame.focus(); });
+
+  // ==== INIT ====
   window.addEventListener('load', () => {
     setCanvasSize();
     frame.focus();
     zoomDisplay.textContent = Math.round(zoom * 100) + '%';
     fetchGridState();
-    updateCoordsDisplay(gridCursor.x, gridCursor.y);
-    ensureCellVisible(gridCursor.x, gridCursor.y);
+    updateFooterCoords();
+    updateCoordPopupPosition();
     requestRedraw();
   });
   window.addEventListener('resize', setCanvasSize);
-  frame.addEventListener('click', () => { frame.focus(); });
-})();
-</script>
+
+  </script>
 </body>
 </html>
