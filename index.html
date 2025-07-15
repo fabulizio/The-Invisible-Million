@@ -40,10 +40,7 @@
       z-index: 2;
     }
     .menu-icon {
-      position: absolute;
-      right: 24px;
-      top: 50%;
-      transform: translateY(-50%);
+      margin-left: 18px;
       width: 48px; height: 48px;
       display: flex;
       flex-direction: column;
@@ -262,7 +259,6 @@
     .color-picker-modal {
       position: fixed;
       z-index: 9999;
-      background: rgba(40,40,40,0.97);
       display: none;
       flex-direction: column;
       align-items: center;
@@ -273,6 +269,7 @@
       min-height: 260px;
       justify-content: center;
       padding: 18px 20px 18px 20px;
+      transition: background .2s;
     }
     .color-picker-modal canvas {
       width: 228px; height: 228px;
@@ -291,14 +288,14 @@
     .palette-error, .palette-message {
       color: #fff;
       background: #ff0070;
-      border-radius: 9px;
-      padding: 11px 26px;
-      font-size: 1.2em;
-      margin-bottom: 10px;
-      margin-top: 12px;
+      border-radius: 14px;
+      padding: 22px 52px;
+      font-size: 2.4em;
+      margin-bottom: 20px;
+      margin-top: 24px;
       text-align: center;
       z-index: 10001;
-      box-shadow: 0 0 11px #000;
+      box-shadow: 0 0 22px #000;
       display: none;
       position: fixed;
       left: 50%;
@@ -323,16 +320,18 @@
       position: fixed;
       background: #fff;
       color: #222;
-      border-radius: 15px;
+      border-radius: 20px;
       border: 2px solid #ff0070;
-      padding: 28px 36px;
-      font-size: 1.3em;
+      padding: 56px 72px;
+      font-size: 2.6em;
       z-index: 10001;
       text-align: center;
-      box-shadow: 0 0 22px #000;
+      box-shadow: 0 0 44px #000;
       display: none;
       max-width: 90vw;
       pointer-events: auto;
+      left: 50%;
+      transform: translateX(-50%);
     }
     label {
       font-weight: bold;
@@ -347,6 +346,8 @@
       .big-title { font-size: 1.3em !important; }
       .arrow-btn, .center-btn, .fancy-btn, .jump-panel, .footer-content { font-size: 0.8em; height: 20px; min-width: 20px; }
       .jump-panel input[type="number"] { height: 15px; width: 28px; font-size: 0.7em; }
+      #congratsMessage { padding: 18px 24px; font-size: 1.3em;}
+      .palette-error { font-size: 1.1em; padding: 12px 18px; }
     }
   </style>
 </head>
@@ -414,7 +415,7 @@
     </footer>
   </main>
   <script>
-    // ---- MENU ----
+    // --- MENU ---
     const menuIcon = document.getElementById('menuIcon');
     const popupMenu = document.getElementById('popupMenu');
     const closeMenuBtn = document.getElementById('closeMenuBtn');
@@ -424,7 +425,7 @@
       if (e.target === popupMenu) popupMenu.classList.remove('active');
     });
 
-    // ---- GRID ----
+    // --- GRID ---
     const GRID_SIZE = 1100;
     const CELL_SIZE = 24;
     let zoom = 1;
@@ -439,6 +440,7 @@
     let palettePreviewCell = null;
     let showCursor = true;
     let hasDonated = false;
+    let donationUsed = false;
     let pinch2Last = null;
     let pinch2Mode = null;
     let pinch2Origin = null;
@@ -467,7 +469,7 @@
     const cancelColorBtn = document.getElementById('cancelColorBtn');
     const randomColorBtn = document.getElementById('randomColorBtn');
     let gridCursor = { x: Math.floor(GRID_SIZE / 2), y: Math.floor(GRID_SIZE / 2) };
-    let previewColor = null;
+    let previewColor = "#fff";
 
     function setCanvasSize() {
       const rect = frame.getBoundingClientRect();
@@ -574,7 +576,6 @@
       showCoordPopup(cell, e.clientX, e.clientY);
     });
     canvas.addEventListener('mouseleave', hideCoordPopup);
-
     function pixelToCell(x, y) {
       const scaledCellSize = CELL_SIZE * zoom;
       const cellX = Math.floor((x - offsetX) / scaledCellSize);
@@ -643,7 +644,8 @@
     function hidePalette() {
       colorPickerModal.style.display = "none";
       palettePreviewCell = null;
-      previewColor = null;
+      previewColor = "#fff";
+      colorPickerModal.style.background = "#222";
       requestRedraw();
       showCursor = true;
       hideCoordPopup();
@@ -728,14 +730,12 @@
       if (e.touches.length === 2 && pinch2Last) {
         const x1 = e.touches[0].clientX, y1 = e.touches[0].clientY;
         const x2 = e.touches[1].clientX, y2 = e.touches[1].clientY;
-        // Distance
         const lastDist = Math.hypot(
           pinch2Last.x1 - pinch2Last.x2,
           pinch2Last.y1 - pinch2Last.y2
         );
         const newDist = Math.hypot(x1 - x2, y1 - y2);
         if (pinch2Mode === null) {
-          // Decide if pinch (zoom) or move
           if (Math.abs(newDist - lastDist) > 10) {
             pinch2Mode = "zoom";
           } else {
@@ -743,11 +743,9 @@
           }
         }
         if (pinch2Mode === "zoom") {
-          // Pinch zoom
           const delta = newDist / lastDist;
           setZoom(pinch2Origin.zoom * delta);
         } else {
-          // Move grid x-y
           const lastCx = (pinch2Last.x1 + pinch2Last.x2) / 2;
           const lastCy = (pinch2Last.y1 + pinch2Last.y2) / 2;
           const newCx = (x1 + x2) / 2;
@@ -766,7 +764,6 @@
       pinch2Mode = null;
     });
 
-    // Mouse drag
     canvas.addEventListener('mousedown', (e) => {
       isDragging = true;
       dragStart.x = e.clientX;
@@ -807,14 +804,15 @@
         showPaletteError("Square already colored! Please choose another empty square.", e.clientX, e.clientY);
         return;
       }
-      if (hasDonated) showColorPickerModalDynamic(e.clientX, e.clientY);
+      if (hasDonated && !donationUsed) showColorPickerModalDynamic(e.clientX, e.clientY);
     });
 
     function showPaletteError(message, mouseX, mouseY) {
       paletteError.textContent = message;
       let pos = dynamicAboveBelow(mouseX, mouseY, paletteError.offsetHeight);
-      paletteError.style.left = pos.left + "px";
+      paletteError.style.left = "50%";
       paletteError.style.top = pos.top + "px";
+      paletteError.style.transform = "translateX(-50%)";
       paletteError.style.display = "block";
       setTimeout(() => paletteError.style.display = "none", 2500);
     }
@@ -830,6 +828,7 @@
       const sat = r / radius;
       const rgb = hsvToRgb(hue/360, sat, 1);
       previewColor = rgbToHex(rgb[0], rgb[1], rgb[2]);
+      colorPickerModal.style.background = previewColor;
       requestPalettePreview();
     });
     randomColorBtn.onclick = () => {
@@ -837,16 +836,16 @@
       const sat = 1;
       const rgb = hsvToRgb(hue/360, sat, 1);
       previewColor = rgbToHex(rgb[0], rgb[1], rgb[2]);
+      colorPickerModal.style.background = previewColor;
       requestPalettePreview();
     };
 
     function showColorPickerModalDynamic(mouseX, mouseY) {
-      previewColor = null;
       palettePreviewCell = {x: gridCursor.x, y: gridCursor.y};
       showCursor = true;
       requestRedraw();
       hideCoordPopup();
-      // Position palette outside the selected square, at half-square offset
+      colorPickerModal.style.background = previewColor || "#222";
       let frameRect = frame.getBoundingClientRect();
       const scaledCellSize = CELL_SIZE * zoom;
       const leftInFrame = offsetX + gridCursor.x * scaledCellSize + scaledCellSize / 2;
@@ -866,13 +865,13 @@
     }
     function dynamicAboveBelow(mouseX, mouseY, popupHeight) {
       let vpad = 10;
-      let left = mouseX - colorPickerModal.offsetWidth / 2;
-      left = Math.max(5, Math.min(window.innerWidth - colorPickerModal.offsetWidth - 5, left));
+      let top;
       if (mouseY + popupHeight + vpad < window.innerHeight) {
-        return {left, top: mouseY + vpad};
+        top = mouseY + vpad;
       } else {
-        return {left, top: mouseY - popupHeight - vpad};
+        top = mouseY - popupHeight - vpad;
       }
+      return {top};
     }
     function requestPalettePreview() {
       palettePreviewCell = {x: gridCursor.x, y: gridCursor.y};
@@ -890,6 +889,7 @@
       palettePreviewCell = null;
       requestRedraw();
       saveParticipation();
+      donationUsed = true;
       setTimeout(resetDonateButton, 5000);
     };
     cancelColorBtn.onclick = function() {
@@ -910,11 +910,8 @@
       const frameRect = frame.getBoundingClientRect();
       const leftInFrame = offsetX + gridCursor.x * scaledCellSize + scaledCellSize / 2;
       const topInFrame = offsetY + gridCursor.y * scaledCellSize + scaledCellSize / 2;
-      let mouseX = frameRect.left + leftInFrame;
       let mouseY = frameRect.top + topInFrame;
       let vpad = 10;
-      let left = mouseX - congratsMessage.offsetWidth / 2;
-      left = Math.max(5, Math.min(window.innerWidth - congratsMessage.offsetWidth - 5, left));
       let top;
       if (mouseY + congratsMessage.offsetHeight + vpad < window.innerHeight) {
         top = mouseY + vpad;
@@ -925,20 +922,27 @@
       <span style="font-size:0.8em;">Proof of participation is saved in your browser's local storage.<br>
       See key <b>"invisibleMillionParticipation"</b> in <b>localStorage</b>.<br>
       (You can view this in your browser's developer tools > Application > Local Storage)</span>`;
-      congratsMessage.style.left = left + "px";
       congratsMessage.style.top = top + "px";
       congratsMessage.style.display = "block";
-      congratsMessage.style.position = "fixed";
     }
     function saveParticipation() {
       localStorage.setItem("invisibleMillionParticipation", "true");
     }
     function checkParticipation() {}
-    function resetDonateButton() { hasDonated = false; }
+    function resetDonateButton() {
+      hasDonated = false;
+      donationUsed = false;
+      donateBtn.textContent = "Donate / Contribute";
+    }
     donateBtn.onclick = function() {
-      hasDonated = true;
-      donateBtn.textContent = "Thanks for your support!";
-      setTimeout(() => donateBtn.textContent = "Donate / Contribute", 4000);
+      if (!hasDonated) {
+        hasDonated = true;
+        donationUsed = false;
+        donateBtn.textContent = "Thanks for your support!";
+        setTimeout(() => { 
+          if (!donationUsed) donateBtn.textContent = "Donate / Contribute";
+        }, 4000);
+      }
     };
     function drawColorDisc() {
       const cx = colorDisc.width / 2;
