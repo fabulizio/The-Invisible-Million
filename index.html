@@ -3,19 +3,15 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Zoomable Grid with Sticky Header/Footer - Arrow Navigation Fixed</title>
+<title>Zoomable Grid with Sticky Header/Footer - Improved</title>
 <style>
-  /* Reset */
-  * {
-    box-sizing: border-box;
-  }
+  * { box-sizing: border-box; }
   body, html {
     margin: 0; padding: 0; height: 100%;
     font-family: Arial, sans-serif;
     display: flex;
     flex-direction: column;
   }
-  /* Sticky header */
   header {
     position: sticky;
     top: 0;
@@ -33,9 +29,7 @@
     text-decoration: none;
     font-weight: 600;
   }
-  header .left-links a:hover {
-    text-decoration: underline;
-  }
+  header .left-links a:hover { text-decoration: underline; }
   header button {
     background: #4CAF50;
     border: none;
@@ -45,11 +39,8 @@
     cursor: pointer;
     font-weight: 600;
   }
-  header button:hover {
-    background: #45a049;
-  }
+  header button:focus, header button:hover { background: #45a049; outline: 2px solid #fff; }
 
-  /* Sticky footer */
   footer {
     position: sticky;
     bottom: 0;
@@ -60,20 +51,24 @@
     align-items: center;
     justify-content: space-between;
     z-index: 10;
+    flex-wrap: wrap;
+    gap: 10px;
   }
-  footer .coords {
-    font-family: monospace;
-  }
-  footer label {
-    margin-right: 10px;
-  }
+  footer .coords { font-family: monospace; }
+  footer label { margin-right: 10px; }
   footer select {
     padding: 4px 8px;
     border-radius: 3px;
     border: none;
     font-size: 1em;
   }
-
+  footer .zoom-controls button {
+    background: #555; color: #fff; border: none; border-radius: 3px;
+    margin: 0 2px; padding: 5px 10px; font-size: 1em; cursor: pointer;
+  }
+  footer .zoom-controls button:focus, footer .zoom-controls button:hover {
+    background: #888; outline: 2px solid #fff;
+  }
   /* Central block with fixed outline */
   main {
     flex: 1 1 auto;
@@ -84,54 +79,49 @@
     padding: 15px;
     overflow: hidden;
   }
-
-  /* Container for fixed frame */
   #frame {
     position: relative;
-    width: 800px;
-    height: 600px;
+    width: 90vw;
+    max-width: 1000px;
+    height: 70vh;
+    max-height: 800px;
     outline: 3px solid #333;
     background: white;
     overflow: hidden;
     touch-action: none;
   }
-
-  /* Canvas fills the frame */
   #gridCanvas {
     position: absolute;
     top: 0; left: 0;
-    width: 800px;
-    height: 600px;
+    width: 100%; height: 100%;
     display: block;
     cursor: grab;
     user-select: none;
   }
-  #gridCanvas:active {
-    cursor: grabbing;
-  }
+  #gridCanvas:active { cursor: grabbing; }
 </style>
 </head>
 <body>
 
-<header>
+<header role="banner">
   <div class="left-links">
     <a href="#stati1" tabindex="1">Stati Page 1</a>
     <a href="#stati2" tabindex="2">Stati Page 2</a>
   </div>
-  <button id="donateBtn" tabindex="3">Donate</button>
+  <button id="donateBtn" tabindex="3" aria-label="Donate">Donate</button>
 </header>
 
 <main>
   <div id="frame" tabindex="0" aria-label="Zoomable grid frame">
-    <canvas id="gridCanvas" width="800" height="600"></canvas>
+    <canvas id="gridCanvas" aria-label="Grid canvas" tabindex="4"></canvas>
   </div>
 </main>
 
-<footer>
+<footer role="contentinfo">
   <div class="coords" aria-live="polite" aria-atomic="true">X: 0, Y: 0</div>
   <div>
     <label for="colorSelect">Select Color:</label>
-    <select id="colorSelect" aria-label="Select drawing color">
+    <select id="colorSelect" aria-label="Select drawing color" tabindex="5">
       <option value="#000000" selected>Black</option>
       <option value="#FF0000">Red</option>
       <option value="#00AA00">Green</option>
@@ -140,62 +130,65 @@
       <option value="#800080">Purple</option>
     </select>
   </div>
+  <div class="zoom-controls" aria-label="Zoom controls">
+    <button id="zoomOutBtn" title="Zoom out" tabindex="6">−</button>
+    <span id="zoomDisplay" aria-live="polite">100%</span>
+    <button id="zoomInBtn" title="Zoom in" tabindex="7">+</button>
+  </div>
 </footer>
 
 <script>
 (() => {
+  // DOM elements
   const canvas = document.getElementById('gridCanvas');
   const ctx = canvas.getContext('2d');
   const frame = document.getElementById('frame');
   const coordsDisplay = document.querySelector('footer .coords');
   const colorSelect = document.getElementById('colorSelect');
   const donateBtn = document.getElementById('donateBtn');
+  const zoomInBtn = document.getElementById('zoomInBtn');
+  const zoomOutBtn = document.getElementById('zoomOutBtn');
+  const zoomDisplay = document.getElementById('zoomDisplay');
 
   // Grid settings
-  const GRID_SIZE = 1000;   // 1000 x 1000 cells
-  const CELL_SIZE = 30;     // Base size (will scale with zoom)
+  const GRID_SIZE = 1000;
+  const CELL_SIZE = 30;
   const MIN_ZOOM = 0.5;
   const MAX_ZOOM = 3;
   let zoom = 1;
-  let offsetX = 0;  // pan offset in pixels
+  let offsetX = 0;
   let offsetY = 0;
 
-  // Track mouse dragging for panning
+  // State
   let isDragging = false;
   let dragStart = {x: 0, y: 0};
   let offsetStart = {x: 0, y: 0};
-
-  // Current mouse cell coords
   let currentCell = {x: 0, y: 0};
-
-  // Selected color for future extensions (e.g. coloring cells)
   let selectedColor = colorSelect.value;
 
-  // Donation button click (dummy alert)
-  donateBtn.addEventListener('click', () => {
-    alert('Thank you for your intention to donate! (Functionality to be implemented)');
-  });
+  // Redraw throttling
+  let redrawPending = false;
 
-  // Color selector change
-  colorSelect.addEventListener('change', (e) => {
-    selectedColor = e.target.value;
+  // Touch support
+  let touchStart = null;
+
+  function setCanvasSize() {
+    // Make canvas fill the frame
+    const rect = frame.getBoundingClientRect();
+    canvas.width = rect.width;
+    canvas.height = rect.height;
+    clampOffset();
     drawGrid();
-  });
+  }
 
-  // Draw grid function
   function drawGrid() {
     const width = canvas.width;
     const height = canvas.height;
     ctx.clearRect(0, 0, width, height);
-
-    // Background fill
     ctx.fillStyle = '#fff';
     ctx.fillRect(0, 0, width, height);
 
-    // Calculate scaled cell size
     const scaledCellSize = CELL_SIZE * zoom;
-
-    // Determine visible grid bounds in cells
     const startCol = Math.floor(-offsetX / scaledCellSize);
     const startRow = Math.floor(-offsetY / scaledCellSize);
     const visibleCols = Math.ceil(width / scaledCellSize) + 1;
@@ -204,7 +197,6 @@
     ctx.strokeStyle = '#ccc';
     ctx.lineWidth = 1;
 
-    // Draw vertical grid lines
     for(let c = startCol; c <= startCol + visibleCols; c++) {
       if (c < 0 || c >= GRID_SIZE) continue;
       const x = offsetX + c * scaledCellSize;
@@ -213,8 +205,6 @@
       ctx.lineTo(x + 0.5, height);
       ctx.stroke();
     }
-
-    // Draw horizontal grid lines
     for(let r = startRow; r <= startRow + visibleRows; r++) {
       if (r < 0 || r >= GRID_SIZE) continue;
       const y = offsetY + r * scaledCellSize;
@@ -223,23 +213,29 @@
       ctx.lineTo(width, y + 0.5);
       ctx.stroke();
     }
-
     // Highlight hovered cell
     if(currentCell.x >= 0 && currentCell.x < GRID_SIZE &&
-       currentCell.y >= 0 && currentCell.y < GRID_SIZE) {
+      currentCell.y >= 0 && currentCell.y < GRID_SIZE) {
       const highlightX = offsetX + currentCell.x * scaledCellSize;
       const highlightY = offsetY + currentCell.y * scaledCellSize;
-      ctx.fillStyle = selectedColor + '88'; // semi-transparent fill
+      ctx.fillStyle = selectedColor + '88';
       ctx.fillRect(highlightX + 1, highlightY + 1, scaledCellSize - 2, scaledCellSize - 2);
     }
   }
 
-  // Update coordinates display based on mouse position on canvas
+  function requestRedraw() {
+    if (redrawPending) return;
+    redrawPending = true;
+    requestAnimationFrame(() => {
+      drawGrid();
+      redrawPending = false;
+    });
+  }
+
   function updateCoordsDisplay(cellX, cellY) {
     coordsDisplay.textContent = `X: ${cellX}, Y: ${cellY}`;
   }
 
-  // Convert canvas pixel coords to cell coords
   function pixelToCell(x, y) {
     const scaledCellSize = CELL_SIZE * zoom;
     const cellX = Math.floor((x - offsetX) / scaledCellSize);
@@ -247,7 +243,6 @@
     return {x: cellX, y: cellY};
   }
 
-  // Clamp offset so grid does not pan out of bounds
   function clampOffset() {
     const scaledCellSize = CELL_SIZE * zoom;
     const maxOffsetX = 0;
@@ -255,12 +250,11 @@
     const minOffsetX = Math.min(canvas.width - GRID_SIZE * scaledCellSize, 0);
     const minOffsetY = Math.min(canvas.height - GRID_SIZE * scaledCellSize, 0);
 
-    if (minOffsetX > maxOffsetX) { // if grid smaller than viewport
+    if (minOffsetX > maxOffsetX) {
       offsetX = (canvas.width - GRID_SIZE * scaledCellSize) / 2;
     } else {
       offsetX = Math.min(maxOffsetX, Math.max(minOffsetX, offsetX));
     }
-
     if (minOffsetY > maxOffsetY) {
       offsetY = (canvas.height - GRID_SIZE * scaledCellSize) / 2;
     } else {
@@ -268,47 +262,44 @@
     }
   }
 
-  // Zoom function (centered on canvas center)
-  function zoomGrid(deltaZoom) {
+  function setZoom(newZoom, centerX, centerY) {
     const oldZoom = zoom;
-    zoom *= deltaZoom;
-    zoom = Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, zoom));
-
-    // Adjust offset to keep center fixed
-    const canvasCenterX = canvas.width / 2;
-    const canvasCenterY = canvas.height / 2;
-
-    offsetX = canvasCenterX - ((canvasCenterX - offsetX) * (zoom / oldZoom));
-    offsetY = canvasCenterY - ((canvasCenterY - offsetY) * (zoom / oldZoom));
+    zoom = Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, newZoom));
+    if (centerX === undefined || centerY === undefined) {
+      centerX = canvas.width / 2;
+      centerY = canvas.height / 2;
+    }
+    offsetX = centerX - ((centerX - offsetX) * (zoom / oldZoom));
+    offsetY = centerY - ((centerY - offsetY) * (zoom / oldZoom));
     clampOffset();
+    zoomDisplay.textContent = Math.round(zoom * 100) + '%';
+    requestRedraw();
   }
 
-  // Handle wheel for zoom
+  // Wheel zoom
   canvas.addEventListener('wheel', (e) => {
     e.preventDefault();
     const zoomStep = 1.1;
-    if(e.deltaY < 0) zoomGrid(zoomStep);
-    else zoomGrid(1 / zoomStep);
-    drawGrid();
+    if(e.deltaY < 0) setZoom(zoom * zoomStep, e.offsetX, e.offsetY);
+    else setZoom(zoom / zoomStep, e.offsetX, e.offsetY);
   }, {passive: false});
 
-  // Handle mouse down for panning
+  // Mouse drag pan
   canvas.addEventListener('mousedown', (e) => {
     isDragging = true;
     dragStart.x = e.clientX;
     dragStart.y = e.clientY;
     offsetStart.x = offsetX;
     offsetStart.y = offsetY;
+    canvas.setPointerCapture(e.pointerId || 0);
   });
-  window.addEventListener('mouseup', () => {
-    isDragging = false;
-  });
+  window.addEventListener('mouseup', () => { isDragging = false; });
   window.addEventListener('mousemove', (e) => {
     if(!isDragging) return;
     offsetX = offsetStart.x + (e.clientX - dragStart.x);
     offsetY = offsetStart.y + (e.clientY - dragStart.y);
     clampOffset();
-    drawGrid();
+    requestRedraw();
     // Update cell under mouse after pan
     const rect = canvas.getBoundingClientRect();
     const mouseX = e.clientX - rect.left;
@@ -317,80 +308,114 @@
     if(cell.x !== currentCell.x || cell.y !== currentCell.y) {
       currentCell = cell;
       updateCoordsDisplay(cell.x, cell.y);
-      drawGrid();
+      requestRedraw();
     }
   });
 
-  // Track mouse move for coordinates update
+  // Throttled mousemove for highlight
   canvas.addEventListener('mousemove', (e) => {
-    if(isDragging) return; // Already handled in dragging
-    const rect = canvas.getBoundingClientRect();
-    const mouseX = e.clientX - rect.left;
-    const mouseY = e.clientY - rect.top;
-    const cell = pixelToCell(mouseX, mouseY);
-    if(cell.x !== currentCell.x || cell.y !== currentCell.y) {
-      currentCell = cell;
-      updateCoordsDisplay(cell.x, cell.y);
-      drawGrid();
-    }
+    if(isDragging) return;
+    if (redrawPending) return;
+    redrawPending = true;
+    requestAnimationFrame(() => {
+      const rect = canvas.getBoundingClientRect();
+      const mouseX = e.clientX - rect.left;
+      const mouseY = e.clientY - rect.top;
+      const cell = pixelToCell(mouseX, mouseY);
+      if(cell.x !== currentCell.x || cell.y !== currentCell.y) {
+        currentCell = cell;
+        updateCoordsDisplay(cell.x, cell.y);
+        drawGrid();
+      }
+      redrawPending = false;
+    });
   });
 
-  // Keyboard navigation for panning by arrow keys
+  // Touch support for pan
+  canvas.addEventListener('touchstart', (e) => {
+    if (e.touches.length === 1) {
+      touchStart = {
+        x: e.touches[0].clientX,
+        y: e.touches[0].clientY,
+        offsetX,
+        offsetY
+      };
+    }
+  }, {passive:true});
+  canvas.addEventListener('touchmove', (e) => {
+    if (!touchStart || e.touches.length !== 1) return;
+    const dx = e.touches[0].clientX - touchStart.x;
+    const dy = e.touches[0].clientY - touchStart.y;
+    offsetX = touchStart.offsetX + dx;
+    offsetY = touchStart.offsetY + dy;
+    clampOffset();
+    requestRedraw();
+  }, {passive:true});
+  canvas.addEventListener('touchend', () => { touchStart = null; });
+
+  // Keyboard navigation for pan and zoom
   frame.addEventListener('keydown', (e) => {
-    const panStep = 30 * zoom; // one cell in pixels scaled by zoom
+    const panStep = 30 * zoom;
     switch(e.key) {
       case 'ArrowLeft':
         offsetX += panStep;
-        e.preventDefault();
-        break;
+        e.preventDefault(); break;
       case 'ArrowRight':
         offsetX -= panStep;
-        e.preventDefault();
-        break;
+        e.preventDefault(); break;
       case 'ArrowUp':
         offsetY += panStep;
-        e.preventDefault();
-        break;
+        e.preventDefault(); break;
       case 'ArrowDown':
         offsetY -= panStep;
-        e.preventDefault();
-        break;
-      case '+':
-      case '=': // zoom in
-        zoomGrid(1.1);
-        e.preventDefault();
-        break;
-      case '-': // zoom out
-        zoomGrid(1/1.1);
-        e.preventDefault();
-        break;
+        e.preventDefault(); break;
+      case '+': case '=':
+        setZoom(zoom * 1.1);
+        e.preventDefault(); break;
+      case '-':
+        setZoom(zoom / 1.1);
+        e.preventDefault(); break;
     }
     clampOffset();
-    drawGrid();
-
-    // Update coords to current center cell after pan
+    requestRedraw();
+    // Center cell update
     const centerX = canvas.width / 2;
     const centerY = canvas.height / 2;
     currentCell = pixelToCell(centerX, centerY);
     updateCoordsDisplay(currentCell.x, currentCell.y);
   });
 
-  // Focus frame on page load to receive keyboard input
+  // Donate button
+  donateBtn.addEventListener('click', () => {
+    alert('Thank you for your intention to donate! (Functionality to be implemented)');
+    donateBtn.focus();
+  });
+
+  // Color selector
+  colorSelect.addEventListener('change', (e) => {
+    selectedColor = e.target.value;
+    requestRedraw();
+  });
+
+  // Zoom buttons
+  zoomInBtn.addEventListener('click', () => setZoom(zoom * 1.1));
+  zoomOutBtn.addEventListener('click', () => setZoom(zoom / 1.1));
+
+  // Focus frame for keyboard input
   window.addEventListener('load', () => {
+    setCanvasSize();
     frame.focus();
-    // Initially center grid
     offsetX = (canvas.width - GRID_SIZE * CELL_SIZE * zoom) / 2;
     offsetY = (canvas.height - GRID_SIZE * CELL_SIZE * zoom) / 2;
     clampOffset();
     drawGrid();
+    zoomDisplay.textContent = Math.round(zoom * 100) + '%';
   });
+  window.addEventListener('resize', setCanvasSize);
 
-  // Refocus frame if user clicks outside canvas but inside frame container
-  frame.addEventListener('click', () => {
-    frame.focus();
-  });
+  frame.addEventListener('click', () => { frame.focus(); });
+
 })();
 </script>
-
 </body>
 </html>
