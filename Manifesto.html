@@ -2,20 +2,227 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Contact</title>
+  <title>Manifesto – The (In)Visible Million Project</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <!-- Copy relevant CSS from index.html -->
+  <style>
+    html, body {
+      margin: 0; padding: 0; height: 100%;
+      font-family: Arial, sans-serif;
+      background: #282828;
+      color: #fff;
+      width: 100vw; height: 100vh;
+      overflow-x: hidden;
+    }
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 120px;
+      min-height: 120px;
+      position: relative;
+    }
+    .header-content {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      height: 100%;
+      gap: 16px;
+      position: relative;
+    }
+    .big-title {
+      font-size: 2.5em;
+      font-weight: bold;
+      letter-spacing: 2px;
+      line-height: 1.2;
+      text-shadow: 0 2px 6px #111a;
+      flex: none;
+      z-index: 2;
+    }
+    .menu-icon {
+      margin-left: 18px;
+      width: 48px; height: 48px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      gap: 10px;
+      cursor: pointer;
+      z-index: 100;
+      background: none;
+      outline: 2px solid #ccc;
+      border-radius: 8px;
+    }
+    .menu-icon:focus {
+      outline: 3px solid #FF0070;
+    }
+    .menu-icon span {
+      display: block;
+      width: 36px;
+      height: 6px;
+      background: #fff;
+      border-radius: 3px;
+      margin: 0 auto;
+      transition: background 0.2s;
+    }
+    .popup-menu {
+      position: fixed;
+      top: 0; right: 0; left: 0; bottom: 0;
+      width: 100vw; height: 100vh;
+      background: rgba(30,30,30,0.98);
+      z-index: 5000;
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 32px;
+      font-size: 2em;
+    }
+    .popup-menu.active { display: flex; }
+    .popup-menu a,
+    .popup-menu .close-menu {
+      outline: 2px solid #ccc;
+      border-radius: 12px;
+    }
+    .popup-menu a {
+      color: #fff !important;
+      text-decoration: none;
+      padding: 18px 42px;
+      font-size: 1.1em;
+      background: #444;
+      margin: 10px 0;
+      border: 2px solid #fff;
+      transition: background 0.2s, color 0.2s;
+      display: flex;
+      align-items: center;
+    }
+    .popup-menu a:hover {
+      background: #fff;
+      color: #222 !important;
+      border-color: #fff;
+    }
+    .popup-menu .close-menu {
+      position: absolute;
+      top: 44px;
+      right: 44px;
+      color: #fff;
+      background: none;
+      border: none;
+      font-size: 2.5em;
+      cursor: pointer;
+      z-index: 5100;
+    }
+    main {
+      max-width: 800px;
+      margin: 48px auto 0 auto;
+      padding: 32px 16px;
+      background: #333;
+      border-radius: 18px;
+      box-shadow: 0 4px 32px #111a;
+    }
+    h1, h2 {
+      font-weight: bold;
+      color: #FF0070;
+      margin-top: 0;
+    }
+    h1 { font-size: 2.2em; }
+    h2 { font-size: 1.35em; }
+    p {
+      font-size: 1.2em;
+      line-height: 1.7;
+      margin-bottom: 1.1em;
+    }
+    footer {
+      width: 100vw;
+      background: transparent;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 95px;
+      height: 95px;
+      overflow-x: auto;
+      font-size: 1.33em;
+      margin-top: 48px;
+    }
+    .footer-content {
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      justify-content: center;
+      gap: 36px;
+      width: 100%;
+      height: 95px;
+      flex-wrap: nowrap;
+      white-space: nowrap;
+    }
+    @media (max-width: 700px) {
+      header, footer { min-height: 40px; height: 40px; }
+      .big-title { font-size: 1.1em !important; }
+      main { padding: 12px 3px; }
+      h1 { font-size: 1.15em; }
+      h2 { font-size: 1em; }
+      p { font-size: 0.95em; }
+      .footer-content { font-size: 0.8em; height: 20px; min-width: 20px; }
+    }
+  </style>
 </head>
 <body>
   <header>
-    <!-- Optionally copy your header/menu structure here -->
+    <div class="header-content">
+      <span class="big-title">The (In)Visible Million Project</span>
+      <div class="menu-icon" id="menuIcon" title="Menu" tabindex="0">
+        <span></span>
+        <span></span>
+        <span></span>
+      </div>
+    </div>
   </header>
   <main>
-    <h1>Contact Us</h1>
-    <!-- Your contact page content -->
+    <h1>Manifesto</h1>
+    <h2>The Beginning of Unseen Narratives</h2>
+    <p>
+      Frabble norkle spandor. Quibly woggles transmogrify the essential plumbus, as we embark on a journey of flarf and spoodle. 
+      The million invisible squibs unite, shimmering beneath the surface of every zindle.
+    </p>
+    <h2>The Collective Squibble</h2>
+    <p>
+      Together, we embrace the zonk. Wibble, wobble, and wharf—these principles guide our snorfle. 
+      Let every participant greeble their own color upon the grid, a celebration of plarf diversity and unity in splonk.
+    </p>
+    <h2>Our Purpose</h2>
+    <p>
+      Glorp is not the absence of blop, but a reimagining of snark. In a world of perpetual yibble, we stand for the zindle. 
+      Let the invisible million become visible through collective spoodle and joyful norkling.
+    </p>
+    <h2>Join the Nonsense</h2>
+    <p>
+      Spoodle your squibs, greeble your gnorks, and let the flarf begin. 
+      Only through wibble can we reach the ultimate splonk. Together, we are the invisible million—seen and unseen, united in flarp.
+    </p>
   </main>
+  <div class="popup-menu" id="popupMenu">
+    <button class="close-menu" id="closeMenuBtn" title="Close Menu">&times;</button>
+    <a href="index.html">Home</a>
+    <a href="about.html">About the Project</a>
+    <a href="collective.html">About the Collective</a>
+    <a href="next.html">Next Steps</a>
+  </div>
   <footer>
-    <!-- Optionally copy your footer here -->
+    <div class="footer-content">
+      <span>— The (In)Visible Million Collective</span>
+    </div>
   </footer>
+  <script>
+    // --- MENU ---
+    const menuIcon = document.getElementById('menuIcon');
+    const popupMenu = document.getElementById('popupMenu');
+    const closeMenuBtn = document.getElementById('closeMenuBtn');
+    menuIcon.addEventListener('click', () => popupMenu.classList.add('active'));
+    closeMenuBtn.addEventListener('click', () => popupMenu.classList.remove('active'));
+    popupMenu.addEventListener('click', (e) => {
+      if (e.target === popupMenu) popupMenu.classList.remove('active');
+    });
+  </script>
 </body>
 </html>
