@@ -212,6 +212,7 @@
       color: #111;
       outline: 3px solid #FF0070;
     }
+    /* MAIN FOOTER */
     footer {
       width: 100vw;
       background: transparent;
@@ -224,6 +225,7 @@
       overflow-x: auto;
       font-size: 1.33em;
       position: relative;
+      z-index: 10;
     }
     .footer-content {
       display: flex;
@@ -349,11 +351,12 @@
       transform: translateX(-50%);
       outline: 2px solid #ccc;
     }
+    /* RANDOM SQUARE POPUP: inside the grid frame, low left */
     .random-popup {
-      position: fixed;
-      left: 24px;
-      bottom: 32px;
-      z-index: 99999;
+      position: absolute;
+      left: 16px;
+      bottom: 16px;
+      z-index: 999;
       display: none;
       flex-direction: column;
       align-items: flex-start;
@@ -362,6 +365,7 @@
       box-shadow: 0 0 22px #000;
       padding: 18px 24px;
       border: 2px solid #FF0070;
+      min-width: 170px;
     }
     .random-popup.active {
       display: flex;
@@ -390,6 +394,22 @@
       font-size: 1em;
       color: #fff;
     }
+    /* SECOND STICKY FOOTER */
+    .footer-copyright {
+      width: 100vw;
+      text-align: center;
+      background: #151515;
+      color: #fff;
+      font-size: 1em;
+      padding: 10px 0 8px 0;
+      letter-spacing: 1px;
+      opacity: 0.8;
+      position: fixed;
+      left: 0;
+      bottom: 0;
+      z-index: 10000;
+      border-top: 1px solid #666;
+    }
     @media (max-width: 700px) {
       header, footer { min-height: 40px; height: 40px; }
       #frame { width: min(98vw, 70vh); height: min(98vw, 70vh);}
@@ -402,16 +422,7 @@
       .palette-error { font-size: 1.1em; padding: 12px 18px; }
       .random-popup { padding: 10px 12px; font-size: 0.9em; }
       .random-btn { padding: 7px 14px; font-size: 1em; }
-    }
-    .footer-copyright {
-      width: 100vw;
-      text-align: center;
-      background: transparent;
-      color: #fff;
-      font-size: 0.9em;
-      padding-top: 8px;
-      letter-spacing: 1px;
-      opacity: 0.8;
+      .footer-copyright { font-size: 0.9em; padding: 7px 0 6px 0;}
     }
   </style>
 </head>
@@ -455,12 +466,12 @@
         </div>
         <div class="palette-error" id="paletteError"></div>
         <div id="congratsMessage"></div>
+        <!-- RANDOM SQUARE POPUP, inside grid frame, low left -->
+        <div class="random-popup" id="randomPopup">
+          <button class="random-btn" id="popupRandomBtn">⟳ Random Square</button>
+          <span style="color:#fff; font-size:0.93em;">Click until you find a square you like,<br>then color it!</span>
+        </div>
       </div>
-    </div>
-    <!-- POPUP RANDOM SQUARE BUTTON -->
-    <div class="random-popup" id="randomPopup">
-      <button class="random-btn" id="popupRandomBtn">⟳ Random Square</button>
-      <span style="color:#fff; font-size:0.93em;">Click until you find a square you like,<br>then color it!</span>
     </div>
     <div class="popup-menu" id="popupMenu">
       <button class="close-menu" id="closeMenuBtn" title="Close Menu">&times;</button>
@@ -481,10 +492,11 @@
           <button class="fancy-btn" id="jumpBtn">Jump</button>
         </div>
       </div>
-      <div class="footer-copyright">
-        &copy; 2024 fabulizio — The (In)Visible Million Project. All rights reserved.
-      </div>
     </footer>
+    <!-- STICKY COPYRIGHT FOOTER -->
+    <div class="footer-copyright">
+      &copy; 2024 fabulizio — The (In)Visible Million Project. All rights reserved.
+    </div>
   </main>
   <script>
     // --- MENU ---
@@ -539,10 +551,8 @@
     const confirmColorBtn = document.getElementById('confirmColorBtn');
     const cancelColorBtn = document.getElementById('cancelColorBtn');
     const randomColorBtn = document.getElementById('randomColorBtn');
-    // -- RANDOM SQUARE POPUP --
     const randomPopup = document.getElementById('randomPopup');
     const popupRandomBtn = document.getElementById('popupRandomBtn');
-
     let gridCursor = { x: Math.floor(GRID_SIZE / 2), y: Math.floor(GRID_SIZE / 2) };
     let previewColor = "#fff";
     let randomPopupActive = false;
@@ -834,7 +844,7 @@
     });
 
     // --- RANDOM SQUARE BUTTON POPUP LOGIC ---
-    // Only way to select for coloring!
+    // Only way to select for coloring, and only after donation
     function showRandomPopup() {
       randomPopup.classList.add('active');
       randomPopupActive = true;
@@ -843,9 +853,31 @@
       randomPopup.classList.remove('active');
       randomPopupActive = false;
     }
-    // Show popup at load
-    showRandomPopup();
 
+    // Initially hidden. Show only after donation!
+    hideRandomPopup();
+
+    donateBtn.onclick = function() {
+      if (!hasDonated) {
+        hasDonated = true;
+        donationUsed = false;
+        donateBtn.textContent = "Thanks for your support!";
+        setTimeout(() => { 
+          if (!donationUsed) donateBtn.textContent = "Donate / Contribute";
+        }, 4000);
+        showRandomPopup();
+      }
+    };
+
+    // Popup is inside grid frame, low left
+    function positionRandomPopup() {
+      // The popup is already positioned absolute inside #frame
+      // So nothing required unless you want to change its offset dynamically
+      // Optionally, you can keep this logic for window resize events
+    }
+    window.addEventListener('resize', positionRandomPopup);
+
+    // Clicking popup random button: jump to random empty square, center it, open color picker
     popupRandomBtn.onclick = function() {
       let tries = 2000;
       let found = false;
@@ -865,17 +897,10 @@
         }
       }
       hidePalette();
-      if (!found) { alert("No available squares left!"); }
+      if (!found) { alert("No available squares left!"); return; }
+      setTimeout(openColorPickerForCurrentSquare, 300);
     };
 
-    // Clicking canvas does NOT open color picker anymore, only navigation
-    canvas.addEventListener('click', function(e){
-      // Only navigation
-    });
-
-    // When popup is active, show color picker on the selected square
-    // Add a visible "Color this square" button in the popup after random selection
-    // Instead, automatically open color picker on random button click
     function openColorPickerForCurrentSquare() {
       paletteError.style.display = "none";
       palettePreviewCell = {x: gridCursor.x, y: gridCursor.y};
@@ -900,11 +925,6 @@
       colorPickerModal.style.width = "auto";
       colorPickerModal.style.height = "auto";
     }
-
-    popupRandomBtn.addEventListener('click', function() {
-      // After jumping to random, show color picker automatically
-      setTimeout(openColorPickerForCurrentSquare, 300);
-    });
 
     // Color picker logic
     colorDisc.addEventListener('click', function(e){
@@ -948,7 +968,7 @@
       saveParticipation();
       donationUsed = true;
       setTimeout(resetDonateButton, 5000);
-      // Hide random square popup until refresh
+      // Hide random popup until donation again
       hideRandomPopup();
     };
     cancelColorBtn.onclick = function() {
@@ -987,22 +1007,11 @@
     function saveParticipation() {
       localStorage.setItem("invisibleMillionParticipation", "true");
     }
-    function checkParticipation() {}
     function resetDonateButton() {
       hasDonated = false;
       donationUsed = false;
       donateBtn.textContent = "Donate / Contribute";
     }
-    donateBtn.onclick = function() {
-      if (!hasDonated) {
-        hasDonated = true;
-        donationUsed = false;
-        donateBtn.textContent = "Thanks for your support!";
-        setTimeout(() => { 
-          if (!donationUsed) donateBtn.textContent = "Donate / Contribute";
-        }, 4000);
-      }
-    };
     function drawColorDisc() {
       const cx = colorDisc.width / 2;
       const cy = colorDisc.height / 2;
