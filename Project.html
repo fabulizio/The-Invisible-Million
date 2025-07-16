@@ -1,1 +1,191 @@
-ciao
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>The (In)Visible Million Project</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    html, body {
+      margin: 0; padding: 0; height: 100%;
+      font-family: Arial, sans-serif;
+      background: #282828;
+      color: #fff;
+      width: 100vw; height: 100vh;
+      overflow-x: hidden;
+    }
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 120px;
+      min-height: 120px;
+      position: relative;
+    }
+    .header-content {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      height: 100%;
+      gap: 16px;
+      position: relative;
+    }
+    .big-title {
+      font-size: 3em;
+      font-weight: bold;
+      letter-spacing: 2px;
+    }
+    nav.popup-menu {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(40,40,40, 0.97);
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      z-index: 1000;
+    }
+    nav.popup-menu.active { display: flex; }
+    nav.popup-menu a {
+      color: #fff;
+      text-decoration: none;
+      font-size: 2em;
+      margin: 24px 0;
+    }
+    .close-menu {
+      background: none;
+      border: none;
+      color: #fff;
+      font-size: 2.5em;
+      align-self: flex-end;
+      margin: 16px;
+      cursor: pointer;
+    }
+    main {
+      padding: 48px 8vw 24px 8vw;
+      min-height: 50vh;
+      text-align: left;
+    }
+    h1 {
+      font-size: 2.2em;
+      margin-bottom: 16px;
+    }
+    h2 {
+      font-size: 1.5em;
+      margin-top: 32px;
+    }
+    p {
+      font-size: 1.3em;
+      margin-bottom: 18px;
+      line-height: 1.7;
+    }
+    footer {
+      position: fixed;
+      left: 0;
+      bottom: 0;
+      width: 100vw;
+      background: #222;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 48px;
+      font-size: 1.33em;
+      z-index: 999;
+      box-shadow: 0 -2px 16px #111a;
+    }
+    .footer-content {
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      justify-content: center;
+      gap: 24px;
+      width: 100%;
+      height: 100%;
+      flex-wrap: nowrap;
+      white-space: nowrap;
+    }
+    @media (max-width: 700px) {
+      .big-title { font-size: 1.3em !important; }
+      main { padding: 12px 3px; }
+      h1 { font-size: 1.5em; }
+      p { font-size: 1em; }
+      .footer-content { font-size: 1em; height: 20px; min-width: 20px; }
+      header, footer { min-height: 40px; height: 40px; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="header-content">
+      <span class="big-title">The (In)Visible Million Project</span>
+      <div class="menu-icon" tabindex="0" title="Menu" aria-label="Open menu">
+        <span></span>
+        <span></span>
+        <span></span>
+      </div>
+    </div>
+  </header>
+  <nav class="popup-menu" id="popupMenu" aria-hidden="true">
+    <button class="close-menu" id="closeMenu" title="Close menu" aria-label="Close menu">&times;</button>
+    <a href="index.html">Home</a>
+    <a href="Manifesto.html">The Manifesto</a>
+    <a href="collective.html">The Collective</a>
+    <a href="next.html">Next Steps</a>
+    <a href="contact.html">Contact</a>
+  </nav>
+  <main>
+    <h1>About the Project</h1>
+    <p>
+      The (In)Visible Million Project is a collective effort to shed light on those overlooked by society.<br>
+      Our mission is to map, visualize, and empower individuals who have remained invisible in mainstream narratives.<br>
+      Through art, data, and participation, we aim to foster inclusion, transparency, and action.
+    </p>
+    <h2>What We Do</h2>
+    <p>
+      - Collect and share stories of the invisible.<br>
+      - Create visual representations that make absence visible.<br>
+      - Build community and invite participation.<br>
+      - Advocate for systemic change.
+    </p>
+    <h2>Get Involved</h2>
+    <p>
+      Join us in making the invisible visible. Explore the grid, read the manifesto, or contact us to contribute your own perspective.
+    </p>
+  </main>
+  <footer>
+    <div class="footer-content">
+      &copy; 2025 The (In)Visible Million Project
+    </div>
+  </footer>
+  <script>
+    // Menu functionality
+    const menuIcon = document.querySelector('.menu-icon');
+    const popupMenu = document.getElementById('popupMenu');
+    const closeMenuBtn = document.getElementById('closeMenu');
+
+    function openMenu() {
+      popupMenu.classList.add('active');
+      popupMenu.setAttribute('aria-hidden', 'false');
+      closeMenuBtn.focus();
+    }
+
+    function closeMenu() {
+      popupMenu.classList.remove('active');
+      popupMenu.setAttribute('aria-hidden', 'true');
+      menuIcon.focus();
+    }
+
+    menuIcon.addEventListener('click', openMenu);
+    menuIcon.addEventListener('keydown', function(e) {
+      if (e.key === 'Enter' || e.key === ' ') openMenu();
+    });
+    closeMenuBtn.addEventListener('click', closeMenu);
+    popupMenu.addEventListener('click', function(e) {
+      if (e.target === popupMenu) closeMenu();
+    });
+  </script>
+</body>
+</html>
