@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>The (In)Visible Million Project</title>
+  <title>The (In)Visible Million Project Collective</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <style>
     html, body {
@@ -31,55 +31,111 @@
       position: relative;
     }
     .big-title {
-      font-size: 3em;
+      font-size: 3.7em;
       font-weight: bold;
       letter-spacing: 2px;
+      line-height: 1.2;
+      text-shadow: 0 2px 6px #111a;
+      flex: none;
+      z-index: 2;
     }
-    nav.popup-menu {
+    .menu-icon {
+      margin-left: 18px;
+      width: 48px; height: 48px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      gap: 10px;
+      cursor: pointer;
+      z-index: 100;
+      background: none;
+      outline: 2px solid #ccc;
+      border-radius: 8px;
+      transition: outline 0.2s;
+    }
+    .menu-icon:focus { outline: 3px solid #eee; }
+    .menu-icon span {
+      display: block;
+      width: 36px;
+      height: 6px;
+      background: #fff;
+      border-radius: 3px;
+      margin: 0 auto;
+      transition: background 0.2s;
+    }
+    .popup-menu {
       position: fixed;
-      top: 0; left: 0;
-      width: 100vw;
-      height: 100vh;
-      background: rgba(40,40,40, 0.97);
+      top: 0; right: 0; left: 0; bottom: 0;
+      width: 100vw; height: 100vh;
+      background: rgba(30,30,30,0.98);
+      z-index: 5000;
       display: none;
       flex-direction: column;
       align-items: center;
-      justify-content: flex-start;
-      z-index: 1000;
-    }
-    nav.popup-menu.active { display: flex; }
-    nav.popup-menu a {
-      color: #fff;
-      text-decoration: none;
+      justify-content: center;
+      gap: 32px;
       font-size: 2em;
-      margin: 24px 0;
     }
-    .close-menu {
+    .popup-menu.active { display: flex; }
+    .popup-menu a,
+    .popup-menu .close-menu {
+      outline: 2px solid #ccc;
+      border-radius: 12px;
+    }
+    .popup-menu a {
+      color: #fff !important;
+      text-decoration: none;
+      padding: 18px 42px;
+      font-size: 1.1em;
+      background: #444;
+      margin: 10px 0;
+      border: 2px solid #fff;
+      transition: background 0.2s, color 0.2s;
+      display: flex;
+      align-items: center;
+    }
+    .popup-menu a:hover {
+      background: #fff;
+      color: #222 !important;
+      border-color: #fff;
+    }
+    .popup-menu .close-menu {
+      position: absolute;
+      top: 44px;
+      right: 44px;
+      color: #fff;
       background: none;
       border: none;
-      color: #fff;
       font-size: 2.5em;
-      align-self: flex-end;
-      margin: 16px;
       cursor: pointer;
+      z-index: 5100;
     }
     main {
-      padding: 48px 8vw 24px 8vw;
-      min-height: 50vh;
-      text-align: left;
+      max-width: 1120px; /* 40% larger than 800px */
+      margin: 48px auto 0 auto;
+      padding: 32px 16px;
+      background: #333;
+      border-radius: 18px;
+      box-shadow: 0 4px 32px #111a;
     }
-    h1 {
-      font-size: 2.2em;
-      margin-bottom: 16px;
+    h1, h2 {
+      font-weight: bold;
+      color: #eee;
+      margin-top: 0;
     }
-    h2 {
-      font-size: 1.5em;
-      margin-top: 32px;
-    }
+    h1 { font-size: 2.2em; }
+    h2 { font-size: 2.7em; }
     p {
-      font-size: 1.3em;
-      margin-bottom: 18px;
+      font-size: 1.8em; /* smaller text in grey box */
       line-height: 1.7;
+      margin-bottom: 1.1em;
+    }
+    ul {
+      font-size: 1.8em; /* smaller text in grey box */
+      line-height: 1.7;
+      margin-bottom: 1.1em;
+      padding-left: 2em;
     }
     footer {
       position: fixed;
@@ -92,8 +148,10 @@
       align-items: center;
       justify-content: center;
       min-height: 48px;
-      font-size: 1.33em;
+      height: 48px;
+      font-size: 1.33em; /* 50% smaller than previous 2.66em */
       z-index: 999;
+      margin-top: 0;
       box-shadow: 0 -2px 16px #111a;
     }
     .footer-content {
@@ -108,19 +166,20 @@
       white-space: nowrap;
     }
     @media (max-width: 700px) {
-      .big-title { font-size: 1.3em !important; }
-      main { padding: 12px 3px; }
-      h1 { font-size: 1.5em; }
-      p { font-size: 1em; }
-      .footer-content { font-size: 1em; height: 20px; min-width: 20px; }
-      header, footer { min-height: 40px; height: 40px; }
+      header { min-height: 40px; height: 40px; }
+      .big-title { font-size: 1.1em !important; }
+      main { padding: 12px 3px; max-width: 100vw; }
+      h1 { font-size: 1.15em; }
+      h2 { font-size: 2em; }
+      p, ul { font-size: 1em; }
+      footer, .footer-content { font-size: 0.8em; height: 32px; min-width: 32px; }
     }
   </style>
 </head>
 <body>
   <header>
     <div class="header-content">
-      <span class="big-title">The (In)Visible Million Project</span>
+      <span class="big-title">About the Collective</span>
       <div class="menu-icon" tabindex="0" title="Menu" aria-label="Open menu">
         <span></span>
         <span></span>
@@ -131,28 +190,64 @@
   <nav class="popup-menu" id="popupMenu" aria-hidden="true">
     <button class="close-menu" id="closeMenu" title="Close menu" aria-label="Close menu">&times;</button>
     <a href="index.html">Home</a>
-    <a href="Manifesto.html">The Manifesto</a>
-    <a href="collective.html">The Collective</a>
+    <a href="Manifesto.html">Manifesto</a>
+    <a href="about.html">About the Project</a>
+    <a href="collective.html">About the Collective</a>
     <a href="next.html">Next Steps</a>
     <a href="contact.html">Contact</a>
   </nav>
   <main>
-    <h1>About the Project</h1>
+    <h1>The Collective</h1>
     <p>
-      The (In)Visible Million Project is a collective effort to shed light on those overlooked by society.<br>
-      Our mission is to map, visualize, and empower individuals who have remained invisible in mainstream narratives.<br>
-      Through art, data, and participation, we aim to foster inclusion, transparency, and action.
+      Who are we, when we are no one?
+      We call ourselves a collective.
+      But not in the traditional sense.
+      
+      There is no shared studio.
+      No list of names.
+      No centralized leadership.
+      No artist statements signed in cursive.
+      No mythology of genius.
+      
+      We are not here to be known.
+      We are here to create a system where knowing is irrelevant.
+      
+      We are a faceless collective. No signatures. No glory. 
+      
+      Just an idea: to build a digital artwork made of one million testimonies, each contributed by a different person. 
+      Each contribution is anonymous, unowned, irreproducible, (in)visible, and forever.
     </p>
-    <h2>What We Do</h2>
-    <p>
-      - Collect and share stories of the invisible.<br>
-      - Create visual representations that make absence visible.<br>
-      - Build community and invite participation.<br>
-      - Advocate for systemic change.
+    <h2>Who runs this?</h2>
+    <p> 
+      Someone sets up the infrastructure.
+      Someone maintains the archive.
+      Someone pays for the server, the domain, the automation.
+
+      But these roles are functional, not symbolic.
+      We are not interested in credit, only in continuity.
+
+      The invisible needs maintenance.
+      That’s the paradox.
+      We accept it.    
     </p>
-    <h2>Get Involved</h2>
+    <h2>Philosophical Position</h2>
     <p>
-      Join us in making the invisible visible. Explore the grid, read the manifesto, or contact us to contribute your own perspective.
+      Behind this construction lies a precise philosophical stance:
+
+      In an era obsessed with visibility, we believe that voluntary invisibility is a radical act.
+      In a time when every action is tracked, posted, shown, we ask:
+      What happens when the gesture detaches from the ego?
+      What happens when you cannot trace a contribution back to its author? We offer no answers.
+      
+      We offer a system where that question remains alive.    
+    </p>
+    <h2>Participation</h2>
+    <p>
+      Participation requires a minimum donation (1 euro or more). Not to sell art, but to create an intention filter. Nothing is free: the pixel is an act, not a product.
+    </p>
+    <h2>The Result</h2>
+    <p>
+      The final result is a public archive, permanently online, freely reusable by anyone. It can be explored, printed, analyzed. No one owns anything. No one will be thanked. But each person counts as one, and no more than one.
     </p>
   </main>
   <footer>
@@ -182,7 +277,20 @@
     menuIcon.addEventListener('keydown', function(e) {
       if (e.key === 'Enter' || e.key === ' ') openMenu();
     });
+
     closeMenuBtn.addEventListener('click', closeMenu);
+    closeMenuBtn.addEventListener('keydown', function(e) {
+      if (e.key === 'Enter' || e.key === ' ') closeMenu();
+    });
+
+    // Close menu on Escape key
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape' && popupMenu.classList.contains('active')) {
+        closeMenu();
+      }
+    });
+
+    // Optional: Close menu when clicking outside
     popupMenu.addEventListener('click', function(e) {
       if (e.target === popupMenu) closeMenu();
     });
