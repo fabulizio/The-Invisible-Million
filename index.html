@@ -120,7 +120,7 @@
       align-items: center;
       justify-content: center;
     }
-    .main-grid-row {
+    .grid-area {
       display: flex;
       flex-direction: row;
       width: 100%;
@@ -129,6 +129,71 @@
       gap: 0;
       position: relative;
     }
+    .top-controls {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      width: 100%;
+      margin-bottom: 18px;
+      position: relative;
+      z-index: 20;
+    }
+    .donate-btn-outer {
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      justify-content: center;
+      gap: 14px;
+      position: relative;
+    }
+    .dummy-btn, .random-btn {
+      background: linear-gradient(160deg, #f0f0f0 70%, #bdbdbd 100%);
+      color: #222;
+      border: none;
+      border-radius: 9px;
+      padding: 10px 28px;
+      font-size: 1.06em;
+      cursor: pointer;
+      margin: 0 4px;
+      font-weight: bold;
+      box-shadow: 0 1px 4px #8883;
+      transition: background 0.2s, color 0.2s;
+      min-width: 130px;
+      min-height: 38px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      outline: 2px solid #ccc;
+    }
+    .dummy-btn:active, .dummy-btn:focus,
+    .random-btn:active, .random-btn:focus {
+      background: #e0e0e0;
+      color: #111;
+      outline: 3px solid #FF0070;
+    }
+    .random-popup {
+      position: absolute;
+      top: 110%; /* below the controls */
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 999;
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      background: #222;
+      border-radius: 14px;
+      box-shadow: 0 0 22px #000;
+      padding: 18px 24px;
+      border: 2px solid #FF0070;
+      min-width: 170px;
+      width: 220px;
+    }
+    .random-popup.active { display: flex; }
+    .random-popup span {
+      color:#fff; font-size:0.93em; text-align: center;
+    }
+    /* grid & grid sidebar */
     #frame {
       outline: 3px solid #ccc;
       background: #333;
@@ -143,6 +208,7 @@
       align-items: center;
       justify-content: center;
       touch-action: none;
+      z-index: 10;
     }
     #gridCanvas {
       width: 100%; height: 100%;
@@ -156,7 +222,89 @@
       touch-action: none;
     }
     #gridCanvas.grabbing, #frame.grabbing { cursor: grabbing !important; }
-    /* Zoom column right of grid */
+    .color-picker-modal {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      z-index: 9999;
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      border-radius: 18px;
+      box-shadow: 0 0 24px #000;
+      border: 3px solid #ccc;
+      min-width: 260px;
+      min-height: 260px;
+      justify-content: center;
+      padding: 18px 20px 18px 20px;
+      transition: background .2s;
+      background: #222;
+    }
+    .color-picker-modal canvas {
+      width: 228px; height: 228px;
+      border: 2px solid #fff;
+      border-radius: 50%;
+      background: transparent;
+      margin-bottom: 16px;
+      display: block;
+    }
+    .color-picker-modal .modal-btns {
+      display: flex; flex-direction: column; gap: 14px; justify-content: center;
+      align-items: center;
+      margin-top: 10px;
+      width: 100%;
+    }
+    .palette-error, .donate-required-message {
+      color: #fff;
+      background: #ff0070;
+      border-radius: 14px;
+      padding: 22px 52px;
+      font-size: 2em;
+      text-align: center;
+      z-index: 10001;
+      box-shadow: 0 0 22px #000;
+      display: none;
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      outline: 2px solid #ccc;
+      pointer-events: none;
+    }
+    #coordPopup {
+      pointer-events: none;
+      position: fixed;
+      background: #111;
+      color: #fff;
+      border: 2px solid #fff;
+      border-radius: 0;
+      padding: 8px 14px;
+      font-size: 1em;
+      z-index: 1200;
+      box-shadow: 0 0 11px #000;
+      white-space: nowrap;
+      text-align: left;
+      display: none;
+    }
+    #congratsMessage {
+      position: fixed;
+      background: #fff;
+      color: #222;
+      border-radius: 20px;
+      border: 2px solid #ff0070;
+      padding: 56px 72px;
+      font-size: 2.6em;
+      z-index: 10001;
+      text-align: center;
+      box-shadow: 0 0 44px #000;
+      display: none;
+      max-width: 90vw;
+      pointer-events: auto;
+      left: 50%;
+      transform: translateX(-50%);
+      outline: 2px solid #ccc;
+    }
     .zoom-column {
       display: flex;
       flex-direction: column;
@@ -203,91 +351,7 @@
       width: 48px;
       letter-spacing: 1px;
     }
-    /* Color picker modal - always overlay grid, always centered */
-    .color-picker-modal {
-      position: absolute;
-      left: 50%;
-      top: 50%;
-      transform: translate(-50%, -50%);
-      z-index: 9999;
-      display: none;
-      flex-direction: column;
-      align-items: center;
-      border-radius: 18px;
-      box-shadow: 0 0 24px #000;
-      border: 3px solid #ccc;
-      min-width: 260px;
-      min-height: 260px;
-      justify-content: center;
-      padding: 18px 20px 18px 20px;
-      transition: background .2s;
-      background: #222;
-    }
-    .color-picker-modal canvas {
-      width: 228px; height: 228px;
-      border: 2px solid #fff;
-      border-radius: 50%;
-      background: transparent;
-      margin-bottom: 16px;
-      display: block;
-    }
-    .color-picker-modal .modal-btns {
-      display: flex; flex-direction: column; gap: 14px; justify-content: center;
-      align-items: center;
-      margin-top: 10px;
-      width: 100%;
-    }
-    .palette-error, .palette-message, .donate-required-message {
-      color: #fff;
-      background: #ff0070;
-      border-radius: 14px;
-      padding: 22px 52px;
-      font-size: 2em;
-      margin-bottom: 20px;
-      margin-top: 24px;
-      text-align: center;
-      z-index: 10001;
-      box-shadow: 0 0 22px #000;
-      display: none;
-      position: fixed;
-      left: 50%;
-      transform: translate(-50%, 0);
-      outline: 2px solid #ccc;
-    }
-    #coordPopup {
-      pointer-events: none;
-      position: fixed;
-      background: #111;
-      color: #fff;
-      border: 2px solid #fff;
-      border-radius: 0;
-      padding: 8px 14px;
-      font-size: 1em;
-      z-index: 1200;
-      box-shadow: 0 0 11px #000;
-      white-space: nowrap;
-      text-align: left;
-      display: none;
-    }
-    #congratsMessage {
-      position: fixed;
-      background: #fff;
-      color: #222;
-      border-radius: 20px;
-      border: 2px solid #ff0070;
-      padding: 56px 72px;
-      font-size: 2.6em;
-      z-index: 10001;
-      text-align: center;
-      box-shadow: 0 0 44px #000;
-      display: none;
-      max-width: 90vw;
-      pointer-events: auto;
-      left: 50%;
-      transform: translateX(-50%);
-      outline: 2px solid #ccc;
-    }
-    /* All footer elements in one row, buttons same size */
+    /* unified footer row, buttons same size */
     .footer {
       width: 100vw;
       background: transparent;
@@ -404,31 +468,31 @@
   </header>
   <main>
     <div id="main-content">
-      <div class="main-grid-row">
-        <div style="position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;">
-          <div id="frame" tabindex="0">
-            <canvas id="gridCanvas"></canvas>
-            <div id="coordPopup"></div>
-            <div id="colorPickerModal" class="color-picker-modal">
-              <canvas id="colorDisc" width="228" height="228"></canvas>
-              <div class="modal-btns">
-                <button id="randomColorBtn" type="button" class="footer-btn">Random Color</button>
-                <button id="confirmColorBtn" type="button" class="footer-btn" disabled style="color:grey;">OK</button>
-                <button id="cancelColorBtn" type="button" class="footer-btn">Cancel</button>
-              </div>
-            </div>
-            <div class="palette-error" id="paletteError"></div>
-            <div class="donate-required-message" id="donateRequiredMsg"></div>
-            <div id="congratsMessage"></div>
-          </div>
-          <!-- Donate button & random popup outside grid, low-left -->
-          <div class="donate-btn-outer" id="donateBtnOuter">
-            <button class="footer-btn" id="donateBtn">Donate / Contribute</button>
-            <div class="random-popup" id="randomPopup">
-              <button class="footer-btn" id="popupRandomBtn">⟳ Random Square</button>
-              <span style="color:#fff; font-size:0.93em;">Click until you find a square you like,<br>then color it!</span>
+      <div class="top-controls">
+        <div class="donate-btn-outer" id="donateBtnOuter">
+          <button class="dummy-btn" id="donateBtn">Donate / Contribute</button>
+          <button class="random-btn" id="randomBtn" style="display:none;">⟳ Random Square</button>
+        </div>
+        <div class="random-popup" id="randomPopup">
+          <button class="random-btn" id="popupRandomBtn">⟳ Random Square</button>
+          <span>Click until you find a square you like,<br>then color it!</span>
+        </div>
+      </div>
+      <div class="grid-area">
+        <div id="frame" tabindex="0">
+          <canvas id="gridCanvas"></canvas>
+          <div id="coordPopup"></div>
+          <div id="colorPickerModal" class="color-picker-modal">
+            <canvas id="colorDisc" width="228" height="228"></canvas>
+            <div class="modal-btns">
+              <button id="randomColorBtn" type="button" class="footer-btn">Random Color</button>
+              <button id="confirmColorBtn" type="button" class="footer-btn" disabled style="color:grey;">OK</button>
+              <button id="cancelColorBtn" type="button" class="footer-btn">Cancel</button>
             </div>
           </div>
+          <div class="palette-error" id="paletteError"></div>
+          <div class="donate-required-message" id="donateRequiredMsg"></div>
+          <div id="congratsMessage"></div>
         </div>
         <!-- Zoom controls column right of grid -->
         <div class="zoom-column">
@@ -511,6 +575,9 @@
     const jumpBtn = document.getElementById('jumpBtn');
     const donateBtn = document.getElementById('donateBtn');
     const donateBtnOuter = document.getElementById('donateBtnOuter');
+    const randomBtn = document.getElementById('randomBtn');
+    const randomPopup = document.getElementById('randomPopup');
+    const popupRandomBtn = document.getElementById('popupRandomBtn');
     const coordPopup = document.getElementById('coordPopup');
     const congratsMessage = document.getElementById('congratsMessage');
     const paletteError = document.getElementById('paletteError');
@@ -519,8 +586,6 @@
     const confirmColorBtn = document.getElementById('confirmColorBtn');
     const cancelColorBtn = document.getElementById('cancelColorBtn');
     const randomColorBtn = document.getElementById('randomColorBtn');
-    const randomPopup = document.getElementById('randomPopup');
-    const popupRandomBtn = document.getElementById('popupRandomBtn');
     const donateRequiredMsg = document.getElementById('donateRequiredMsg');
     let gridCursor = { x: Math.floor(GRID_SIZE / 2), y: Math.floor(GRID_SIZE / 2) };
     let previewColor = null; // null means no color selected
@@ -635,18 +700,15 @@
     // Show donation required popup if user clicks grid before donating
     canvas.addEventListener('click', function(e){
       if (!hasDonated) {
-        showDonateRequiredMessage(e.clientX, e.clientY);
+        showDonateRequiredMessage();
         return;
       }
     });
 
-    function showDonateRequiredMessage(mouseX, mouseY) {
+    function showDonateRequiredMessage() {
       donateRequiredMsg.textContent = "You must donate/contribute before you can select a square to color.";
-      donateRequiredMsg.style.left = "50%";
-      donateRequiredMsg.style.top = "30%";
-      donateRequiredMsg.style.transform = "translate(-50%, 0)";
       donateRequiredMsg.style.display = "block";
-      setTimeout(() => { donateRequiredMsg.style.display = "none"; }, 5000); // <-- now 5 seconds
+      setTimeout(() => { donateRequiredMsg.style.display = "none"; }, 5000);
     }
 
     function pixelToCell(x, y) {
@@ -850,11 +912,16 @@
         hasDonated = true;
         donationUsed = false;
         donateBtn.textContent = "Thanks for your support!";
+        randomBtn.style.display = "inline-flex";
         setTimeout(() => { 
           if (!donationUsed) donateBtn.textContent = "Donate / Contribute";
         }, 4000);
-        showRandomPopup();
       }
+    };
+
+    randomBtn.onclick = function() {
+      if (!hasDonated) return; // should never show if not donated
+      showRandomPopup();
     };
 
     popupRandomBtn.onclick = function() {
@@ -877,10 +944,11 @@
       }
       hidePalette();
       if (!found) { alert("No available squares left!"); return; }
+      hideRandomPopup();
       setTimeout(openColorPickerForCurrentSquare, 300);
     };
 
-    // --- always center modal overlay on grid ---
+    // always center modal overlay on grid
     function openColorPickerForCurrentSquare() {
       paletteError.style.display = "none";
       palettePreviewCell = {x: gridCursor.x, y: gridCursor.y};
@@ -890,7 +958,6 @@
       confirmColorBtn.style.color = "grey";
       requestPalettePreview();
       hideCoordPopup();
-      // Always place modal centered over grid
       colorPickerModal.style.display = "flex";
       colorPickerModal.style.position = "absolute";
       colorPickerModal.style.left = "50%";
@@ -946,7 +1013,6 @@
       saveParticipation();
       donationUsed = true;
       setTimeout(resetDonateButton, 5000);
-      hideRandomPopup();
       confirmColorBtn.disabled = true;
       confirmColorBtn.style.color = "grey";
     };
@@ -962,16 +1028,12 @@
         showCursor = true;
         requestRedraw();
       }
+      if (randomPopupActive && !randomPopup.contains(e.target) && !randomBtn.contains(e.target)) {
+        hideRandomPopup();
+      }
     });
+
     function placeCongratsMessageDynamic() {
-      const scaledCellSize = CELL_SIZE * zoom;
-      const frameRect = frame.getBoundingClientRect();
-      const leftInFrame = offsetX + gridCursor.x * scaledCellSize + scaledCellSize / 2;
-      const topInFrame = offsetY + gridCursor.y * scaledCellSize + scaledCellSize / 2;
-      let mouseY = frameRect.top + topInFrame;
-      let vpad = 10;
-      let top;
-      // Just always center the congrats message for simplicity
       congratsMessage.style.left = "50%";
       congratsMessage.style.top = "50%";
       congratsMessage.style.transform = "translate(-50%, -50%)";
