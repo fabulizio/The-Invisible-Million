@@ -39,6 +39,79 @@
       flex: none;
       z-index: 2;
     }
+    .menu-icon {
+      margin-left: 18px;
+      width: 48px; height: 48px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      gap: 10px;
+      cursor: pointer;
+      z-index: 100;
+      background: none;
+      outline: 2px solid #ccc;
+      border-radius: 8px;
+    }
+    .menu-icon:focus {
+      outline: 3px solid #FF0070;
+    }
+    .menu-icon span {
+      display: block;
+      width: 36px;
+      height: 6px;
+      background: #fff;
+      border-radius: 3px;
+      margin: 0 auto;
+      transition: background 0.2s;
+    }
+    .popup-menu {
+      position: fixed;
+      top: 0; right: 0; left: 0; bottom: 0;
+      width: 100vw; height: 100vh;
+      background: rgba(30,30,30,0.98);
+      z-index: 5000;
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 32px;
+      font-size: 2em;
+    }
+    .popup-menu.active { display: flex; }
+    .popup-menu a,
+    .popup-menu .close-menu {
+      outline: 2px solid #ccc;
+      border-radius: 12px;
+    }
+    .popup-menu a {
+      color: #fff !important;
+      text-decoration: none;
+      padding: 18px 42px;
+      font-size: 1.1em;
+      background: #444;
+      margin: 10px 0;
+      border: 2px solid #fff;
+      transition: background 0.2s, color 0.2s;
+      display: flex;
+      align-items: center;
+    }
+    .popup-menu a:hover {
+      background: #fff;
+      color: #222 !important;
+      border-color: #fff;
+    }
+    .popup-menu .close-menu {
+      position: absolute;
+      top: 44px;
+      right: 44px;
+      color: #fff;
+      background: none;
+      border: none;
+      font-size: 2.5em;
+      cursor: pointer;
+      z-index: 5100;
+    }
     #main-content {
       position: relative;
       width: 100vw;
@@ -74,12 +147,8 @@
       touch-action: none;
     }
     #gridCanvas.grabbing, #frame.grabbing { cursor: grabbing !important; }
-    /* Color Picker Modal: below grid, not overlapping */
     .color-picker-modal {
       position: fixed;
-      left: 50%;
-      transform: translateX(-50%);
-      top: calc(50vh + 42vh); /* below grid */
       z-index: 9999;
       display: none;
       flex-direction: column;
@@ -91,7 +160,6 @@
       min-height: 260px;
       justify-content: center;
       padding: 18px 20px 18px 20px;
-      background: #222;
       transition: background .2s;
     }
     .color-picker-modal canvas {
@@ -142,9 +210,6 @@
     }
     #congratsMessage {
       position: fixed;
-      left: 50%;
-      transform: translateX(-50%);
-      top: calc(50vh + 42vh + 320px); /* below grid/modal */
       background: #fff;
       color: #222;
       border-radius: 20px;
@@ -157,58 +222,49 @@
       display: none;
       max-width: 90vw;
       pointer-events: auto;
+      left: 50%;
+      transform: translateX(-50%);
       outline: 2px solid #ccc;
     }
-    /* Bar below grid: left is donate/random, right is controls */
-    .grid-bottom-bar {
-      width: min(80vw, 80vh);
-      min-width: 240px;
-      display: flex;
-      flex-direction: row;
-      justify-content: space-between;
-      align-items: flex-end;
-      margin: 0 auto;
-      z-index: 100;
-      gap: 0;
-      margin-bottom: 16px;
-    }
+    /* Donate button outside grid, low-left */
     .donate-btn-outer {
-      width: 49%;
-      min-width: 120px;
-      max-width: 100%;
+      position: absolute;
+      left: 0;
+      bottom: -70px;
+      z-index: 100;
       display: flex;
-      align-items: flex-end;
-      justify-content: flex-start;
-      position: relative;
-      height: 60px;
+      flex-direction: column;
+      align-items: flex-start;
+      width: 200px;
+      min-width: 120px;
+      padding-left: 16px;
     }
     .dummy-btn {
       background: linear-gradient(160deg, #f0f0f0 70%, #bdbdbd 100%);
       color: #222;
       border: none;
       border-radius: 9px;
-      padding: 18px 0;
-      font-size: 2em;
+      padding: 7px 18px;
+      font-size: 1.06em;
       cursor: pointer;
+      margin: 0 4px;
       font-weight: bold;
       box-shadow: 0 1px 4px #8883;
       transition: background 0.2s, color 0.2s;
-      height: 60px;
+      height: 32px;
       min-width: 120px;
-      width: 100%;
       display: flex;
       align-items: center;
       justify-content: center;
       outline: 2px solid #ccc;
-      margin-bottom: 0;
-      margin-right: 0;
+      margin-bottom: 8px;
     }
     .dummy-btn:active, .dummy-btn:focus {
       background: #e0e0e0;
       color: #111;
       outline: 3px solid #FF0070;
     }
-    /* Popup random overlay the donate button, not overlapping grid */
+    /* Popup random overlay the donate button */
     .random-popup {
       position: absolute;
       left: 0;
@@ -220,12 +276,10 @@
       background: #222;
       border-radius: 14px;
       box-shadow: 0 0 22px #000;
+      padding: 18px 24px;
       border: 2px solid #FF0070;
-      min-width: 120px;
-      width: 100%;
-      height: 100%;
-      justify-content: center;
-      padding: 0;
+      min-width: 170px;
+      width: 200px;
     }
     .random-popup.active {
       display: flex;
@@ -235,87 +289,92 @@
       color: #222;
       border: none;
       border-radius: 9px;
-      padding: 18px 0;
-      font-size: 2em;
+      padding: 10px 30px;
+      font-size: 1.22em;
       cursor: pointer;
       font-weight: bold;
       box-shadow: 0 1px 6px #8883;
       transition: background 0.2s, color 0.2s;
       outline: 2px solid #ccc;
-      margin-bottom: 0;
-      width: 100%;
-      height: 100%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
+      margin-bottom: 10px;
     }
     .random-btn:active, .random-btn:focus {
       background: #e0e0e0;
       color: #111;
       outline: 3px solid #FF0070;
     }
-    .random-popup span {
-      font-size: 1.18em;
+    /* Footer below grid, two rows */
+    .footer {
+      width: 100vw;
+      background: transparent;
       color: #fff;
-      text-align: center;
-      width: 100%;
-      padding-bottom: 8px;
-      display: block;
-    }
-    /* Controls below right half of grid */
-    .grid-controls-bar {
-      width: 49%;
-      min-width: 240px;
-      max-width: 100%;
       display: flex;
       flex-direction: column;
       align-items: center;
-      justify-content: flex-end;
-      height: 60px;
-      gap: 8px;
-      margin-left: auto;
+      justify-content: center;
+      font-size: 1.33em;
+      position: relative;
+      z-index: 10;
+      margin-top: 22px;
+      gap: 6px;
     }
     .footer-row {
       display: flex;
       flex-direction: row;
       align-items: center;
       justify-content: center;
-      gap: 32px;
+      gap: 40px;
       width: 100%;
-      margin-bottom: 6px;
+      margin-bottom: 8px;
       flex-wrap: wrap;
     }
-    .nav-btn-group-footer, .zoom-controls-footer, .jump-panel {
+    .footer-row.footer-row-jump {
+      gap: 20px;
+      margin-bottom: 0;
+    }
+    .nav-btn-group-footer {
       display: flex;
-      gap: 18px;
+      gap: 8px;
       justify-content: center;
       align-items: center;
     }
-    .nav-btn-group-footer button,
-    .zoom-controls-footer button,
-    .jump-panel button,
-    .jump-panel input[type="number"] {
-      font-size: 2em;
-      height: 60px;
-      min-width: 70px;
-      padding: 0 28px;
-      border-radius: 10px;
-      outline: 2px solid #ccc;
-      margin: 0;
-      box-sizing: border-box;
+    .zoom-controls-footer {
+      display: flex; gap: 8px;
+      align-items: center;
+      height: 38px;
+    }
+    .jump-panel {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      justify-content: center;
+      flex-wrap: nowrap;
+      height: 40px;
+      white-space: nowrap;
     }
     .jump-panel label {
-      font-size: 1.16em;
-      margin-right: 6px;
+      font-size: 1em;
+      margin-right: 4px;
     }
     .jump-panel input[type="number"] {
-      width: 80px;
+      font-size: 1em;
+      width: 65px;
+      height: 32px;
+      border-radius: 6px;
+      border: 1px solid #bbb;
+      padding: 3px 12px;
+      background: #f8f8f8;
+      color: #222;
       text-align: center;
-      padding: 0 0;
-      font-size: 2em;
-      height: 60px;
-      border-radius: 10px;
-      margin-right: 9px;
+      outline: 2px solid #ccc;
+      appearance: none;
+      -webkit-appearance: none;
+      -moz-appearance: textfield;
+    }
+    .jump-panel input[type="number"]::-webkit-inner-spin-button,
+    .jump-panel input[type="number"]::-webkit-outer-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
     }
     .footer-copyright {
       width: 100vw;
@@ -338,18 +397,14 @@
       .color-picker-modal canvas { width: 114px; height: 114px; }
       .color-picker-modal { min-width: 130px; min-height: 130px; }
       .big-title { font-size: 1.3em !important; }
-      .nav-btn-group-footer button,
-      .zoom-controls-footer button,
-      .jump-panel button,
-      .jump-panel input[type="number"] {
-        font-size: 1.2em; height: 35px; min-width: 35px; padding: 0 10px;
-      }
-      .dummy-btn, .random-btn { font-size: 1em; height: 35px; padding: 7px 0; min-width: 60px;}
-      .jump-panel input[type="number"] { width: 32px; }
+      .arrow-btn, .center-btn, .fancy-btn, .jump-panel, .footer-content { font-size: 0.8em; height: 20px; min-width: 20px; }
+      .jump-panel input[type="number"] { height: 15px; width: 28px; font-size: 0.7em; }
+      #congratsMessage { padding: 18px 24px; font-size: 1.3em;}
+      .palette-error { font-size: 1.1em; padding: 12px 18px; }
+      .random-popup, .donate-btn-outer { min-width: 100px; width: 120px; left: 2px; }
+      .random-btn { padding: 7px 14px; font-size: 1em; }
       .footer-copyright { font-size: 0.9em; padding: 7px 0 6px 0;}
       .footer-row { gap: 8px; }
-      .grid-bottom-bar, .grid-controls-bar, .donate-btn-outer { min-width: 80px; width: 50vw; }
-      .random-popup span { font-size: 0.9em; }
     }
   </style>
 </head>
@@ -378,42 +433,42 @@
               <button id="cancelColorBtn" type="button" class="fancy-btn">Cancel</button>
             </div>
           </div>
+          <div class="palette-error" id="paletteError"></div>
           <div class="donate-required-message" id="donateRequiredMsg"></div>
           <div id="congratsMessage"></div>
         </div>
-        <!-- Bar below grid: left half is donate/random, right half is controls -->
-        <div class="grid-bottom-bar">
-          <div class="donate-btn-outer" id="donateBtnOuter">
-            <button class="dummy-btn" id="donateBtn">Donate / Contribute</button>
-            <div class="random-popup" id="randomPopup">
-              <button class="random-btn" id="popupRandomBtn">⟳ Random Square</button>
-              <span>Click until you find a square you like,<br>then color it!</span>
-            </div>
+        <!-- Donate button & random popup outside grid, low-left -->
+        <div class="donate-btn-outer" id="donateBtnOuter">
+          <button class="dummy-btn" id="donateBtn">Donate / Contribute</button>
+          <div class="random-popup" id="randomPopup">
+            <button class="random-btn" id="popupRandomBtn">⟳ Random Square</button>
+            <span style="color:#fff; font-size:0.93em;">Click until you find a square you like,<br>then color it!</span>
           </div>
-          <div class="grid-controls-bar">
-            <div class="footer-row">
-              <div class="nav-btn-group-footer">
-                <button class="arrow-btn" id="arrowUpBtn">↑</button>
-                <button class="arrow-btn" id="arrowLeftBtn">←</button>
-                <button class="center-btn" id="centerBtn">⦿ Center</button>
-                <button class="arrow-btn" id="arrowRightBtn">→</button>
-                <button class="arrow-btn" id="arrowDownBtn">↓</button>
-              </div>
-              <div class="zoom-controls-footer">
-                <button id="zoomOutBtn" class="fancy-btn" title="Zoom out">−</button>
-                <span id="zoomDisplay" style="color:#fff;">100%</span>
-                <button id="zoomInBtn" class="fancy-btn" title="Zoom in">+</button>
-              </div>
-            </div>
-            <div class="footer-row footer-row-jump">
-              <div class="jump-panel">
-                <label for="jumpX">X:</label>
-                <input type="number" id="jumpX" min="0" max="1099" value="0" />
-                <label for="jumpY">Y:</label>
-                <input type="number" id="jumpY" min="0" max="1099" value="0" />
-                <button class="fancy-btn" id="jumpBtn">Jump</button>
-              </div>
-            </div>
+        </div>
+      </div>
+      <!-- Footer below grid -->
+      <div class="footer">
+        <div class="footer-row">
+          <div class="nav-btn-group-footer">
+            <button class="arrow-btn" id="arrowUpBtn">↑</button>
+            <button class="arrow-btn" id="arrowLeftBtn">←</button>
+            <button class="center-btn" id="centerBtn">⦿ Center</button>
+            <button class="arrow-btn" id="arrowRightBtn">→</button>
+            <button class="arrow-btn" id="arrowDownBtn">↓</button>
+          </div>
+          <div class="zoom-controls-footer">
+            <button id="zoomOutBtn" class="fancy-btn" title="Zoom out">−</button>
+            <span id="zoomDisplay" style="color:#fff;">100%</span>
+            <button id="zoomInBtn" class="fancy-btn" title="Zoom in">+</button>
+          </div>
+        </div>
+        <div class="footer-row footer-row-jump">
+          <div class="jump-panel">
+            <label for="jumpX">X:</label>
+            <input type="number" id="jumpX" min="0" max="1099" value="0" />
+            <label for="jumpY">Y:</label>
+            <input type="number" id="jumpY" min="0" max="1099" value="0" />
+            <button class="fancy-btn" id="jumpBtn">Jump</button>
           </div>
         </div>
       </div>
@@ -441,7 +496,7 @@
       if (e.target === popupMenu) popupMenu.classList.remove('active');
     });
 
-    // --- GRID & CONTROLS ---
+    // --- GRID ---
     const GRID_SIZE = 1100;
     const CELL_SIZE = 24;
     let zoom = 1;
@@ -449,7 +504,6 @@
     const MAX_ZOOM = 3;
     let offsetX = 0, offsetY = 0;
     let coloredCells = {};
-    let reservedCells = {}; // Simulates squares being selected by others
     let redrawPending = false;
     let isDragging = false;
     let dragStart = {x: 0, y: 0};
@@ -479,6 +533,7 @@
     const donateBtnOuter = document.getElementById('donateBtnOuter');
     const coordPopup = document.getElementById('coordPopup');
     const congratsMessage = document.getElementById('congratsMessage');
+    const paletteError = document.getElementById('paletteError');
     const colorPickerModal = document.getElementById('colorPickerModal');
     const colorDisc = document.getElementById('colorDisc');
     const confirmColorBtn = document.getElementById('confirmColorBtn');
@@ -820,27 +875,14 @@
       }
     };
 
-    // Simulate reserved squares by others (for demo, random selection)
-    function updateReservedCells() {
-      reservedCells = {}; // clear
-      // For demo: randomly reserve 10 squares
-      for (let i = 0; i < 10; i++) {
-        let x = Math.floor(Math.random() * GRID_SIZE);
-        let y = Math.floor(Math.random() * GRID_SIZE);
-        reservedCells[x + "," + y] = true;
-      }
-    }
-
     popupRandomBtn.onclick = function() {
-      updateReservedCells();
-      let tries = 4000;
+      let tries = 2000;
       let found = false;
       while(tries-- > 0) {
         const x = Math.floor(Math.random()*GRID_SIZE);
         const y = Math.floor(Math.random()*GRID_SIZE);
         const key = x + "," + y;
-        // Exclude colored and reserved squares
-        if ((!coloredCells[key] || !coloredCells[key].locked) && !reservedCells[key]) {
+        if (!coloredCells[key] || !coloredCells[key].locked) {
           gridCursor.x = x;
           gridCursor.y = y;
           jumpX.value = x;
@@ -857,6 +899,7 @@
     };
 
     function openColorPickerForCurrentSquare() {
+      paletteError.style.display = "none";
       palettePreviewCell = {x: gridCursor.x, y: gridCursor.y};
       showCursor = true;
       previewColor = null;
@@ -865,7 +908,22 @@
       requestRedraw();
       hideCoordPopup();
       colorPickerModal.style.background = "#222";
+      let frameRect = frame.getBoundingClientRect();
+      const scaledCellSize = CELL_SIZE * zoom;
+      const leftInFrame = offsetX + gridCursor.x * scaledCellSize + scaledCellSize / 2;
+      const topInFrame = offsetY + gridCursor.y * scaledCellSize + scaledCellSize / 2;
+      let left = frameRect.left + leftInFrame + scaledCellSize/2;
+      let top = frameRect.top + topInFrame - colorPickerModal.offsetHeight/2;
+      if (left + colorPickerModal.offsetWidth > window.innerWidth) {
+        left = frameRect.left + leftInFrame - colorPickerModal.offsetWidth - scaledCellSize/2;
+      }
+      if (top < 0) top = frameRect.top + topInFrame + scaledCellSize/2;
+      colorPickerModal.style.left = left + "px";
+      colorPickerModal.style.top = top + "px";
       colorPickerModal.style.display = "flex";
+      colorPickerModal.style.position = "fixed";
+      colorPickerModal.style.width = "auto";
+      colorPickerModal.style.height = "auto";
     }
 
     // Color picker logic: enable OK only after color is picked
@@ -933,10 +991,23 @@
       }
     });
     function placeCongratsMessageDynamic() {
+      const scaledCellSize = CELL_SIZE * zoom;
+      const frameRect = frame.getBoundingClientRect();
+      const leftInFrame = offsetX + gridCursor.x * scaledCellSize + scaledCellSize / 2;
+      const topInFrame = offsetY + gridCursor.y * scaledCellSize + scaledCellSize / 2;
+      let mouseY = frameRect.top + topInFrame;
+      let vpad = 10;
+      let top;
+      if (mouseY + congratsMessage.offsetHeight + vpad < window.innerHeight) {
+        top = mouseY + vpad;
+      } else {
+        top = mouseY - congratsMessage.offsetHeight - vpad;
+      }
       congratsMessage.innerHTML = `🎉 Congratulations!<br>You have participated in The (In)Visible Million.<br>Thank you!<br><br>
       <span style="font-size:0.8em;">Proof of participation is saved in your browser's local storage.<br>
       See key <b>"invisibleMillionParticipation"</b> in <b>localStorage</b>.<br>
       (You can view this in your browser's developer tools > Application > Local Storage)</span>`;
+      congratsMessage.style.top = top + "px";
       congratsMessage.style.display = "block";
     }
     function saveParticipation() {
