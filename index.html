@@ -38,7 +38,7 @@
       gap: 12px;
       position: relative;
       height: 70px;
-      flex-direction: column; /* CHANGED for vertical stacking */
+      flex-direction: column;
     }
     .big-title {
       font-size: 2.1em;
@@ -50,7 +50,6 @@
       flex: none;
       margin-bottom: 16px;
     }
-    /* Donate button below title, above grid */
     .donate-btn-outer {
       width: 100%;
       display: flex;
@@ -104,7 +103,6 @@
     .random-popup.active {
       display: flex;
     }
-    /* --- GRID OUTLINE SQUARE FIX FOR MOBILE AND DESKTOP --- */
     .grid-container {
       position: relative;
       width: 100%;
@@ -176,10 +174,10 @@
       #frame {
         width: 98vw;
         max-width: 98vw;
-        height: 98vw;   /* CHANGED: height matches width */
+        height: 98vw;
         max-height: 98vw;
         min-height: 220px;
-        aspect-ratio: 1/1; /* Force square */
+        aspect-ratio: 1/1;
       }
       .grid-container { max-width: 98vw; }
     }
@@ -357,7 +355,6 @@
             <button class="arrow-btn" id="arrowUpBtn">↑</button>
             <button class="arrow-btn" id="arrowLeftBtn">←</button>
             <button class="center-btn" id="centerBtn">Full View</button>
-            <!-- RENAMED BUTTON -->
             <button class="arrow-btn" id="arrowRightBtn">→</button>
             <button class="arrow-btn" id="arrowDownBtn">↓</button>
           </div>
@@ -395,23 +392,23 @@
     const closeMenuBtn = document.getElementById('closeMenuBtn');
     menuIcon.addEventListener('click', () => { 
       popupMenu.classList.add('active'); 
-      hidePalette(); // Hide color picker when menu is opened (change #3)
+      hidePalette(); // Hide color picker when menu is opened
     });
     closeMenuBtn.addEventListener('click', () => { 
       popupMenu.classList.remove('active'); 
-      hidePalette(); // Hide color picker when menu is closed (change #3)
+      hidePalette(); // Hide color picker when menu is closed
     });
     popupMenu.addEventListener('click', (e) => {
       if (e.target === popupMenu) {
         popupMenu.classList.remove('active');
-        hidePalette(); // Hide color picker when menu background is clicked (change #3)
+        hidePalette(); // Hide color picker when menu background is clicked
       }
     });
 
     // --- GRID ---
     const GRID_SIZE = 1100;
     const CELL_SIZE = 24;
-    let zoom = 0.5; // CHANGE #1: DEFAULT ZOOM 50%
+    let zoom = 0.5; // Default zoom 50%
     let MIN_ZOOM = 0.1;
     const MAX_ZOOM = 3;
     let offsetX = 0, offsetY = 0;
@@ -638,9 +635,7 @@
         })
         .catch(err => {});
     }
-    // CHANGE #3: Only hide color picker if not clicking inside the picker
     function hidePalette(force) {
-      // Only hide if force is true, or if not clicking inside color picker
       colorPickerModal.style.display = "none";
       palettePreviewCell = null;
       previewColor = null;
@@ -674,7 +669,7 @@
       jumpY.value = gridCursor.y;
       offsetX = 0;
       offsetY = 0;
-      setZoom(0.5); // CHANGE #1: Center button sets zoom to 50%
+      setZoom(0.5); // Center button sets zoom to 50%
       requestRedraw();
       hidePalette(true);
     };
@@ -791,7 +786,7 @@
       } else {
         showRandomPopup();
       }
-      hidePalette(true); // Ensure color picker closes when donate is clicked (change #3)
+      hidePalette(true);
     };
 
     popupRandomBtn.onclick = function() {
@@ -842,7 +837,6 @@
       colorPickerModal.style.display = "flex";
     }
 
-    // Ensure default zoom is set to 50% on first load
     window.addEventListener('resize', setCanvasSize);
     window.addEventListener('DOMContentLoaded', function() {
       setCanvasSize();
