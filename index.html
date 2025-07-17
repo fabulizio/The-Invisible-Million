@@ -163,43 +163,27 @@
       color: #111;
       outline: 3px solid #FF0070;
     }
-    .random-popup {
-      position: absolute;
-      top: 38px;
-      right: 0;
-      z-index: 1003;
-      display: none;
-      flex-direction: column;
-      align-items: flex-end;
-      background: #222;
-      border-radius: 14px;
-      box-shadow: 0 0 22px #000;
-      padding: 10px 12px;
-      border: 2px solid #FF0070;
-      min-width: 80px;
-      width: 120px;
-    }
-    .random-popup.active {
-      display: flex;
-    }
-    .random-btn {
-      background: linear-gradient(160deg, #f0f0f0 70%, #bdbdbd 100%);
+    .random-btn-pink {
+      border: 3px solid #FF0070 !important;
+      outline: 3px solid #FF0070 !important;
+      background: linear-gradient(160deg, #fff0f8 70%, #ffbde8 100%);
       color: #222;
-      border: none;
       border-radius: 9px;
-      padding: 9px 16px;
+      padding: 7px 16px;
       font-size: 1em;
       cursor: pointer;
       font-weight: bold;
-      box-shadow: 0 1px 6px #8883;
-      transition: background 0.2s, color 0.2s;
-      outline: 2px solid #ccc;
-      margin-bottom: 0;
-      min-width: 80px;
+      box-shadow: 0 1px 4px #FF0070;
+      min-width: 90px;
+      margin-bottom: 8px;
       height: 33px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: none;
     }
-    .random-btn:active, .random-btn:focus {
-      background: #e0e0e0;
+    .random-btn-pink:active, .random-btn-pink:focus {
+      background: #ffd1eb;
       color: #111;
       outline: 3px solid #FF0070;
     }
@@ -472,8 +456,7 @@
       }
       .grid-container { max-width: 98vw; }
       .dummy-btn { font-size: 0.9em; min-width: 80px; padding: 5px 8px;}
-      .random-popup { min-width: 60px; width: 90px; padding: 6px 8px;}
-      .random-btn { font-size: 0.9em; min-width: 60px; height: 28px; padding: 7px 8px;}
+      .random-btn-pink { font-size: 0.9em; min-width: 80px; padding: 5px 8px;}
       .footer { font-size: 0.8em; max-width: 98vw;}
       .footer-row { gap: 4px; padding: 5px 7px;}
       .footer-copyright { font-size: 0.8em; }
@@ -487,8 +470,7 @@
       .big-title { font-size: 0.8em; }
       #frame { min-height: 150px; height: 98vw; max-height: 98vw; aspect-ratio: 1/1; }
       .dummy-btn { font-size: 0.8em; min-width: 60px; padding: 4px 4px;}
-      .random-popup { min-width: 40px; width: 60px; padding: 3px 4px;}
-      .random-btn { font-size: 0.8em; min-width: 40px; height: 22px; padding: 3px 4px;}
+      .random-btn-pink { font-size: 0.8em; min-width: 60px; padding: 4px 4px;}
     }
   </style>
 </head>
@@ -505,9 +487,6 @@
   </header>
   <div id="donateBtnOuter">
     <button class="dummy-btn" id="donateBtn">Donate / Contribute</button>
-    <div class="random-popup" id="randomPopup">
-      <button class="random-btn" id="popupRandomBtn">⟳ Random Square</button>
-    </div>
   </div>
   <main>
     <div id="main-content">
@@ -569,8 +548,16 @@
     const menuIcon = document.getElementById('menuIcon');
     const popupMenu = document.getElementById('popupMenu');
     const closeMenuBtn = document.getElementById('closeMenuBtn');
-    menuIcon.addEventListener('click', () => popupMenu.classList.add('active'));
-    closeMenuBtn.addEventListener('click', () => popupMenu.classList.remove('active'));
+    menuIcon.addEventListener('click', () => {
+      popupMenu.classList.add('active');
+      hidePalette.shouldHide = true;
+      hidePalette(true);
+    });
+    closeMenuBtn.addEventListener('click', () => {
+      popupMenu.classList.remove('active');
+      hidePalette.shouldHide = true;
+      hidePalette(true);
+    });
     popupMenu.addEventListener('click', (e) => {
       if (e.target === popupMenu) popupMenu.classList.remove('active');
     });
@@ -578,7 +565,7 @@
     // --- GRID ---
     const GRID_SIZE = 1100;
     const CELL_SIZE = 24;
-    let zoom = 0.5; // Default zoom at opening set to 50%
+    let zoom = 0.5;
     let MIN_ZOOM = 0.1;
     const MAX_ZOOM = 3;
     let offsetX = 0, offsetY = 0;
@@ -591,6 +578,8 @@
     let showCursor = true;
     let hasDonated = false;
     let donationUsed = false;
+    let canDonate = true;
+    let awaitingColoring = false;
     let pinch2Last = null;
     let pinch2Mode = null;
     let pinch2Origin = null;
@@ -618,12 +607,10 @@
     const confirmColorBtn = document.getElementById('confirmColorBtn');
     const cancelColorBtn = document.getElementById('cancelColorBtn');
     const randomColorBtn = document.getElementById('randomColorBtn');
-    const randomPopup = document.getElementById('randomPopup');
-    const popupRandomBtn = document.getElementById('popupRandomBtn');
     const donateRequiredMsg = document.getElementById('donateRequiredMsg');
     let gridCursor = { x: Math.floor(GRID_SIZE / 2), y: Math.floor(GRID_SIZE / 2) };
-    let previewColor = null; // null means no color selected
-    let randomPopupActive = false;
+    let previewColor = null;
+    let discSelectedColor = null;
 
     function setCanvasSize() {
       const rect = frame.getBoundingClientRect();
@@ -790,7 +777,12 @@
         body: JSON.stringify({x, y, color})
       })
       .then(res => res.json())
-      .then(_ => fetchGridState())
+      .then(_ => {
+        fetchGridState();
+        awaitingColoring = false;
+        donateBtn.disabled = false;
+        donateBtn.textContent = "Random Square";
+      })
       .catch(err => {});
     }
     function fetchGridState() {
@@ -805,6 +797,7 @@
         })
         .catch(err => {});
     }
+
     function hidePalette(force = false) {
       if (!force) {
         // Only hide on OK button or menu open; otherwise, do not hide
@@ -938,32 +931,8 @@
       hidePalette();
     });
 
-    // --- RANDOM SQUARE BUTTON POPUP LOGIC ---
-    function showRandomPopup() {
-      randomPopup.classList.add('active');
-      randomPopupActive = true;
-    }
-    function hideRandomPopup() {
-      randomPopup.classList.remove('active');
-      randomPopupActive = false;
-    }
-    hideRandomPopup();
-
-    donateBtn.onclick = function() {
-      if (!hasDonated) {
-        hasDonated = true;
-        donationUsed = false;
-        donateBtn.textContent = "Thanks for your support!";
-        showRandomPopup();
-        setTimeout(() => { 
-          if (!donationUsed) donateBtn.textContent = "Donate / Contribute";
-        }, 4000);
-      } else {
-        showRandomPopup();
-      }
-    };
-
-    popupRandomBtn.onclick = function() {
+    // --- Random Square Button Logic (NO POPUP) ---
+    function handleRandomSquare() {
       let tries = 2000;
       let found = false;
       while(tries-- > 0) {
@@ -982,10 +951,93 @@
         }
       }
       hidePalette();
-      hideRandomPopup();
       if (!found) { alert("No available squares left!"); return; }
       setTimeout(openColorPickerForCurrentSquare, 300);
+    }
+
+    // Donate Button Logic - transform on donate
+    donateBtn.onclick = function() {
+      if (!hasDonated && canDonate) {
+        hasDonated = true;
+        donationUsed = false;
+        canDonate = false;
+        awaitingColoring = true;
+        donateBtn.textContent = "Random Square";
+        donateBtn.classList.remove("dummy-btn");
+        donateBtn.classList.add("random-btn-pink");
+        handleRandomSquare();
+        donateBtn.disabled = true;
+      } else if (hasDonated && !awaitingColoring) {
+        handleRandomSquare();
+      } else if (awaitingColoring) {
+        donateBtn.disabled = true;
+        donateBtn.textContent = "Color your square first!";
+        setTimeout(() => {
+          donateBtn.textContent = "Random Square";
+          donateBtn.disabled = false;
+        }, 2500);
+      }
     };
+
+    // --- Color Picker Palette Drawing and Selection ---
+    function drawColorDisc() {
+      const disc = document.getElementById('colorDisc');
+      const ctxDisc = disc.getContext('2d');
+      const w = disc.width;
+      const h = disc.height;
+      const r = w/2;
+      ctxDisc.clearRect(0,0,w,h);
+      for (let y = 0; y < h; y++) {
+        for (let x = 0; x < w; x++) {
+          const dx = x - r;
+          const dy = y - r;
+          const dist = Math.sqrt(dx*dx + dy*dy);
+          if (dist > r) continue;
+          let angle = Math.atan2(dy, dx);
+          if (angle < 0) angle += 2*Math.PI;
+          const hue = angle * 180 / Math.PI;
+          const sat = dist / r;
+          ctxDisc.fillStyle = `hsl(${hue},${sat*100}%,50%)`;
+          ctxDisc.fillRect(x, y, 1, 1);
+        }
+      }
+    }
+
+    colorDisc.addEventListener('mousedown', function(e) {
+      const rect = colorDisc.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+      const r = colorDisc.width/2;
+      const dx = x - r;
+      const dy = y - r;
+      const dist = Math.sqrt(dx*dx + dy*dy);
+      if (dist > r) return;
+      let angle = Math.atan2(dy, dx);
+      if (angle < 0) angle += 2*Math.PI;
+      const hue = angle * 180 / Math.PI;
+      const sat = dist / r;
+      discSelectedColor = `hsl(${hue},${sat*100}%,50%)`;
+      previewColor = discSelectedColor;
+      confirmColorBtn.disabled = false;
+      confirmColorBtn.style.color = "#222";
+      colorPickerModal.style.background = discSelectedColor;
+      requestRedraw();
+    });
+    colorDisc.addEventListener('mousemove', function(e) {
+      if (e.buttons === 1) {
+        colorDisc.dispatchEvent(new MouseEvent('mousedown', e));
+      }
+    });
+    randomColorBtn.addEventListener('click', function() {
+      const hue = Math.floor(Math.random()*360);
+      const sat = 0.7 + Math.random()*0.3;
+      discSelectedColor = `hsl(${hue},${sat*100}%,50%)`;
+      previewColor = discSelectedColor;
+      confirmColorBtn.disabled = false;
+      confirmColorBtn.style.color = "#222";
+      colorPickerModal.style.background = discSelectedColor;
+      requestRedraw();
+    });
 
     function openColorPickerForCurrentSquare() {
       paletteError.style.display = "none";
@@ -996,6 +1048,7 @@
       confirmColorBtn.style.color = "grey";
       requestRedraw();
       hideCoordPopup();
+      drawColorDisc();
       colorPickerModal.style.background = "#222";
       let frameRect = frame.getBoundingClientRect();
       const scaledCellSize = CELL_SIZE * zoom;
@@ -1019,6 +1072,7 @@
         palettePreviewCell = null;
         previewColor = null;
         hidePalette.shouldHide = true;
+        colorPickerModal.style.background = "#222";
         hidePalette(true);
       }
     });
@@ -1029,14 +1083,6 @@
     randomColorBtn.addEventListener('click', function() {
       // Do not hide on Random Color
     });
-    menuIcon.addEventListener('click', function() {
-      hidePalette.shouldHide = true;
-      hidePalette(true);
-    });
-    closeMenuBtn.addEventListener('click', function() {
-      hidePalette.shouldHide = true;
-      hidePalette(true);
-    });
 
     window.addEventListener('resize', setCanvasSize);
     window.addEventListener('DOMContentLoaded', function() {
@@ -1044,65 +1090,6 @@
       zoomDisplay.textContent = Math.round(zoom * 100) + '%';
       fetchGridState();
     });
-    // --- Color Picker Palette Drawing and Selection ---
-function drawColorDisc() {
-  const disc = document.getElementById('colorDisc');
-  const ctxDisc = disc.getContext('2d');
-  const w = disc.width;
-  const h = disc.height;
-  const r = w/2;
-  ctxDisc.clearRect(0,0,w,h);
-  for (let y = 0; y < h; y++) {
-    for (let x = 0; x < w; x++) {
-      const dx = x - r;
-      const dy = y - r;
-      const dist = Math.sqrt(dx*dx + dy*dy);
-      if (dist > r) continue;
-      let angle = Math.atan2(dy, dx);
-      if (angle < 0) angle += 2*Math.PI;
-      const hue = angle * 180 / Math.PI;
-      const sat = dist / r;
-      ctxDisc.fillStyle = `hsl(${hue},${sat*100}%,50%)`;
-      ctxDisc.fillRect(x, y, 1, 1);
-    }
-  }
-}
-drawColorDisc();
-
-let discSelectedColor = null;
-colorDisc.addEventListener('mousedown', function(e) {
-  const rect = colorDisc.getBoundingClientRect();
-  const x = e.clientX - rect.left;
-  const y = e.clientY - rect.top;
-  const r = colorDisc.width/2;
-  const dx = x - r;
-  const dy = y - r;
-  const dist = Math.sqrt(dx*dx + dy*dy);
-  if (dist > r) return;
-  let angle = Math.atan2(dy, dx);
-  if (angle < 0) angle += 2*Math.PI;
-  const hue = angle * 180 / Math.PI;
-  const sat = dist / r;
-  discSelectedColor = `hsl(${hue},${sat*100}%,50%)`;
-  previewColor = discSelectedColor;
-  confirmColorBtn.disabled = false;
-  confirmColorBtn.style.color = "#222";
-  requestRedraw();
-});
-colorDisc.addEventListener('mousemove', function(e) {
-  if (e.buttons === 1) {
-    colorDisc.dispatchEvent(new MouseEvent('mousedown', e));
-  }
-});
-randomColorBtn.addEventListener('click', function() {
-  const hue = Math.floor(Math.random()*360);
-  const sat = 0.7 + Math.random()*0.3;
-  discSelectedColor = `hsl(${hue},${sat*100}%,50%)`;
-  previewColor = discSelectedColor;
-  confirmColorBtn.disabled = false;
-  confirmColorBtn.style.color = "#222";
-  requestRedraw();
-});
   </script>
 </body>
 </html>
