@@ -6,64 +6,73 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <style>
     html, body {
-      margin: 0; padding: 0; height: 100%;
+      margin: 0; padding: 0; height: 100%; width: 100%;
       font-family: Arial, sans-serif;
       background: #282828;
       color: #fff;
-      width: 100vw; height: 100vh;
       overflow-x: hidden;
+      box-sizing: border-box;
+    }
+    body {
+      min-height: 100vh;
+      width: 100vw;
+      display: flex;
+      flex-direction: column;
     }
     header {
+      width: 100%;
+      min-height: 70px;
+      height: 70px;
       display: flex;
       align-items: center;
       justify-content: center;
-      height: 120px;
-      min-height: 120px;
       position: relative;
+      background: #222;
+      z-index: 2;
     }
     .header-content {
+      width: 100%;
       display: flex;
       align-items: center;
       justify-content: center;
-      width: 100%;
-      height: 100%;
-      gap: 16px;
+      gap: 12px;
       position: relative;
+      height: 70px;
     }
     .big-title {
-      font-size: 3em;
+      font-size: 2.1em;
       font-weight: bold;
       letter-spacing: 2px;
       line-height: 1.2;
       text-shadow: 0 2px 6px #111a;
-      flex: none;
       z-index: 2;
+      flex: none;
     }
     .menu-icon {
-      margin-left: 18px;
-      width: 48px; height: 48px;
+      margin-left: 12px;
+      width: 38px; height: 38px;
       display: flex;
       flex-direction: column;
       justify-content: center;
       align-items: center;
-      gap: 10px;
+      gap: 8px;
       cursor: pointer;
       z-index: 100;
       background: none;
       outline: 2px solid #ccc;
       border-radius: 8px;
     }
-    .menu-icon:focus {
-      outline: 3px solid #FF0070;
-    }
     .menu-icon span {
       display: block;
-      width: 36px;
-      height: 6px;
+      width: 28px;
+      height: 5px;
       background: #fff;
       border-radius: 3px;
       margin: 0 auto;
       transition: background 0.2s;
+    }
+    .menu-icon:focus {
+      outline: 3px solid #FF0070;
     }
     .popup-menu {
       position: fixed;
@@ -75,8 +84,8 @@
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      gap: 32px;
-      font-size: 2em;
+      gap: 24px;
+      font-size: 1.5em;
     }
     .popup-menu.active { display: flex; }
     .popup-menu a,
@@ -87,10 +96,10 @@
     .popup-menu a {
       color: #fff !important;
       text-decoration: none;
-      padding: 18px 42px;
-      font-size: 1.1em;
+      padding: 14px 32px;
+      font-size: 1em;
       background: #444;
-      margin: 10px 0;
+      margin: 8px 0;
       border: 2px solid #fff;
       transition: background 0.2s, color 0.2s;
       display: flex;
@@ -103,32 +112,46 @@
     }
     .popup-menu .close-menu {
       position: absolute;
-      top: 44px;
-      right: 44px;
+      top: 24px;
+      right: 24px;
       color: #fff;
       background: none;
       border: none;
-      font-size: 2.5em;
+      font-size: 2em;
       cursor: pointer;
       z-index: 5100;
     }
     #main-content {
       position: relative;
       width: 100vw;
+      flex: 1 1 auto;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
     }
+    .grid-container {
+      position: relative;
+      width: 100%;
+      max-width: 700px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 360px;
+    }
     #frame {
       outline: 3px solid #ccc;
       background: #333;
-      width: min(80vw, 80vh);
-      height: min(80vw, 80vh);
+      width: 90vw;
+      max-width: 700px;
+      height: 90vw;
+      max-height: 700px;
       aspect-ratio: 1;
       position: relative;
       overflow: hidden;
-      margin: auto;
+      margin: 0 auto;
       box-sizing: border-box;
       display: flex;
       align-items: center;
@@ -147,6 +170,82 @@
       touch-action: none;
     }
     #gridCanvas.grabbing, #frame.grabbing { cursor: grabbing !important; }
+    .donate-btn-outer {
+      position: absolute;
+      top: -50px;
+      right: 0;
+      z-index: 1002;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      width: 160px;
+      min-width: 90px;
+      background: none;
+    }
+    .dummy-btn {
+      background: linear-gradient(160deg, #f0f0f0 70%, #bdbdbd 100%);
+      color: #222;
+      border: none;
+      border-radius: 9px;
+      padding: 7px 16px;
+      font-size: 1em;
+      cursor: pointer;
+      font-weight: bold;
+      box-shadow: 0 1px 4px #8883;
+      transition: background 0.2s, color 0.2s;
+      min-width: 90px;
+      outline: 2px solid #ccc;
+      margin-bottom: 8px;
+      height: 33px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .dummy-btn:active, .dummy-btn:focus {
+      background: #e0e0e0;
+      color: #111;
+      outline: 3px solid #FF0070;
+    }
+    .random-popup {
+      position: absolute;
+      top: 38px;
+      right: 0;
+      z-index: 1003;
+      display: none;
+      flex-direction: column;
+      align-items: flex-end;
+      background: #222;
+      border-radius: 14px;
+      box-shadow: 0 0 22px #000;
+      padding: 10px 12px;
+      border: 2px solid #FF0070;
+      min-width: 80px;
+      width: 120px;
+    }
+    .random-popup.active {
+      display: flex;
+    }
+    .random-btn {
+      background: linear-gradient(160deg, #f0f0f0 70%, #bdbdbd 100%);
+      color: #222;
+      border: none;
+      border-radius: 9px;
+      padding: 9px 16px;
+      font-size: 1em;
+      cursor: pointer;
+      font-weight: bold;
+      box-shadow: 0 1px 6px #8883;
+      transition: background 0.2s, color 0.2s;
+      outline: 2px solid #ccc;
+      margin-bottom: 0;
+      min-width: 80px;
+      height: 33px;
+    }
+    .random-btn:active, .random-btn:focus {
+      background: #e0e0e0;
+      color: #111;
+      outline: 3px solid #FF0070;
+    }
     .color-picker-modal {
       position: fixed;
       z-index: 9999;
@@ -156,34 +255,35 @@
       border-radius: 18px;
       box-shadow: 0 0 24px #000;
       border: 3px solid #ccc;
-      min-width: 260px;
-      min-height: 260px;
+      min-width: 200px;
+      min-height: 200px;
       justify-content: center;
-      padding: 18px 20px 18px 20px;
+      padding: 16px 12px;
       transition: background .2s;
+      background: #222;
     }
     .color-picker-modal canvas {
-      width: 228px; height: 228px;
+      width: 120px; height: 120px;
       border: 2px solid #fff;
       border-radius: 50%;
       background: transparent;
-      margin-bottom: 16px;
+      margin-bottom: 12px;
       display: block;
     }
     .color-picker-modal .modal-btns {
-      display: flex; flex-direction: column; gap: 14px; justify-content: center;
+      display: flex; flex-direction: column; gap: 10px; justify-content: center;
       align-items: center;
-      margin-top: 10px;
+      margin-top: 7px;
       width: 100%;
     }
     .palette-error, .palette-message, .donate-required-message {
       color: #fff;
       background: #ff0070;
       border-radius: 14px;
-      padding: 22px 52px;
-      font-size: 2em;
-      margin-bottom: 20px;
-      margin-top: 24px;
+      padding: 14px 24px;
+      font-size: 1.1em;
+      margin-bottom: 12px;
+      margin-top: 14px;
       text-align: center;
       z-index: 10001;
       box-shadow: 0 0 22px #000;
@@ -200,8 +300,8 @@
       color: #fff;
       border: 2px solid #fff;
       border-radius: 0;
-      padding: 8px 14px;
-      font-size: 1em;
+      padding: 7px 10px;
+      font-size: 0.9em;
       z-index: 1200;
       box-shadow: 0 0 11px #000;
       white-space: nowrap;
@@ -214,8 +314,8 @@
       color: #222;
       border-radius: 20px;
       border: 2px solid #ff0070;
-      padding: 56px 72px;
-      font-size: 2.6em;
+      padding: 24px 32px;
+      font-size: 1.3em;
       z-index: 10001;
       text-align: center;
       box-shadow: 0 0 44px #000;
@@ -226,200 +326,123 @@
       transform: translateX(-50%);
       outline: 2px solid #ccc;
     }
-    /* Donate button above grid, upper-right */
-    .donate-btn-outer {
-      position: absolute;
-      /* Place above upper right of the grid frame */
-      top: calc(50% - min(80vw, 80vh)/2 - 60px); /* 60px above the top of grid */
-      left: calc(50% + min(80vw, 80vh)/2 - 200px); /* right edge of grid minus button width */
-      z-index: 200;
+    .footer {
+      width: 100vw;
+      max-width: 700px;
+      background: transparent;
+      color: #fff;
       display: flex;
       flex-direction: column;
-      align-items: flex-end;
-      width: 200px;
-      min-width: 120px;
-      background: none;
+      align-items: center;
+      justify-content: center;
+      font-size: 1em;
+      position: relative;
+      z-index: 10;
+      margin: 16px auto 0 auto;
     }
-    .dummy-btn {
+    .footer-row {
+      width: 100%;
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      justify-content: space-between;
+      gap: 7px;
+      flex-wrap: wrap;
+      background: #222;
+      border-radius: 12px;
+      padding: 7px 10px;
+      box-sizing: border-box;
+    }
+    .footer-group {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      flex-wrap: wrap;
+    }
+    .arrow-btn, .center-btn, .fancy-btn, .jump-panel input[type="number"], .jump-panel label {
+      font-size: 1em;
+      height: 28px;
+      min-width: 28px;
+      border-radius: 7px;
+      padding: 0 7px;
       background: linear-gradient(160deg, #f0f0f0 70%, #bdbdbd 100%);
       color: #222;
       border: none;
-      border-radius: 9px;
-      padding: 7px 18px;
-      font-size: 1.06em;
-      cursor: pointer;
-      margin: 0 4px;
+      outline: 2px solid #ccc;
+      margin: 0 1px;
       font-weight: bold;
       box-shadow: 0 1px 4px #8883;
       transition: background 0.2s, color 0.2s;
-      height: 32px;
-      min-width: 120px;
       display: flex;
       align-items: center;
       justify-content: center;
-      outline: 2px solid #ccc;
-      margin-bottom: 8px;
     }
-    .dummy-btn:active, .dummy-btn:focus {
+    .arrow-btn:active, .arrow-btn:focus,
+    .center-btn:active, .center-btn:focus,
+    .fancy-btn:active, .fancy-btn:focus {
       background: #e0e0e0;
       color: #111;
       outline: 3px solid #FF0070;
     }
-    /* Popup random overlay the donate button, simplified */
-    .random-popup {
-      position: absolute;
-      top: 38px;
-      right: 0;
-      z-index: 201;
-      display: none;
-      flex-direction: column;
-      align-items: flex-end;
-      background: #222;
-      border-radius: 14px;
-      box-shadow: 0 0 22px #000;
-      padding: 10px 16px;
-      border: 2px solid #FF0070;
-      min-width: 100px;
-      width: 140px;
-    }
-    .random-popup.active {
+    .zoom-display {
+      font-size: 1em;
+      color: #fff;
+      background: #444;
+      border-radius: 7px;
+      padding: 0 7px;
+      height: 28px;
       display: flex;
-    }
-    .random-btn {
-      background: linear-gradient(160deg, #f0f0f0 70%, #bdbdbd 100%);
-      color: #222;
-      border: none;
-      border-radius: 9px;
-      padding: 10px 30px;
-      font-size: 1.22em;
-      cursor: pointer;
+      align-items: center;
+      margin: 0 4px;
       font-weight: bold;
-      box-shadow: 0 1px 6px #8883;
-      transition: background 0.2s, color 0.2s;
+    }
+    .jump-panel {
+      display: flex;
+      align-items: center;
+      gap: 3px;
+      flex-wrap: nowrap;
+      height: 28px;
+      white-space: nowrap;
+    }
+    .jump-panel label {
+      background: none;
+      color: #fff;
+      margin-right: 2px;
+      font-weight: normal;
+      outline: none;
+      min-width: 18px;
+      padding: 0;
+      height: auto;
+      box-shadow: none;
+      font-size: 0.9em;
+    }
+    .jump-panel input[type="number"] {
+      font-size: 1em;
+      width: 40px;
+      height: 18px;
+      border-radius: 6px;
+      border: 1px solid #bbb;
+      padding: 2px 6px;
+      background: #f8f8f8;
+      color: #222;
+      text-align: center;
       outline: 2px solid #ccc;
-      margin-bottom: 0;
+      appearance: none;
+      -webkit-appearance: none;
+      -moz-appearance: textfield;
     }
-    .random-btn:active, .random-btn:focus {
-      background: #e0e0e0;
-      color: #111;
-      outline: 3px solid #FF0070;
+    .jump-panel input[type="number"]::-webkit-inner-spin-button,
+    .jump-panel input[type="number"]::-webkit-outer-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
     }
-    /* Footer below grid, one rows */
-          .footer {
-        width: min(80vw, 80vh);
-        background: transparent;
-        color: #fff;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        font-size: 1.1em;
-        position: relative;
-        z-index: 10;
-        margin-top: 22px;
-      }
-      .footer-row {
-        width: 100%;
-        display: flex;
-        flex-direction: row;
-        align-items: center;
-        justify-content: space-between;
-        gap: 12px;
-        flex-wrap: wrap;
-        background: #222;
-        border-radius: 12px;
-        padding: 12px 18px;
-        box-sizing: border-box;
-      }
-      .footer-group {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        flex-wrap: wrap;
-      }
-      .arrow-btn, .center-btn, .fancy-btn, .jump-panel input[type="number"], .jump-panel label {
-        font-size: 1.1em;
-        height: 38px;
-        min-width: 38px;
-        border-radius: 7px;
-        padding: 0 14px;
-        background: linear-gradient(160deg, #f0f0f0 70%, #bdbdbd 100%);
-        color: #222;
-        border: none;
-        outline: 2px solid #ccc;
-        margin: 0 2px;
-        font-weight: bold;
-        box-shadow: 0 1px 4px #8883;
-        transition: background 0.2s, color 0.2s;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-      }
-      .arrow-btn:active, .arrow-btn:focus,
-      .center-btn:active, .center-btn:focus,
-      .fancy-btn:active, .fancy-btn:focus {
-        background: #e0e0e0;
-        color: #111;
-        outline: 3px solid #FF0070;
-      }
-      .zoom-display {
-        font-size: 1.1em;
-        color: #fff;
-        background: #444;
-        border-radius: 7px;
-        padding: 0 12px;
-        height: 38px;
-        display: flex;
-        align-items: center;
-        margin: 0 8px;
-        font-weight: bold;
-      }
-      .jump-panel {
-        display: flex;
-        align-items: center;
-        gap: 6px;
-        flex-wrap: nowrap;
-        height: 38px;
-        white-space: nowrap;
-      }
-      .jump-panel label {
-        background: none;
-        color: #fff;
-        margin-right: 2px;
-        font-weight: normal;
-        outline: none;
-        min-width: 22px;
-        padding: 0;
-        height: auto;
-        box-shadow: none;
-      }
-      .jump-panel input[type="number"] {
-        font-size: 1.1em;
-        width: 65px;
-        height: 32px;
-        border-radius: 6px;
-        border: 1px solid #bbb;
-        padding: 3px 12px;
-        background: #f8f8f8;
-        color: #222;
-        text-align: center;
-        outline: 2px solid #ccc;
-        appearance: none;
-        -webkit-appearance: none;
-        -moz-appearance: textfield;
-      }
-      .jump-panel input[type="number"]::-webkit-inner-spin-button,
-      .jump-panel input[type="number"]::-webkit-outer-spin-button {
-        -webkit-appearance: none;
-        margin: 0;
-      }
     .footer-copyright {
       width: 100vw;
       text-align: center;
       background: #151515;
       color: #fff;
-      font-size: 1em;
-      padding: 10px 0 8px 0;
+      font-size: 0.9em;
+      padding: 7px 0 5px 0;
       letter-spacing: 1px;
       opacity: 0.8;
       position: fixed;
@@ -428,20 +451,43 @@
       z-index: 10000;
       border-top: 1px solid #666;
     }
-    @media (max-width: 700px) {
-      header, .footer { min-height: 40px; height: 40px; }
-      #frame { width: min(98vw, 70vh); height: min(98vw, 70vh);}
-      .color-picker-modal canvas { width: 114px; height: 114px; }
-      .color-picker-modal { min-width: 130px; min-height: 130px; }
-      .big-title { font-size: 1.3em !important; }
-      .arrow-btn, .center-btn, .fancy-btn, .jump-panel, .footer-content { font-size: 0.8em; height: 20px; min-width: 20px; }
-      .jump-panel input[type="number"] { height: 15px; width: 28px; font-size: 0.7em; }
-      #congratsMessage { padding: 18px 24px; font-size: 1.3em;}
-      .palette-error { font-size: 1.1em; padding: 12px 18px; }
-      .random-popup, .donate-btn-outer { min-width: 100px; width: 120px; top: -40px; right: 0px; }
-      .random-btn { padding: 7px 14px; font-size: 1em; }
-      .footer-copyright { font-size: 0.9em; padding: 7px 0 6px 0;}
-      .footer-row { gap: 8px; }
+    @media (max-width: 750px) {
+      .big-title { font-size: 1.1em; }
+      .header-content { height: 44px; min-height: 44px;}
+      header { min-height: 44px; height: 44px; }
+      #frame {
+        width: 98vw;
+        max-width: 98vw;
+        height: 68vw;
+        max-height: 68vw;
+        min-height: 220px;
+      }
+      .grid-container { max-width: 98vw; }
+      .donate-btn-outer {
+        top: -44px;
+        right: 0;
+        min-width: 80px;
+        width: 100px;
+      }
+      .dummy-btn { font-size: 0.9em; min-width: 80px; padding: 5px 8px;}
+      .random-popup { min-width: 60px; width: 90px; padding: 6px 8px;}
+      .random-btn { font-size: 0.9em; min-width: 60px; height: 28px; padding: 7px 8px;}
+      .footer { font-size: 0.8em; max-width: 98vw;}
+      .footer-row { gap: 4px; padding: 5px 7px;}
+      .footer-copyright { font-size: 0.8em; }
+      .color-picker-modal canvas { width: 80px; height: 80px;}
+      .color-picker-modal { min-width: 120px; min-height: 120px; padding: 8px 5px;}
+      #congratsMessage { padding: 10px 14px; font-size: 1em;}
+      .palette-error { font-size: 0.9em; padding: 7px 12px; }
+    }
+    @media (max-width: 480px) {
+      .header-content { gap: 4px; }
+      .big-title { font-size: 0.8em; }
+      .donate-btn-outer { top: -36px; right: 0; min-width: 60px; width: 80px;}
+      #frame { min-height: 150px; }
+      .dummy-btn { font-size: 0.8em; min-width: 60px; padding: 4px 4px;}
+      .random-popup { min-width: 40px; width: 60px; padding: 3px 4px;}
+      .random-btn { font-size: 0.8em; min-width: 40px; height: 22px; padding: 3px 4px;}
     }
   </style>
 </head>
@@ -458,12 +504,18 @@
   </header>
   <main>
     <div id="main-content">
-      <div style="position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;">
+      <div class="grid-container">
+        <div class="donate-btn-outer" id="donateBtnOuter">
+          <button class="dummy-btn" id="donateBtn">Donate / Contribute</button>
+          <div class="random-popup" id="randomPopup">
+            <button class="random-btn" id="popupRandomBtn">⟳ Random Square</button>
+          </div>
+        </div>
         <div id="frame" tabindex="0">
           <canvas id="gridCanvas"></canvas>
           <div id="coordPopup"></div>
           <div id="colorPickerModal" class="color-picker-modal">
-            <canvas id="colorDisc" width="228" height="228"></canvas>
+            <canvas id="colorDisc" width="120" height="120"></canvas>
             <div class="modal-btns">
               <button id="randomColorBtn" type="button" class="fancy-btn">Random Color</button>
               <button id="confirmColorBtn" type="button" class="fancy-btn" disabled style="color:grey;">OK</button>
@@ -473,16 +525,8 @@
           <div class="palette-error" id="paletteError"></div>
           <div class="donate-required-message" id="donateRequiredMsg"></div>
           <div id="congratsMessage"></div>
-          <!-- Donate button & random popup above upper-right grid corner, OUTSIDE #frame -->
-          <div class="donate-btn-outer" id="donateBtnOuter">
-            <button class="dummy-btn" id="donateBtn">Donate / Contribute</button>
-            <div class="random-popup" id="randomPopup">
-              <button class="random-btn" id="popupRandomBtn">⟳ Random Square</button>
-            </div>
-          </div>
         </div>
       </div>
-      <!-- Footer below grid -->
       <div class="footer">
         <div class="footer-row">
           <div class="footer-group" id="footer-joystick">
@@ -896,13 +940,6 @@
       randomPopupActive = false;
     }
     hideRandomPopup();
-
-    // Move donate button above upper-right corner of grid
-    function positionDonateBtn() {
-      // This is already handled by CSS absolute positioning within #frame
-      // left empty for clarity
-    }
-    window.addEventListener('resize', positionDonateBtn);
 
     donateBtn.onclick = function() {
       if (!hasDonated) {
