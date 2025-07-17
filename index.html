@@ -1135,19 +1135,25 @@
       }
     };
     
-       confirmColorBtn.onclick = function() {
+    confirmColorBtn.onclick = function() {
+      // Prevent double coloring and require color selection
       if (hasColoredSquare || !palettePreviewCell || !previewColor) return;
     
-      // Send the update to backend
-      sendCellColor(palettePreviewCell.x, palettePreviewCell.y, previewColor);
-    
+      // Lock the square in local state
+      coloredCells[palettePreviewCell.x+","+palettePreviewCell.y] = {color: previewColor, locked: true};
       hasColoredSquare = true;
+    
+      // Hide the color picker modal
       hidePalette(true);
     
-      // Optionally display a confirmation
-      congratsMessage.textContent = "Congratulations! Your square is now part of the (In)Visible Million.";
-      congratsMessage.style.display = "block";
-      setTimeout(() => { congratsMessage.style.display = "none"; }, 2500);
+      // Send color to backend (this updates your JSON)
+      sendCellColor(palettePreviewCell.x, palettePreviewCell.y, previewColor);
+    
+      // Redraw grid to show the color immediately
+      requestRedraw();
+    
+      // Show congratulation message with proper info
+      showCongratsMessage(palettePreviewCell.x, palettePreviewCell.y, previewColor);
     };
     
     // --- CONGRATULATIONS MESSAGE LOGIC ---
@@ -1162,7 +1168,6 @@
         </div>
       `;
       congratsMessage.style.display = "block";
-      // Screenshot logic
       document.getElementById("screenshotBtn").onclick = function() {
         takeGridScreenshot(x, y, color);
       };
