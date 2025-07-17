@@ -1134,7 +1134,25 @@
         }, 3000);
       }
     };
-
+    
+    confirmColorBtn.onclick = function() {
+      if (hasColoredSquare || !palettePreviewCell || !previewColor) return;
+    
+      // Send the colored cell to the backend
+      sendCellColor(palettePreviewCell.x, palettePreviewCell.y, previewColor);
+    
+      // Mark that the user has colored their square
+      hasColoredSquare = true;
+    
+      // Hide palette & update UI
+      hidePalette(true);
+    
+      // Optionally show a confirmation message
+      congratsMessage.textContent = "Congratulations! Your square is now part of the (In)Visible Million.";
+      congratsMessage.style.display = "block";
+      setTimeout(() => { congratsMessage.style.display = "none"; }, 2500);
+    };
+    
     // --- CONGRATULATIONS MESSAGE LOGIC ---
     function showCongratsMessage(x, y, color) {
       congratsMessage.innerHTML = `
