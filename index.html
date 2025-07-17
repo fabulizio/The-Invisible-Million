@@ -139,6 +139,51 @@
       padding-top: 8px;
       padding-bottom: 8px;
     }
+    #donateBtnOuter.toolbar-mode {
+      background: #222;
+      border: 3px solid #ccc;
+      border-radius: 12px;
+      padding: 16px;
+      margin: 8px auto;
+      max-width: 700px;
+      flex-direction: row;
+      gap: 16px;
+      flex-wrap: wrap;
+      box-shadow: 0 2px 8px #0005;
+    }
+    #colorToolbar {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      flex-wrap: wrap;
+      justify-content: center;
+      width: 100%;
+    }
+    #colorToolbar canvas {
+      width: 80px; 
+      height: 80px;
+      border: 2px solid #fff;
+      border-radius: 50%;
+      background: transparent;
+      flex-shrink: 0;
+    }
+    .toolbar-buttons {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      align-items: center;
+    }
+    #paletteErrorToolbar {
+      color: #fff;
+      background: #ff0070;
+      border-radius: 8px;
+      padding: 8px 16px;
+      font-size: 0.9em;
+      text-align: center;
+      display: none;
+      width: 100%;
+      box-sizing: border-box;
+    }
     .dummy-btn {
       background: linear-gradient(160deg, #f0f0f0 70%, #bdbdbd 100%);
       color: #222;
@@ -237,36 +282,6 @@
       touch-action: none;
     }
     #gridCanvas.grabbing, #frame.grabbing { cursor: grabbing !important; }
-    .color-picker-modal {
-      position: fixed;
-      z-index: 9999;
-      display: none;
-      flex-direction: column;
-      align-items: center;
-      border-radius: 18px;
-      box-shadow: 0 0 24px #000;
-      border: 3px solid #ccc;
-      min-width: 200px;
-      min-height: 200px;
-      justify-content: center;
-      padding: 16px 12px;
-      transition: background .2s;
-      background: #222;
-    }
-    .color-picker-modal canvas {
-      width: 120px; height: 120px;
-      border: 2px solid #fff;
-      border-radius: 50%;
-      background: transparent;
-      margin-bottom: 12px;
-      display: block;
-    }
-    .color-picker-modal .modal-btns {
-      display: flex; flex-direction: column; gap: 10px; justify-content: center;
-      align-items: center;
-      margin-top: 7px;
-      width: 100%;
-    }
     .palette-error, .palette-message, .donate-required-message {
       color: #fff;
       background: #ff0070;
@@ -460,8 +475,8 @@
       .footer { font-size: 0.8em; max-width: 98vw;}
       .footer-row { gap: 4px; padding: 5px 7px;}
       .footer-copyright { font-size: 0.8em; }
-      .color-picker-modal canvas { width: 80px; height: 80px;}
-      .color-picker-modal { min-width: 120px; min-height: 120px; padding: 8px 5px;}
+      #colorToolbar canvas { width: 60px; height: 60px;}
+      #donateBtnOuter.toolbar-mode { padding: 8px; gap: 8px;}
       #congratsMessage { padding: 10px 14px; font-size: 1em;}
       .palette-error { font-size: 0.9em; padding: 7px 12px; }
     }
@@ -487,6 +502,16 @@
   </header>
   <div id="donateBtnOuter">
     <button class="dummy-btn" id="donateBtn">Donate / Contribute</button>
+    <div id="colorToolbar" style="display: none;">
+      <canvas id="colorDisc" width="120" height="120"></canvas>
+      <div class="toolbar-buttons">
+        <button id="randomSquareBtn" type="button" class="random-btn-pink">Random Square</button>
+        <button id="randomColorBtn" type="button" class="fancy-btn">Random Color</button>
+        <button id="confirmColorBtn" type="button" class="fancy-btn" disabled style="color:grey;">OK</button>
+        <button id="cancelColorBtn" type="button" class="fancy-btn">Cancel</button>
+      </div>
+      <div class="palette-error" id="paletteErrorToolbar"></div>
+    </div>
   </div>
   <main>
     <div id="main-content">
@@ -494,14 +519,6 @@
         <div id="frame" tabindex="0">
           <canvas id="gridCanvas"></canvas>
           <div id="coordPopup"></div>
-          <div id="colorPickerModal" class="color-picker-modal">
-            <canvas id="colorDisc" width="120" height="120"></canvas>
-            <div class="modal-btns">
-              <button id="randomColorBtn" type="button" class="fancy-btn">Random Color</button>
-              <button id="confirmColorBtn" type="button" class="fancy-btn" disabled style="color:grey;">OK</button>
-              <button id="cancelColorBtn" type="button" class="fancy-btn">Cancel</button>
-            </div>
-          </div>
           <div class="palette-error" id="paletteError"></div>
           <div class="donate-required-message" id="donateRequiredMsg"></div>
           <div id="congratsMessage"></div>
@@ -614,12 +631,14 @@
     const coordPopup = document.getElementById('coordPopup');
     const congratsMessage = document.getElementById('congratsMessage');
     const paletteError = document.getElementById('paletteError');
-    const colorPickerModal = document.getElementById('colorPickerModal');
+    const donateRequiredMsg = document.getElementById('donateRequiredMsg');
+    const colorToolbar = document.getElementById('colorToolbar');
     const colorDisc = document.getElementById('colorDisc');
     const confirmColorBtn = document.getElementById('confirmColorBtn');
     const cancelColorBtn = document.getElementById('cancelColorBtn');
     const randomColorBtn = document.getElementById('randomColorBtn');
-    const donateRequiredMsg = document.getElementById('donateRequiredMsg');
+    const randomSquareBtn = document.getElementById('randomSquareBtn');
+    const paletteErrorToolbar = document.getElementById('paletteErrorToolbar');
     let gridCursor = { x: Math.floor(GRID_SIZE / 2), y: Math.floor(GRID_SIZE / 2) };
     let previewColor = null;
     let discSelectedColor = null;
@@ -711,7 +730,7 @@
       }
     }
     function showCoordPopup(cell, mouseX, mouseY) {
-      if (colorPickerModal.style.display === "flex") return;
+      if (colorToolbar.style.display === "flex" && palettePreviewCell) return;
       coordPopup.innerHTML = `<span>X: ${cell.x}, Y: ${cell.y}</span>`;
       coordPopup.style.left = (mouseX + 9) + "px";
       coordPopup.style.top = (mouseY + 9) + "px";
@@ -721,7 +740,7 @@
       coordPopup.style.display = "none";
     }
     canvas.addEventListener('mousemove', function(e) {
-      if (colorPickerModal.style.display === "flex") return;
+      if (colorToolbar.style.display === "flex" && palettePreviewCell) return;
       const rect = canvas.getBoundingClientRect();
       const mouseX = e.clientX - rect.left;
       const mouseY = e.clientY - rect.top;
@@ -792,8 +811,8 @@
       .then(_ => {
         fetchGridState();
         awaitingColoring = false;
-        donateBtn.disabled = false;
-        donateBtn.textContent = "Random Square";
+        randomSquareBtn.disabled = false;
+        randomSquareBtn.textContent = "Random Square";
       })
       .catch(err => {});
     }
@@ -815,10 +834,9 @@
         // Only hide on OK button or menu open; otherwise, do not hide
         if (!hidePalette.shouldHide) return;
       }
-      colorPickerModal.style.display = "none";
+      // Reset preview state but keep toolbar visible
       palettePreviewCell = null;
       previewColor = null;
-      colorPickerModal.style.background = "#222";
       requestRedraw();
       showCursor = true;
       confirmColorBtn.disabled = true;
@@ -864,7 +882,7 @@
 
     // Mouse wheel zoom/ctrl only for grid
     canvas.addEventListener('wheel', function(e) {
-      if (colorPickerModal.style.display === "flex") return;
+      if (colorToolbar.style.display === "flex" && palettePreviewCell) return;
       if (e.ctrlKey || e.metaKey) {
         e.preventDefault();
         setZoom(zoom * (e.deltaY < 0 ? 1.1 : 0.9), e.offsetX, e.offsetY);
@@ -968,31 +986,46 @@
       setTimeout(openColorPickerForCurrentSquare, 300);
     }
 
-    // Donate Button Logic - transform on donate
+    // Donate Button Logic - transform to toolbar on donate
     donateBtn.onclick = function() {
       if (!hasDonated && canDonate) {
         hasDonated = true;
         donationUsed = false;
         canDonate = false;
         awaitingColoring = true;
-        donateBtn.textContent = "Random Square";
-        donateBtn.classList.remove("dummy-btn");
-        donateBtn.classList.add("random-btn-pink");
+        
+        // Transform to toolbar mode
+        donateBtn.style.display = 'none';
+        colorToolbar.style.display = 'flex';
+        donateBtnOuter.classList.add('toolbar-mode');
+        
         handleRandomSquare();
-        donateBtn.disabled = true;
+        randomSquareBtn.disabled = true;
       } else if (hasDonated && !awaitingColoring) {
         handleRandomSquare();
       } else if (awaitingColoring) {
-        donateBtn.disabled = true;
-        donateBtn.textContent = "Color your square first!";
+        randomSquareBtn.disabled = true;
+        randomSquareBtn.textContent = "Color your square first!";
         setTimeout(() => {
-          donateBtn.textContent = "Random Square";
-          donateBtn.disabled = false;
+          randomSquareBtn.textContent = "Random Square";
+          randomSquareBtn.disabled = false;
         }, 2500);
       }
     };
 
-    // --- Color Picker Palette Drawing and Selection ---
+    // Random Square Button in Toolbar
+    randomSquareBtn.onclick = function() {
+      if (!awaitingColoring) {
+        handleRandomSquare();
+      } else {
+        randomSquareBtn.disabled = true;
+        randomSquareBtn.textContent = "Color your square first!";
+        setTimeout(() => {
+          randomSquareBtn.textContent = "Random Square";
+          randomSquareBtn.disabled = false;
+        }, 2500);
+      }
+    };
     function drawColorDisc() {
       const disc = document.getElementById('colorDisc');
       const ctxDisc = disc.getContext('2d');
@@ -1027,8 +1060,6 @@
     function openColorPickerForCurrentSquare() {
       palettePreviewCell = { x: gridCursor.x, y: gridCursor.y };
       previewColor = null;
-      colorPickerModal.style.display = "flex";
-      colorPickerModal.style.background = "#222";
       drawColorDisc();
       showCursor = false;
       confirmColorBtn.disabled = true;
