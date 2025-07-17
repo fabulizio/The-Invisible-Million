@@ -815,8 +815,6 @@
         } else {
           const lastCx = (pinch2Last.x1 + pinch2Last.x2) / 2;
           const lastCy = (pinch2Last.y1 + pinch2Last.y2) / 2;
-          const newCx = (x1 + x2) / 2;
-          const newCy = (y1 + y2) / 2;
           offsetX = pinch2Origin.offsetX + (newCx - lastCx);
           offsetY = pinch2Origin.offsetY + (newCy - lastCy);
           clampOffset();
@@ -1000,20 +998,55 @@
       let mouseY = frameRect.top + topInFrame;
       let vpad = 10;
       let top;
-      // Place message dynamically near colored cell (top, center)
-      top = mouseY - vpad;
+      if (mouseY + congratsMessage.offsetHeight + vpad < window.innerHeight) {
+        top = mouseY + vpad;
+      } else {
+        top = mouseY - congratsMessage.offsetHeight - vpad;
+      }
+      congratsMessage.innerHTML = `🎉 Congratulations!<br>You have participated in The (In)Visible Million.<br>Thank you!<br><br>
+      <span style="font-size:0.8em;">Proof of participation is saved in your browser's local storage.<br>
+      See key <b>"invisibleMillionParticipation"</b> in <b>localStorage</b>.<br>
+      (You can view this in your browser's developer tools > Application > Local Storage)</span>`;
       congratsMessage.style.top = top + "px";
-      congratsMessage.style.left = "50%";
-      congratsMessage.style.transform = "translate(-50%, 0)";
-      congratsMessage.innerHTML = "Congratulations! You have colored a square!";
       congratsMessage.style.display = "block";
-      setTimeout(() => {
-        congratsMessage.style.display = "none";
-        showCursor = true;
-        requestRedraw();
-      }, 3500);
     }
-    // HSV to RGB
+    function saveParticipation() {
+      localStorage.setItem("invisibleMillionParticipation", "true");
+    }
+    function resetDonateButton() {
+      hasDonated = false;
+      donationUsed = false;
+      donateBtn.textContent = "Donate / Contribute";
+    }
+    function drawColorDisc() {
+      const cx = colorDisc.width / 2;
+      const cy = colorDisc.height / 2;
+      const radius = colorDisc.width / 2 - 3;
+      const ctxc = colorDisc.getContext('2d');
+      ctxc.clearRect(0, 0, colorDisc.width, colorDisc.height);
+      for (let angle=0; angle<360; angle+=1) {
+        const rad = angle * Math.PI / 180;
+        const grad = ctxc.createLinearGradient(
+          cx, cy,
+          cx + radius * Math.cos(rad), cy + radius * Math.sin(rad)
+        );
+        grad.addColorStop(0, 'white');
+        grad.addColorStop(1, `hsl(${angle},100%,50%)`);
+        ctxc.beginPath();
+        ctxc.moveTo(cx, cy);
+        ctxc.arc(cx, cy, radius, rad, rad+Math.PI/180, false);
+        ctxc.closePath();
+        ctxc.fillStyle = grad;
+        ctxc.fill();
+      }
+      ctxc.globalAlpha = 0.3;
+      ctxc.beginPath();
+      ctxc.arc(cx, cy, radius, 0, 2*Math.PI);
+      ctxc.fillStyle = 'black';
+      ctxc.fill();
+      ctxc.globalAlpha = 1.0;
+    }
+    drawColorDisc();
     function hsvToRgb(h, s, v) {
       let r, g, b;
       let i = Math.floor(h * 6);
@@ -1021,7 +1054,7 @@
       let p = v * (1 - s);
       let q = v * (1 - f * s);
       let t = v * (1 - (1 - f) * s);
-      switch(i % 6){
+      switch (i % 6) {
         case 0: r = v, g = t, b = p; break;
         case 1: r = q, g = v, b = p; break;
         case 2: r = p, g = v, b = t; break;
@@ -1029,26 +1062,16 @@
         case 4: r = t, g = p, b = v; break;
         case 5: r = v, g = p, b = q; break;
       }
-      return [Math.round(r * 255), Math.round(g * 255), Math.round(b * 255)];
+      return [Math.round(r*255), Math.round(g*255), Math.round(b*255)];
     }
-    function rgbToHex(r, g, b) {
-      return "#" + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1);
+    function rgbToHex(r,g,b) {
+      return "#" + [r,g,b].map(x => x.toString(16).padStart(2,'0')).join('');
     }
-    // Participation (localStorage, etc.) stub
-    function saveParticipation() {}
-    function resetDonateButton() {
-      donateBtn.textContent = "Donate / Contribute";
-      donateBtn.disabled = false;
-      hasDonated = false;
-    }
-
-    window.onload = function() {
+    window.addEventListener('resize', setCanvasSize);
+    window.addEventListener('DOMContentLoaded', () => {
       setCanvasSize();
       fetchGridState();
-    };
-    window.onresize = function() {
-      setCanvasSize();
-    };
+    });
   </script>
 </body>
 </html>
