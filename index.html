@@ -594,7 +594,7 @@
   <header>
     <div class="header-content">
       <span class="big-title">The (In)Visible Million Project</span>
-      <div class="menu-icon" id="menuIcon" title="Menu" tabindex="0">
+      <div class="menu-icon" id="menuIcon" title="Menu" tabindex="0" role="button" aria-label="Open navigation menu">
         <span></span>
         <span></span>
         <span></span>
@@ -672,10 +672,25 @@
     const menuIcon = document.getElementById('menuIcon');
     const popupMenu = document.getElementById('popupMenu');
     const closeMenuBtn = document.getElementById('closeMenuBtn');
-    menuIcon.addEventListener('click', () => popupMenu.classList.add('active'));
-    closeMenuBtn.addEventListener('click', () => popupMenu.classList.remove('active'));
+    
+    function openMenu() {
+      popupMenu.classList.add('active');
+    }
+    
+    function closeMenu() {
+      popupMenu.classList.remove('active');
+    }
+    
+    menuIcon.addEventListener('click', openMenu);
+    menuIcon.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        openMenu();
+      }
+    });
+    closeMenuBtn.addEventListener('click', closeMenu);
     popupMenu.addEventListener('click', (e) => {
-      if (e.target === popupMenu) popupMenu.classList.remove('active');
+      if (e.target === popupMenu) closeMenu();
     });
 
     // --- GRID ---
