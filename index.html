@@ -270,7 +270,6 @@
       padding: 16px 12px;
       transition: background .2s;
       background: #222;
-      /* Default position: right of grid */
       left: calc(50vw + 370px);
       top: 120px;
     }
@@ -363,131 +362,6 @@
       background: #e0e0e0;
       color: #111;
       outline: 3px solid #FF0070;
-    }
-    .footer {
-      width: 100vw;
-      max-width: 700px;
-      background: transparent;
-      color: #fff;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      font-size: 1em;
-      position: relative;
-      z-index: 10;
-      margin: 16px auto 0 auto;
-    }
-    .footer-row {
-      width: 100%;
-      display: flex;
-      flex-direction: row;
-      align-items: center;
-      justify-content: space-between;
-      gap: 7px;
-      flex-wrap: wrap;
-      background: #222;
-      border-radius: 12px;
-      padding: 7px 10px;
-      box-sizing: border-box;
-    }
-    .footer-group {
-      display: flex;
-      align-items: center;
-      gap: 5px;
-      flex-wrap: wrap;
-    }
-    .arrow-btn, .center-btn, .fancy-btn, .jump-panel input[type="number"], .jump-panel label {
-      font-size: 1em;
-      height: 28px;
-      min-width: 28px;
-      border-radius: 7px;
-      padding: 0 7px;
-      background: linear-gradient(160deg, #f0f0f0 70%, #bdbdbd 100%);
-      color: #222;
-      border: none;
-      outline: 2px solid #ccc;
-      margin: 0 1px;
-      font-weight: bold;
-      box-shadow: 0 1px 4px #8883;
-      transition: background 0.2s, color 0.2s;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-    .arrow-btn:active, .arrow-btn:focus,
-    .center-btn:active, .center-btn:focus,
-    .fancy-btn:active, .fancy-btn:focus {
-      background: #e0e0e0;
-      color: #111;
-      outline: 3px solid #FF0070;
-    }
-    .zoom-display {
-      font-size: 1em;
-      color: #fff;
-      background: #444;
-      border-radius: 7px;
-      padding: 0 7px;
-      height: 28px;
-      display: flex;
-      align-items: center;
-      margin: 0 4px;
-      font-weight: bold;
-    }
-    .jump-panel {
-      display: flex;
-      align-items: center;
-      gap: 3px;
-      flex-wrap: nowrap;
-      height: 28px;
-      white-space: nowrap;
-    }
-    .jump-panel label {
-      background: none;
-      color: #fff;
-      margin-right: 2px;
-      font-weight: normal;
-      outline: none;
-      min-width: 18px;
-      padding: 0;
-      height: auto;
-      box-shadow: none;
-      font-size: 0.9em;
-    }
-    .jump-panel input[type="number"] {
-      font-size: 1em;
-      width: 40px;
-      height: 18px;
-      border-radius: 6px;
-      border: 1px solid #bbb;
-      padding: 2px 6px;
-      background: #f8f8f8;
-      color: #222;
-      text-align: center;
-      outline: 2px solid #ccc;
-      appearance: none;
-      -webkit-appearance: none;
-      -moz-appearance: textfield;
-    }
-    .jump-panel input[type="number"]::-webkit-inner-spin-button,
-    .jump-panel input[type="number"]::-webkit-outer-spin-button {
-      -webkit-appearance: none;
-      margin: 0;
-    }
-    .footer-copyright {
-      width: 100vw;
-      text-align: center;
-      background: #151515;
-      color: #fff;
-      font-size: 0.9em;
-      padding: 7px 0 5px 0;
-      letter-spacing: 1px;
-      opacity: 0.8;
-      position: fixed;
-      left: 0;
-      bottom: 0;
-      z-index: 10000;
-      border-top: 1px solid #666;
     }
     /* --- MOBILE RESPONSIVE --- */
     @media (max-width: 1000px) {
@@ -689,6 +563,7 @@
     let gridCursor = { x: Math.floor(GRID_SIZE / 2), y: Math.floor(GRID_SIZE / 2) };
     let previewColor = null;
     let randomPopupActive = false;
+    let hasColoredSquare = false; // NEW: tracks if user has colored their square
 
     function setCanvasSize() {
       const rect = frame.getBoundingClientRect();
@@ -798,7 +673,7 @@
 
     // Show donation required popup if user clicks grid before donating
     canvas.addEventListener('click', function(e){
-      if (!hasDonated) {
+      if (!hasDonated || hasColoredSquare) {
         showDonateRequiredMessage(e.clientX, e.clientY);
         return;
       }
@@ -1004,9 +879,8 @@
 
     // --- DONATE BUTTON LOGIC ---
     donateBtn.onclick = function() {
-      if (!hasDonated) {
+      if (!hasDonated && !hasColoredSquare) {
         hasDonated = true;
-        donationUsed = false;
         donateBtn.disabled = true;
         donateBtn.style.display = "none";
         randomSquareBtn.style.display = "inline-flex";
@@ -1015,6 +889,7 @@
 
     // --- RANDOM SQUARE BUTTON LOGIC ---
     randomSquareBtn.onclick = function() {
+      if (hasColoredSquare) return; // Prevent coloring more than one square
       let tries = 2000;
       let found = false;
       while(tries-- > 0) {
@@ -1038,6 +913,7 @@
     };
 
     popupRandomBtn.onclick = function() {
+      if (hasColoredSquare) return;
       let tries = 2000;
       let found = false;
       while(tries-- > 0) {
@@ -1062,6 +938,7 @@
     };
 
     function openColorPickerForCurrentSquare() {
+      if (hasColoredSquare) return;
       paletteError.style.display = "none";
       palettePreviewCell = {x: gridCursor.x, y: gridCursor.y};
       showCursor = true;
@@ -1075,7 +952,6 @@
     }
 
     // --- COLOR PICKER LOGIC ---
-    // Simple color disc mock
     function drawColorDisc() {
       const ctxDisc = colorDisc.getContext("2d");
       const w = colorDisc.width, h = colorDisc.height;
@@ -1100,6 +976,7 @@
     drawColorDisc();
 
     colorDisc.addEventListener("click", function(e) {
+      if (hasColoredSquare) return;
       const rect = colorDisc.getBoundingClientRect();
       const x = e.clientX - rect.left - rect.width/2;
       const y = e.clientY - rect.top - rect.height/2;
@@ -1113,6 +990,7 @@
       requestRedraw();
     });
     randomColorBtn.onclick = function() {
+      if (hasColoredSquare) return;
       previewColor = `hsl(${Math.floor(Math.random()*360)}, 90%, 50%)`;
       confirmColorBtn.disabled = false;
       confirmColorBtn.style.color = "#222";
@@ -1123,11 +1001,12 @@
     };
 
     confirmColorBtn.onclick = function() {
-      if(palettePreviewCell && previewColor) {
+      if (palettePreviewCell && previewColor && !hasColoredSquare) {
         sendCellColor(palettePreviewCell.x, palettePreviewCell.y, previewColor);
         coloredCells[palettePreviewCell.x+","+palettePreviewCell.y] = {color: previewColor, locked: true};
         requestRedraw();
         hidePalette(true);
+        hasColoredSquare = true; // Prevent further coloring
         // 3 seconds later, show congrats message with coords and color
         setTimeout(function(){
           showCongratsMessage(palettePreviewCell.x, palettePreviewCell.y, previewColor);
@@ -1147,7 +1026,6 @@
         </div>
       `;
       congratsMessage.style.display = "block";
-      // Screenshot logic
       document.getElementById("screenshotBtn").onclick = function() {
         takeGridScreenshot(x, y, color);
       };
@@ -1171,6 +1049,12 @@
       const closeBtn = document.getElementById("closeCongratsBtn");
       closeBtn.onclick = function() {
         congratsMessage.style.display = "none";
+        // Revert UI: allow donation again, reset coloring ability
+        hasDonated = false;
+        hasColoredSquare = false;
+        donateBtn.disabled = false;
+        donateBtn.style.display = "inline-flex";
+        randomSquareBtn.style.display = "none";
       };
     }
 
