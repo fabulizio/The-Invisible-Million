@@ -61,8 +61,13 @@
       cursor: pointer;
       z-index: 100;
       background: none;
-      outline: 2px solid #ccc;
       border-radius: 8px;
+      outline: 3px solid #888; /* changed from 2px to 3px */
+      transition: outline-color 0.5s;
+    }
+    .menu-icon:focus, .menu-icon.active-outline {
+      outline: 3px solid #FF0070 !important;
+      transition: outline-color 0.5s;
     }
     .menu-icon span {
       display: block;
@@ -72,9 +77,6 @@
       border-radius: 3px;
       margin: 0 auto;
       transition: background 0.2s;
-    }
-    .menu-icon:focus {
-      outline: 3px solid #FF0070;
     }
     .popup-menu {
       position: fixed;
@@ -92,8 +94,14 @@
     .popup-menu.active { display: flex; }
     .popup-menu a,
     .popup-menu .close-menu {
-      outline: 2px solid #ccc;
+      outline: 3px solid #888 !important;
       border-radius: 12px;
+      transition: outline-color 0.5s;
+    }
+    .popup-menu a:active, .popup-menu a.active-outline,
+    .popup-menu .close-menu:active, .popup-menu .close-menu.active-outline {
+      outline: 3px solid #FF0070 !important;
+      transition: outline-color 0.5s;
     }
     .popup-menu a {
       color: #fff !important;
@@ -139,7 +147,7 @@
       padding-top: 8px;
       padding-bottom: 8px;
     }
-    .dummy-btn {
+    .dummy-btn, .random-btn-pink, .fancy-btn, .arrow-btn, .center-btn, #jumpBtn, .close-menu {
       background: linear-gradient(160deg, #f0f0f0 70%, #bdbdbd 100%);
       color: #222;
       border: none;
@@ -149,43 +157,30 @@
       cursor: pointer;
       font-weight: bold;
       box-shadow: 0 1px 4px #8883;
-      transition: background 0.2s, color 0.2s;
       min-width: 90px;
-      outline: 2px solid #ccc;
       margin-bottom: 8px;
       height: 33px;
       display: flex;
       align-items: center;
       justify-content: center;
+      outline: 3px solid #888 !important;
+      transition: outline-color 0.5s;
     }
-    .dummy-btn:active, .dummy-btn:focus {
-      background: #e0e0e0;
-      color: #111;
-      outline: 3px solid #FF0070;
+    .dummy-btn:active, .dummy-btn:focus, .dummy-btn.active-outline,
+    .random-btn-pink:active, .random-btn-pink:focus, .random-btn-pink.active-outline,
+    .fancy-btn:active, .fancy-btn:focus, .fancy-btn.active-outline,
+    .arrow-btn:active, .arrow-btn:focus, .arrow-btn.active-outline,
+    .center-btn:active, .center-btn:focus, .center-btn.active-outline,
+    #jumpBtn:active, #jumpBtn:focus, #jumpBtn.active-outline,
+    .close-menu:active, .close-menu:focus, .close-menu.active-outline {
+      outline: 3px solid #FF0070 !important;
+      transition: outline-color 0.5s;
     }
     .random-btn-pink {
-      border: 3px solid #FF0070 !important;
-      outline: 3px solid #FF0070 !important;
       background: linear-gradient(160deg, #fff0f8 70%, #ffbde8 100%);
       color: #222;
       border-radius: 9px;
-      padding: 7px 16px;
-      font-size: 1em;
-      cursor: pointer;
-      font-weight: bold;
       box-shadow: 0 1px 4px #FF0070;
-      min-width: 90px;
-      margin-bottom: 8px;
-      height: 33px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      transition: none;
-    }
-    .random-btn-pink:active, .random-btn-pink:focus {
-      background: #ffd1eb;
-      color: #111;
-      outline: 3px solid #FF0070;
     }
     #main-content {
       position: relative;
@@ -202,7 +197,7 @@
       max-width: 700px;
       margin: 0 auto;
       display: flex;
-      flex-direction: column;
+      flex-direction: row; /* changed for palette beside grid */
       align-items: center;
       justify-content: center;
       min-height: 360px;
@@ -238,7 +233,7 @@
     }
     #gridCanvas.grabbing, #frame.grabbing { cursor: grabbing !important; }
     .color-picker-modal {
-      position: fixed;
+      position: relative;
       z-index: 9999;
       display: none;
       flex-direction: column;
@@ -252,6 +247,9 @@
       padding: 16px 12px;
       transition: background .2s;
       background: #222;
+      margin-left: 14px; /* Moved beside grid */
+      margin-top: 0;
+      left: 0;
     }
     .color-picker-modal canvas {
       width: 120px; height: 120px;
@@ -359,21 +357,22 @@
       background: linear-gradient(160deg, #f0f0f0 70%, #bdbdbd 100%);
       color: #222;
       border: none;
-      outline: 2px solid #ccc;
+      outline: 3px solid #888 !important;
       margin: 0 1px;
       font-weight: bold;
       box-shadow: 0 1px 4px #8883;
-      transition: background 0.2s, color 0.2s;
+      transition: background 0.2s, color 0.2s, outline-color 0.5s;
       display: flex;
       align-items: center;
       justify-content: center;
     }
-    .arrow-btn:active, .arrow-btn:focus,
-    .center-btn:active, .center-btn:focus,
-    .fancy-btn:active, .fancy-btn:focus {
+    .arrow-btn:active, .arrow-btn:focus, .arrow-btn.active-outline,
+    .center-btn:active, .center-btn:focus, .center-btn.active-outline,
+    .fancy-btn:active, .fancy-btn:focus, .fancy-btn.active-outline {
       background: #e0e0e0;
       color: #111;
-      outline: 3px solid #FF0070;
+      outline: 3px solid #FF0070 !important;
+      transition: outline-color 0.5s;
     }
     .zoom-display {
       font-size: 1em;
@@ -417,15 +416,15 @@
       background: #f8f8f8;
       color: #222;
       text-align: center;
-      outline: 2px solid #ccc;
+      outline: 3px solid #888 !important;
       appearance: none;
       -webkit-appearance: none;
       -moz-appearance: textfield;
+      transition: outline-color 0.5s;
     }
-    .jump-panel input[type="number"]::-webkit-inner-spin-button,
-    .jump-panel input[type="number"]::-webkit-outer-spin-button {
-      -webkit-appearance: none;
-      margin: 0;
+    .jump-panel input[type="number"]:active, .jump-panel input[type="number"]:focus, .jump-panel input[type="number"].active-outline {
+      outline: 3px solid #FF0070 !important;
+      transition: outline-color 0.5s;
     }
     .footer-copyright {
       width: 100vw;
@@ -442,6 +441,16 @@
       z-index: 10000;
       border-top: 1px solid #666;
     }
+    @media (max-width: 950px) {
+      .grid-container {
+        flex-direction: column;
+        align-items: center;
+      }
+      .color-picker-modal {
+        margin-left: 0;
+        margin-top: 14px;
+      }
+    }
     @media (max-width: 750px) {
       .big-title { font-size: 1.1em; }
       .header-content { height: 44px; min-height: 44px;}
@@ -455,8 +464,7 @@
         aspect-ratio: 1/1;
       }
       .grid-container { max-width: 98vw; }
-      .dummy-btn { font-size: 0.9em; min-width: 80px; padding: 5px 8px;}
-      .random-btn-pink { font-size: 0.9em; min-width: 80px; padding: 5px 8px;}
+      .dummy-btn, .random-btn-pink, .fancy-btn { font-size: 0.9em; min-width: 80px; padding: 5px 8px;}
       .footer { font-size: 0.8em; max-width: 98vw;}
       .footer-row { gap: 4px; padding: 5px 7px;}
       .footer-copyright { font-size: 0.8em; }
@@ -469,8 +477,7 @@
       .header-content { gap: 4px; }
       .big-title { font-size: 0.8em; }
       #frame { min-height: 150px; height: 98vw; max-height: 98vw; aspect-ratio: 1/1; }
-      .dummy-btn { font-size: 0.8em; min-width: 60px; padding: 4px 4px;}
-      .random-btn-pink { font-size: 0.8em; min-width: 60px; padding: 4px 4px;}
+      .dummy-btn, .random-btn-pink, .fancy-btn { font-size: 0.8em; min-width: 60px; padding: 4px 4px;}
     }
   </style>
 </head>
@@ -494,17 +501,17 @@
         <div id="frame" tabindex="0">
           <canvas id="gridCanvas"></canvas>
           <div id="coordPopup"></div>
-          <div id="colorPickerModal" class="color-picker-modal">
-            <canvas id="colorDisc" width="120" height="120"></canvas>
-            <div class="modal-btns">
-              <button id="randomColorBtn" type="button" class="fancy-btn">Random Color</button>
-              <button id="confirmColorBtn" type="button" class="fancy-btn" disabled style="color:grey;">OK</button>
-              <button id="cancelColorBtn" type="button" class="fancy-btn">Cancel</button>
-            </div>
-          </div>
           <div class="palette-error" id="paletteError"></div>
           <div class="donate-required-message" id="donateRequiredMsg"></div>
           <div id="congratsMessage"></div>
+        </div>
+        <div id="colorPickerModal" class="color-picker-modal">
+          <canvas id="colorDisc" width="120" height="120"></canvas>
+          <div class="modal-btns">
+            <button id="randomColorBtn" type="button" class="fancy-btn">Random Color</button>
+            <button id="confirmColorBtn" type="button" class="fancy-btn" disabled style="color:grey;">OK</button>
+            <button id="cancelColorBtn" type="button" class="fancy-btn">Cancel</button>
+          </div>
         </div>
       </div>
       <div class="footer">
@@ -623,6 +630,7 @@
     let gridCursor = { x: Math.floor(GRID_SIZE / 2), y: Math.floor(GRID_SIZE / 2) };
     let previewColor = null;
     let discSelectedColor = null;
+    let lastRandomSquareKey = null;
 
     function setCanvasSize() {
       const rect = frame.getBoundingClientRect();
@@ -788,14 +796,27 @@
         headers: {"Content-Type": "application/json"},
         body: JSON.stringify({x, y, color})
       })
-      .then(res => res.json())
+      .then(res => {
+        if (!res.ok) throw new Error("Too much traffic");
+        return res.json();
+      })
       .then(_ => {
         fetchGridState();
         awaitingColoring = false;
+        donationUsed = true;
+        donateBtn.disabled = false;
+        donateBtn.textContent = "Donate / Contribute";
+        donateBtn.classList.remove("random-btn-pink");
+        donateBtn.classList.add("dummy-btn");
+        hasDonated = false;
+        canDonate = true;
+        showCongratsMessage();
+      })
+      .catch(err => {
+        showPaletteError("Too much traffic, please retry.");
         donateBtn.disabled = false;
         donateBtn.textContent = "Random Square";
-      })
-      .catch(err => {});
+      });
     }
     function fetchGridState() {
       fetch(`https://155ca338-0e90-4f5a-88ec-b6163921baae-00-181dgn4pq10j7.janeway.replit.dev/painted`)
@@ -812,7 +833,6 @@
 
     function hidePalette(force = false) {
       if (!force) {
-        // Only hide on OK button or menu open; otherwise, do not hide
         if (!hidePalette.shouldHide) return;
       }
       colorPickerModal.style.display = "none";
@@ -827,16 +847,14 @@
     }
     hidePalette.shouldHide = false;
 
-    // --- MODIFIED FOOTER BUTTONS: DO NOT HIDE PALETTE ---
-    zoomInBtn.addEventListener('click', () => { setZoom(zoom * 1.1); /* hidePalette(); */ });
-    zoomOutBtn.addEventListener('click', () => { setZoom(zoom / 1.1); /* hidePalette(); */ });
+    zoomInBtn.addEventListener('click', () => { setZoom(zoom * 1.1); });
+    zoomOutBtn.addEventListener('click', () => { setZoom(zoom / 1.1); });
 
     function moveBy(deltaX, deltaY) {
       offsetX += deltaX;
       offsetY += deltaY;
       clampOffset();
       requestRedraw();
-      // hidePalette(); // REMOVED
     }
     function getMoveAmount() { return CELL_SIZE * zoom * 0.8; }
     arrowUpBtn.onclick = function() { moveBy(0, getMoveAmount()); };
@@ -852,14 +870,12 @@
       offsetY = 0;
       setZoom(MIN_ZOOM);
       requestRedraw();
-      // hidePalette(); // REMOVED
     };
     jumpBtn.addEventListener('click', () => {
       gridCursor.x = Math.min(GRID_SIZE-1, Math.max(0, Number(jumpX.value)));
       gridCursor.y = Math.min(GRID_SIZE-1, Math.max(0, Number(jumpY.value)));
       ensureCellVisible(gridCursor.x, gridCursor.y);
       requestRedraw();
-      // hidePalette(); // REMOVED
     });
 
     // Mouse wheel zoom/ctrl only for grid
@@ -944,33 +960,45 @@
       hidePalette();
     });
 
-    // --- Random Square Button Logic (NO POPUP) ---
+    // --- Random Square Button Logic ---
     function handleRandomSquare() {
-      let tries = 2000;
-      let found = false;
-      while(tries-- > 0) {
-        const x = Math.floor(Math.random()*GRID_SIZE);
-        const y = Math.floor(Math.random()*GRID_SIZE);
-        const key = x + "," + y;
-        if (!coloredCells[key] || !coloredCells[key].locked) {
-          gridCursor.x = x;
-          gridCursor.y = y;
-          jumpX.value = x;
-          jumpY.value = y;
-          ensureCellVisible(x, y);
-          requestRedraw();
-          found = true;
+      let available = [];
+      for (let x = 0; x < GRID_SIZE; x++) {
+        for (let y = 0; y < GRID_SIZE; y++) {
+          let key = x + "," + y;
+          if (!coloredCells[key] || !coloredCells[key].locked) {
+            available.push({x, y, key});
+          }
+        }
+      }
+      if (available.length === 0) {
+        alert("No available squares left!");
+        return;
+      }
+      let picked = null, tries = 1000;
+      while (tries-- > 0) {
+        let n = Math.floor(Math.random() * available.length);
+        if (available[n].key !== lastRandomSquareKey || available.length === 1) {
+          picked = available[n];
           break;
         }
       }
+      if (!picked) picked = available[0];
+      gridCursor.x = picked.x;
+      gridCursor.y = picked.y;
+      jumpX.value = picked.x;
+      jumpY.value = picked.y;
+      ensureCellVisible(picked.x, picked.y);
+      lastRandomSquareKey = picked.key;
+      requestRedraw();
       hidePalette();
-      if (!found) { alert("No available squares left!"); return; }
       setTimeout(openColorPickerForCurrentSquare, 300);
     }
 
-    // Donate Button Logic - transform on donate
+    // Donate Button Logic - transform on donate, revert when colored
     donateBtn.onclick = function() {
-      if (!hasDonated && canDonate) {
+      addActiveOutline(donateBtn);
+      if ((!hasDonated && canDonate) || (hasDonated && donationUsed)) {
         hasDonated = true;
         donationUsed = false;
         canDonate = false;
@@ -979,7 +1007,7 @@
         donateBtn.classList.remove("dummy-btn");
         donateBtn.classList.add("random-btn-pink");
         handleRandomSquare();
-        donateBtn.disabled = true;
+        donateBtn.disabled = false;
       } else if (hasDonated && !awaitingColoring) {
         handleRandomSquare();
       } else if (awaitingColoring) {
@@ -992,102 +1020,117 @@
       }
     };
 
+    function showPaletteError(msg) {
+      paletteError.textContent = msg;
+      paletteError.style.display = "block";
+      setTimeout(() => paletteError.style.display = "none", 3500);
+    }
+
+    function showCongratsMessage() {
+      congratsMessage.textContent = "Congratulations! Your square has been colored.";
+      congratsMessage.style.display = "block";
+      setTimeout(() => congratsMessage.style.display = "none", 2500);
+    }
+
     // --- Color Picker Palette Drawing and Selection ---
+    function openColorPickerForCurrentSquare() {
+      palettePreviewCell = {x: gridCursor.x, y: gridCursor.y};
+      previewColor = null;
+      colorPickerModal.style.display = "flex";
+      colorPickerModal.style.left = "auto";
+      colorPickerModal.style.top = "auto";
+      showCursor = false;
+      confirmColorBtn.disabled = true;
+      confirmColorBtn.style.color = "grey";
+      drawColorDisc();
+    }
+
     function drawColorDisc() {
       const disc = document.getElementById('colorDisc');
       const ctxDisc = disc.getContext('2d');
       const w = disc.width;
       const h = disc.height;
-      const r = w/2;
-      ctxDisc.clearRect(0,0,w,h);
-      for (let y = 0; y < h; y++) {
-        for (let x = 0; x < w; x++) {
-          const dx = x - r;
-          const dy = y - r;
-          const dist = Math.sqrt(dx*dx + dy*dy);
-          if (dist > r) continue;
-          let angle = Math.atan2(dy, dx);
-          if (angle < 0) angle += 2*Math.PI;
-          const hue = angle * 180 / Math.PI;
-          const sat = dist / r;
-          ctxDisc.fillStyle = `hsl(${hue},${sat*100}%,50%)`;
-          ctxDisc.fillRect(x, y, 1, 1);
+      ctxDisc.clearRect(0, 0, w, h);
+      for (let r = 0; r < w / 2; r++) {
+        for (let a = 0; a < 360; a += 1) {
+          let rad = a * Math.PI / 180;
+          let x = w / 2 + r * Math.cos(rad);
+          let y = h / 2 + r * Math.sin(rad);
+          let color = `hsl(${a},100%,${80 - r / (w / 2) * 50}%)`;
+          ctxDisc.beginPath();
+          ctxDisc.arc(x, y, 1, 0, 2 * Math.PI);
+          ctxDisc.fillStyle = color;
+          ctxDisc.fill();
         }
       }
       if (discSelectedColor) {
         ctxDisc.beginPath();
-        ctxDisc.arc(discSelectedColor.x, discSelectedColor.y, 8, 0, 2*Math.PI);
-        ctxDisc.strokeStyle = "#fff";
-        ctxDisc.lineWidth = 2;
+        ctxDisc.arc(w / 2, h / 2, w / 2 - 2, 0, 2 * Math.PI);
+        ctxDisc.lineWidth = 4;
+        ctxDisc.strokeStyle = discSelectedColor;
         ctxDisc.stroke();
       }
     }
 
-    // --- MODIFIED: Palette Tool and Menu Icon Logic ---
-    function openColorPickerForCurrentSquare() {
-      palettePreviewCell = { x: gridCursor.x, y: gridCursor.y };
-      previewColor = null;
-      colorPickerModal.style.display = "flex";
-      colorPickerModal.style.background = "#222";
-      drawColorDisc();
-      showCursor = false;
-      confirmColorBtn.disabled = true;
-      confirmColorBtn.style.color = "grey";
-      hidePalette.shouldHide = false;
-      disableMenuIcon(); // Disable menu icon when palette opens
-    }
-
-    // Palette Modal Handlers
-    randomColorBtn.onclick = function() {
-      const h = Math.floor(Math.random()*360);
-      const s = Math.floor(Math.random()*60)+40;
-      const l = Math.floor(Math.random()*30)+50;
-      previewColor = `hsl(${h},${s}%,${l}%)`;
-      confirmColorBtn.disabled = false;
-      confirmColorBtn.style.color = "#222";
-      discSelectedColor = null;
-      drawColorDisc();
-      requestRedraw();
-    };
-    cancelColorBtn.onclick = function() {
-      hidePalette(true);
-      enableMenuIcon();
-    };
-
-    colorDisc.addEventListener('click', function(e){
+    colorDisc.addEventListener('click', function(e) {
       const rect = colorDisc.getBoundingClientRect();
       const x = e.clientX - rect.left;
       const y = e.clientY - rect.top;
-      const r = colorDisc.width/2;
-      const dx = x - r;
-      const dy = y - r;
+      const dx = x - colorDisc.width/2;
+      const dy = y - colorDisc.height/2;
       const dist = Math.sqrt(dx*dx + dy*dy);
-      if (dist > r) return;
-      let angle = Math.atan2(dy, dx);
-      if (angle < 0) angle += 2*Math.PI;
-      const hue = angle * 180 / Math.PI;
-      const sat = dist / r;
-      previewColor = `hsl(${hue},${sat*100}%,50%)`;
+      if (dist > colorDisc.width/2) return;
+      const angle = Math.atan2(dy, dx) * 180 / Math.PI;
+      let hue = (angle + 360) % 360;
+      let sat = 100;
+      let light = 80 - dist / (colorDisc.width/2) * 50;
+      discSelectedColor = `hsl(${hue},${sat}%,${light}%)`;
+      previewColor = discSelectedColor;
       confirmColorBtn.disabled = false;
       confirmColorBtn.style.color = "#222";
-      discSelectedColor = {x,y};
       drawColorDisc();
-      requestRedraw();
     });
 
-    // --- MODIFIED: Palette OK Button disables menu icon for 7 seconds ---
-    confirmColorBtn.onclick = function() {
-      if (!palettePreviewCell || !previewColor) return;
-      sendCellColor(palettePreviewCell.x, palettePreviewCell.y, previewColor);
+    randomColorBtn.addEventListener('click', function() {
+      addActiveOutline(randomColorBtn);
+      const hue = Math.floor(Math.random()*360);
+      const sat = 100;
+      const light = 55 + Math.floor(Math.random()*30);
+      discSelectedColor = `hsl(${hue},${sat}%,${light}%)`;
+      previewColor = discSelectedColor;
+      confirmColorBtn.disabled = false;
+      confirmColorBtn.style.color = "#222";
+      drawColorDisc();
+    });
+    confirmColorBtn.addEventListener('click', function() {
+      addActiveOutline(confirmColorBtn);
+      if (palettePreviewCell && previewColor && awaitingColoring) {
+        sendCellColor(palettePreviewCell.x, palettePreviewCell.y, previewColor);
+        hidePalette(true);
+      }
+    });
+    cancelColorBtn.addEventListener('click', function() {
+      addActiveOutline(cancelColorBtn);
       hidePalette(true);
-      setTimeout(() => {
-        enableMenuIcon(); // Re-enable menu icon after 7 seconds
-      }, 7000);
-    };
+    });
 
+    // Button outline effect logic for all buttons
+    function addActiveOutline(btn) {
+      btn.classList.add('active-outline');
+      setTimeout(()=>{
+        btn.classList.remove('active-outline');
+      },2000);
+    }
+    document.querySelectorAll('button, input[type="number"], .menu-icon, .close-menu').forEach(btn=>{
+      btn.addEventListener('mousedown', function(){ addActiveOutline(btn); });
+      btn.addEventListener('focus', function(){ addActiveOutline(btn); });
+    });
+
+    // Responsive canvas
     window.addEventListener('resize', setCanvasSize);
     setCanvasSize();
     fetchGridState();
+
   </script>
 </body>
 </html>
