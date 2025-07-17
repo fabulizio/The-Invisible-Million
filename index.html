@@ -1135,19 +1135,16 @@
       }
     };
     
-    confirmColorBtn.onclick = function() {
+       confirmColorBtn.onclick = function() {
       if (hasColoredSquare || !palettePreviewCell || !previewColor) return;
     
-      // Send the colored cell to the backend
+      // Send the update to backend
       sendCellColor(palettePreviewCell.x, palettePreviewCell.y, previewColor);
     
-      // Mark that the user has colored their square
       hasColoredSquare = true;
-    
-      // Hide palette & update UI
       hidePalette(true);
     
-      // Optionally show a confirmation message
+      // Optionally display a confirmation
       congratsMessage.textContent = "Congratulations! Your square is now part of the (In)Visible Million.";
       congratsMessage.style.display = "block";
       setTimeout(() => { congratsMessage.style.display = "none"; }, 2500);
