@@ -123,78 +123,23 @@
       cursor: pointer;
       z-index: 5100;
     }
-    /* Tool Panel Styles */
-    #toolPanel {
+    #donateBtnOuter {
       width: 100vw;
-      max-width: 700px;
-      min-height: 120px;
-      background: #222;
-      display: none;
-      flex-direction: row;
-      align-items: center;
+      display: flex;
       justify-content: center;
-      gap: 32px;
+      align-items: center;
+      background: none;
       position: relative;
       z-index: 1002;
-      margin: 0 auto 12px auto;
-      padding: 12px 0;
-      border-bottom: 2px solid #444;
-      box-shadow: 0 4px 18px #0008;
-    }
-    #toolPanel.active {
-      display: flex;
-    }
-    .tool-section {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 10px;
-      min-width: 120px;
-    }
-    #toolColorDisc {
-      width: 120px;
-      height: 120px;
-      border: 2px solid #fff;
-      border-radius: 50%;
-      background: transparent;
-      margin-bottom: 8px;
-      display: block;
-    }
-    .tool-btn {
-      background: linear-gradient(160deg, #fff0f8 70%, #ffbde8 100%);
-      color: #222;
-      border: 3px solid #FF0070 !important;
-      outline: 3px solid #FF0070 !important;
-      border-radius: 9px;
-      padding: 7px 16px;
-      font-size: 1em;
-      cursor: pointer;
-      font-weight: bold;
-      box-shadow: 0 1px 4px #FF0070;
+      margin-top: 0;
+      margin-bottom: 12px;
+      top: 0;
+      right: 0;
       min-width: 90px;
-      margin-bottom: 8px;
-      height: 33px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      transition: none;
+      padding-top: 8px;
+      padding-bottom: 8px;
     }
-    .tool-btn:active, .tool-btn:focus {
-      background: #ffd1eb;
-      color: #111;
-      outline: 3px solid #FF0070;
-    }
-    #toolPreviewColor {
-      width: 40px;
-      height: 40px;
-      border-radius: 50%;
-      border: 2px solid #fff;
-      margin-bottom: 8px;
-      background: #fff;
-      display: block;
-    }
-    #toolConfirmBtn,
-    #toolCancelBtn {
+    .dummy-btn {
       background: linear-gradient(160deg, #f0f0f0 70%, #bdbdbd 100%);
       color: #222;
       border: none;
@@ -204,46 +149,25 @@
       cursor: pointer;
       font-weight: bold;
       box-shadow: 0 1px 4px #8883;
-      margin-bottom: 4px;
+      transition: background 0.2s, color 0.2s;
+      min-width: 90px;
+      outline: 2px solid #ccc;
+      margin-bottom: 8px;
       height: 33px;
       display: flex;
       align-items: center;
       justify-content: center;
-      outline: 2px solid #ccc;
-      transition: background 0.2s, color 0.2s;
     }
-    #toolConfirmBtn:active, #toolConfirmBtn:focus,
-    #toolCancelBtn:active, #toolCancelBtn:focus {
+    .dummy-btn:active, .dummy-btn:focus {
       background: #e0e0e0;
       color: #111;
       outline: 3px solid #FF0070;
     }
-    #toolConfirmBtn:disabled {
-      color: grey;
-      background: #ccc;
-      cursor: not-allowed;
-    }
-    #toolError {
-      color: #fff;
-      background: #ff0070;
-      border-radius: 14px;
-      padding: 10px 18px;
-      font-size: 1.1em;
-      text-align: center;
-      z-index: 10001;
-      box-shadow: 0 0 22px #000;
-      display: none;
-      position: absolute;
-      left: 50%;
-      top: 10%;
-      transform: translate(-50%, 0);
-      outline: 2px solid #ccc;
-    }
-    #toolRandomBtn {
-      background: linear-gradient(160deg, #fff0f8 70%, #ffbde8 100%);
-      color: #222;
+    .random-btn-pink {
       border: 3px solid #FF0070 !important;
       outline: 3px solid #FF0070 !important;
+      background: linear-gradient(160deg, #fff0f8 70%, #ffbde8 100%);
+      color: #222;
       border-radius: 9px;
       padding: 7px 16px;
       font-size: 1em;
@@ -251,7 +175,6 @@
       font-weight: bold;
       box-shadow: 0 1px 4px #FF0070;
       min-width: 90px;
-      margin-top: 4px;
       margin-bottom: 8px;
       height: 33px;
       display: flex;
@@ -259,12 +182,141 @@
       justify-content: center;
       transition: none;
     }
-    #toolRandomBtn:active, #toolRandomBtn:focus {
+    .random-btn-pink:active, .random-btn-pink:focus {
       background: #ffd1eb;
       color: #111;
       outline: 3px solid #FF0070;
     }
-    /* ...footer and other CSS unchanged... */
+    #main-content {
+      position: relative;
+      width: 100vw;
+      flex: 1 1 auto;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+    .grid-container {
+      position: relative;
+      width: 100%;
+      max-width: 700px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 360px;
+      z-index: 1;
+    }
+    #frame {
+      outline: 3px solid #ccc;
+      background: #333;
+      width: 90vw;
+      max-width: 700px;
+      height: 90vw;
+      max-height: 700px;
+      aspect-ratio: 1/1;
+      position: relative;
+      overflow: hidden;
+      margin: 0 auto;
+      box-sizing: border-box;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      touch-action: none;
+    }
+    #gridCanvas {
+      width: 100%; height: 100%;
+      display: block;
+      user-select: none;
+      background: #333;
+      position: absolute;
+      left: 0; top: 0;
+      transition: cursor .15s;
+      cursor: pointer;
+      touch-action: none;
+    }
+    #gridCanvas.grabbing, #frame.grabbing { cursor: grabbing !important; }
+    .color-picker-modal {
+      position: fixed;
+      z-index: 9999;
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      border-radius: 18px;
+      box-shadow: 0 0 24px #000;
+      border: 3px solid #ccc;
+      min-width: 200px;
+      min-height: 200px;
+      justify-content: center;
+      padding: 16px 12px;
+      transition: background .2s;
+      background: #222;
+    }
+    .color-picker-modal canvas {
+      width: 120px; height: 120px;
+      border: 2px solid #fff;
+      border-radius: 50%;
+      background: transparent;
+      margin-bottom: 12px;
+      display: block;
+    }
+    .color-picker-modal .modal-btns {
+      display: flex; flex-direction: column; gap: 10px; justify-content: center;
+      align-items: center;
+      margin-top: 7px;
+      width: 100%;
+    }
+    .palette-error, .palette-message, .donate-required-message {
+      color: #fff;
+      background: #ff0070;
+      border-radius: 14px;
+      padding: 14px 24px;
+      font-size: 1.1em;
+      margin-bottom: 12px;
+      margin-top: 14px;
+      text-align: center;
+      z-index: 10001;
+      box-shadow: 0 0 22px #000;
+      display: none;
+      position: fixed;
+      left: 50%;
+      transform: translate(-50%, 0);
+      outline: 2px solid #ccc;
+    }
+    #coordPopup {
+      pointer-events: none;
+      position: fixed;
+      background: #111;
+      color: #fff;
+      border: 2px solid #fff;
+      border-radius: 0;
+      padding: 7px 10px;
+      font-size: 0.9em;
+      z-index: 1200;
+      box-shadow: 0 0 11px #000;
+      white-space: nowrap;
+      text-align: left;
+      display: none;
+    }
+    #congratsMessage {
+      position: fixed;
+      background: #fff;
+      color: #222;
+      border-radius: 20px;
+      border: 2px solid #ff0070;
+      padding: 24px 32px;
+      font-size: 1.3em;
+      z-index: 10001;
+      text-align: center;
+      box-shadow: 0 0 44px #000;
+      display: none;
+      max-width: 90vw;
+      pointer-events: auto;
+      left: 50%;
+      transform: translateX(-50%);
+      outline: 2px solid #ccc;
+    }
     .footer {
       width: 100vw;
       max-width: 700px;
@@ -298,7 +350,83 @@
       gap: 5px;
       flex-wrap: wrap;
     }
-    /* ...other CSS unchanged... */
+    .arrow-btn, .center-btn, .fancy-btn, .jump-panel input[type="number"], .jump-panel label {
+      font-size: 1em;
+      height: 28px;
+      min-width: 28px;
+      border-radius: 7px;
+      padding: 0 7px;
+      background: linear-gradient(160deg, #f0f0f0 70%, #bdbdbd 100%);
+      color: #222;
+      border: none;
+      outline: 2px solid #ccc;
+      margin: 0 1px;
+      font-weight: bold;
+      box-shadow: 0 1px 4px #8883;
+      transition: background 0.2s, color 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .arrow-btn:active, .arrow-btn:focus,
+    .center-btn:active, .center-btn:focus,
+    .fancy-btn:active, .fancy-btn:focus {
+      background: #e0e0e0;
+      color: #111;
+      outline: 3px solid #FF0070;
+    }
+    .zoom-display {
+      font-size: 1em;
+      color: #fff;
+      background: #444;
+      border-radius: 7px;
+      padding: 0 7px;
+      height: 28px;
+      display: flex;
+      align-items: center;
+      margin: 0 4px;
+      font-weight: bold;
+    }
+    .jump-panel {
+      display: flex;
+      align-items: center;
+      gap: 3px;
+      flex-wrap: nowrap;
+      height: 28px;
+      white-space: nowrap;
+    }
+    .jump-panel label {
+      background: none;
+      color: #fff;
+      margin-right: 2px;
+      font-weight: normal;
+      outline: none;
+      min-width: 18px;
+      padding: 0;
+      height: auto;
+      box-shadow: none;
+      font-size: 0.9em;
+    }
+    .jump-panel input[type="number"] {
+      font-size: 1em;
+      width: 40px;
+      height: 18px;
+      border-radius: 6px;
+      border: 1px solid #bbb;
+      padding: 2px 6px;
+      background: #f8f8f8;
+      color: #222;
+      text-align: center;
+      outline: 2px solid #ccc;
+      appearance: none;
+      -webkit-appearance: none;
+      -moz-appearance: textfield;
+    }
+    .jump-panel input[type="number"]::-webkit-inner-spin-button,
+    .jump-panel input[type="number"]::-webkit-outer-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
+    }
     .footer-copyright {
       width: 100vw;
       text-align: center;
@@ -315,16 +443,34 @@
       border-top: 1px solid #666;
     }
     @media (max-width: 750px) {
-      #toolPanel { max-width: 98vw; }
-      #toolColorDisc { width: 80px; height: 80px; }
-      #toolPreviewColor { width: 28px; height: 28px; }
-      .tool-section { min-width: 80px; }
+      .big-title { font-size: 1.1em; }
+      .header-content { height: 44px; min-height: 44px;}
+      header { min-height: 44px; height: 44px; }
+      #frame {
+        width: 98vw;
+        max-width: 98vw;
+        height: 98vw;
+        max-height: 98vw;
+        min-height: 220px;
+        aspect-ratio: 1/1;
+      }
+      .grid-container { max-width: 98vw; }
+      .dummy-btn { font-size: 0.9em; min-width: 80px; padding: 5px 8px;}
+      .random-btn-pink { font-size: 0.9em; min-width: 80px; padding: 5px 8px;}
+      .footer { font-size: 0.8em; max-width: 98vw;}
+      .footer-row { gap: 4px; padding: 5px 7px;}
+      .footer-copyright { font-size: 0.8em; }
+      .color-picker-modal canvas { width: 80px; height: 80px;}
+      .color-picker-modal { min-width: 120px; min-height: 120px; padding: 8px 5px;}
+      #congratsMessage { padding: 10px 14px; font-size: 1em;}
+      .palette-error { font-size: 0.9em; padding: 7px 12px; }
     }
     @media (max-width: 480px) {
-      #toolPanel { padding: 8px 0; gap: 10px;}
-      #toolColorDisc { width: 50px; height: 50px;}
-      #toolPreviewColor { width: 18px; height: 18px;}
-      .tool-section { min-width: 50px; }
+      .header-content { gap: 4px; }
+      .big-title { font-size: 0.8em; }
+      #frame { min-height: 150px; height: 98vw; max-height: 98vw; aspect-ratio: 1/1; }
+      .dummy-btn { font-size: 0.8em; min-width: 60px; padding: 4px 4px;}
+      .random-btn-pink { font-size: 0.8em; min-width: 60px; padding: 4px 4px;}
     }
   </style>
 </head>
@@ -339,22 +485,8 @@
       </div>
     </div>
   </header>
-  <!-- Donate button (initial display) -->
   <div id="donateBtnOuter">
     <button class="dummy-btn" id="donateBtn">Donate / Contribute</button>
-  </div>
-  <!-- Tool panel (appears after donation) -->
-  <div id="toolPanel">
-    <div class="tool-section">
-      <canvas id="toolColorDisc" width="120" height="120"></canvas>
-      <div id="toolPreviewColor"></div>
-      <button id="toolConfirmBtn" type="button" disabled>OK</button>
-      <button id="toolCancelBtn" type="button">Cancel</button>
-      <div id="toolError"></div>
-    </div>
-    <div class="tool-section">
-      <button id="toolRandomBtn" type="button">Random Square</button>
-    </div>
   </div>
   <main>
     <div id="main-content">
@@ -362,6 +494,15 @@
         <div id="frame" tabindex="0">
           <canvas id="gridCanvas"></canvas>
           <div id="coordPopup"></div>
+          <div id="colorPickerModal" class="color-picker-modal">
+            <canvas id="colorDisc" width="120" height="120"></canvas>
+            <div class="modal-btns">
+              <button id="randomColorBtn" type="button" class="fancy-btn">Random Color</button>
+              <button id="confirmColorBtn" type="button" class="fancy-btn" disabled style="color:grey;">OK</button>
+              <button id="cancelColorBtn" type="button" class="fancy-btn">Cancel</button>
+            </div>
+          </div>
+          <div class="palette-error" id="paletteError"></div>
           <div class="donate-required-message" id="donateRequiredMsg"></div>
           <div id="congratsMessage"></div>
         </div>
@@ -409,13 +550,29 @@
     const closeMenuBtn = document.getElementById('closeMenuBtn');
     menuIcon.addEventListener('click', () => {
       popupMenu.classList.add('active');
+      hidePalette.shouldHide = true;
+      hidePalette(true);
     });
     closeMenuBtn.addEventListener('click', () => {
       popupMenu.classList.remove('active');
+      hidePalette.shouldHide = true;
+      hidePalette(true);
     });
     popupMenu.addEventListener('click', (e) => {
       if (e.target === popupMenu) popupMenu.classList.remove('active');
     });
+
+    // --- MENU ICON DISABLE/ENABLE LOGIC ---
+    function disableMenuIcon() {
+      menuIcon.setAttribute('disabled', 'disabled');
+      menuIcon.style.pointerEvents = 'none';
+      menuIcon.style.opacity = '0.4';
+    }
+    function enableMenuIcon() {
+      menuIcon.removeAttribute('disabled');
+      menuIcon.style.pointerEvents = '';
+      menuIcon.style.opacity = '';
+    }
 
     // --- GRID ---
     const GRID_SIZE = 1100;
@@ -429,6 +586,7 @@
     let isDragging = false;
     let dragStart = {x: 0, y: 0};
     let offsetStart = {x: 0, y: 0};
+    let palettePreviewCell = null;
     let showCursor = true;
     let hasDonated = false;
     let donationUsed = false;
@@ -455,23 +613,16 @@
     const donateBtnOuter = document.getElementById('donateBtnOuter');
     const coordPopup = document.getElementById('coordPopup');
     const congratsMessage = document.getElementById('congratsMessage');
+    const paletteError = document.getElementById('paletteError');
+    const colorPickerModal = document.getElementById('colorPickerModal');
+    const colorDisc = document.getElementById('colorDisc');
+    const confirmColorBtn = document.getElementById('confirmColorBtn');
+    const cancelColorBtn = document.getElementById('cancelColorBtn');
+    const randomColorBtn = document.getElementById('randomColorBtn');
     const donateRequiredMsg = document.getElementById('donateRequiredMsg');
     let gridCursor = { x: Math.floor(GRID_SIZE / 2), y: Math.floor(GRID_SIZE / 2) };
-
-    // Tool panel elements
-    const toolPanel = document.getElementById('toolPanel');
-    const toolColorDisc = document.getElementById('toolColorDisc');
-    const toolPreviewColor = document.getElementById('toolPreviewColor');
-    const toolConfirmBtn = document.getElementById('toolConfirmBtn');
-    const toolCancelBtn = document.getElementById('toolCancelBtn');
-    const toolRandomBtn = document.getElementById('toolRandomBtn');
-    const toolError = document.getElementById('toolError');
-
-    // Color picker tool state
     let previewColor = null;
     let discSelectedColor = null;
-    let toolActive = false;
-    let palettePreviewCell = null;
 
     function setCanvasSize() {
       const rect = frame.getBoundingClientRect();
@@ -560,6 +711,7 @@
       }
     }
     function showCoordPopup(cell, mouseX, mouseY) {
+      if (colorPickerModal.style.display === "flex") return;
       coordPopup.innerHTML = `<span>X: ${cell.x}, Y: ${cell.y}</span>`;
       coordPopup.style.left = (mouseX + 9) + "px";
       coordPopup.style.top = (mouseY + 9) + "px";
@@ -569,6 +721,7 @@
       coordPopup.style.display = "none";
     }
     canvas.addEventListener('mousemove', function(e) {
+      if (colorPickerModal.style.display === "flex") return;
       const rect = canvas.getBoundingClientRect();
       const mouseX = e.clientX - rect.left;
       const mouseY = e.clientY - rect.top;
@@ -577,6 +730,7 @@
     });
     canvas.addEventListener('mouseleave', hideCoordPopup);
 
+    // Show donation required popup if user clicks grid before donating
     canvas.addEventListener('click', function(e){
       if (!hasDonated) {
         showDonateRequiredMessage(e.clientX, e.clientY);
@@ -607,6 +761,7 @@
       requestRedraw();
     }
     function setZoom(newZoom, centerX, centerY) {
+      hidePalette();
       const oldZoom = zoom;
       zoom = Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, newZoom));
       if (centerX === undefined || centerY === undefined) {
@@ -637,9 +792,8 @@
       .then(_ => {
         fetchGridState();
         awaitingColoring = false;
-        toolRandomBtn.disabled = false;
-        toolRandomBtn.textContent = "Random Square";
-        toolConfirmBtn.disabled = true;
+        donateBtn.disabled = false;
+        donateBtn.textContent = "Random Square";
       })
       .catch(err => {});
     }
@@ -656,160 +810,33 @@
         .catch(err => {});
     }
 
-    // --- Random Square Button Logic ---
-    function handleRandomSquare() {
-      let tries = 2000;
-      let found = false;
-      while(tries-- > 0) {
-        const x = Math.floor(Math.random()*GRID_SIZE);
-        const y = Math.floor(Math.random()*GRID_SIZE);
-        const key = x + "," + y;
-        if (!coloredCells[key] || !coloredCells[key].locked) {
-          gridCursor.x = x;
-          gridCursor.y = y;
-          jumpX.value = x;
-          jumpY.value = y;
-          ensureCellVisible(x, y);
-          requestRedraw();
-          found = true;
-          break;
-        }
+    function hidePalette(force = false) {
+      if (!force) {
+        // Only hide on OK button or menu open; otherwise, do not hide
+        if (!hidePalette.shouldHide) return;
       }
-      if (!found) { showToolError("No available squares left!"); return; }
-      openToolColorPickerForCurrentSquare();
-    }
-    function showToolError(msg) {
-      toolError.textContent = msg;
-      toolError.style.display = "block";
-      setTimeout(() => { toolError.style.display = "none"; }, 2200);
-    }
-
-    // --- Donate Button Logic - transform on donate ---
-    donateBtn.onclick = function() {
-      if (!hasDonated && canDonate) {
-        hasDonated = true;
-        donationUsed = false;
-        canDonate = false;
-        awaitingColoring = true;
-        donateBtnOuter.style.display = "none";
-        toolPanel.classList.add("active");
-        handleRandomSquare();
-        toolRandomBtn.disabled = true;
-      }
-    };
-
-    // --- Tool Panel Color Picker Functions ---
-    function drawToolColorDisc() {
-      const disc = toolColorDisc;
-      const ctxDisc = disc.getContext('2d');
-      const w = disc.width;
-      const h = disc.height;
-      const cx = w/2, cy = h/2, r = Math.min(w,h)/2-3;
-      ctxDisc.clearRect(0,0,w,h);
-      for(let angle=0; angle<360; angle+=1) {
-        let rad = angle*Math.PI/180;
-        let x = cx + Math.cos(rad)*r;
-        let y = cy + Math.sin(rad)*r;
-        let grad = ctxDisc.createLinearGradient(cx,cy,x,y);
-        grad.addColorStop(0, `hsl(${angle},100%,60%)`);
-        grad.addColorStop(1, `hsl(${angle},100%,30%)`);
-        ctxDisc.strokeStyle = `hsl(${angle},100%,50%)`;
-        ctxDisc.beginPath();
-        ctxDisc.moveTo(cx,cy);
-        ctxDisc.lineTo(x,y);
-        ctxDisc.stroke();
-      }
-      ctxDisc.beginPath();
-      ctxDisc.arc(cx,cy,r,0,2*Math.PI);
-      ctxDisc.strokeStyle = "#fff";
-      ctxDisc.lineWidth = 2;
-      ctxDisc.stroke();
-      if (discSelectedColor) {
-        ctxDisc.beginPath();
-        ctxDisc.arc(cx,cy,18,0,2*Math.PI);
-        ctxDisc.fillStyle = discSelectedColor;
-        ctxDisc.fill();
-        ctxDisc.strokeStyle = "#fff";
-        ctxDisc.lineWidth = 3;
-        ctxDisc.stroke();
-      }
-    }
-    toolColorDisc.addEventListener("mousedown", function(e){
-      const rect = toolColorDisc.getBoundingClientRect();
-      const x = e.clientX - rect.left;
-      const y = e.clientY - rect.top;
-      const cx = rect.width/2, cy = rect.height/2;
-      const dx = x-cx, dy = y-cy, dist = Math.sqrt(dx*dx+dy*dy);
-      if (dist > rect.width/2-3) return;
-      let angle = Math.atan2(dy, dx)*180/Math.PI;
-      if (angle<0) angle += 360;
-      const sat = Math.min(1, Math.max(0, dist/(rect.width/2-3)));
-      discSelectedColor = `hsl(${angle},${Math.round(sat*100)}%,50%)`;
-      previewColor = discSelectedColor;
-      toolPreviewColor.style.background = previewColor;
-      toolConfirmBtn.disabled = false;
-      drawToolColorDisc();
-    });
-
-    toolRandomBtn.onclick = function() {
-      handleRandomSquare();
-      toolRandomBtn.disabled = true;
-    };
-
-    toolCancelBtn.onclick = function() {
-      discSelectedColor = null;
-      previewColor = null;
+      colorPickerModal.style.display = "none";
       palettePreviewCell = null;
-      toolPreviewColor.style.background = "#fff";
-      toolConfirmBtn.disabled = true;
-      drawToolColorDisc();
-    };
-
-    toolConfirmBtn.onclick = function() {
-      if (!previewColor) {
-        showToolError("Select a color first.");
-        return;
-      }
-      sendCellColor(gridCursor.x, gridCursor.y, previewColor);
-      discSelectedColor = null;
       previewColor = null;
-      palettePreviewCell = null;
-      toolPreviewColor.style.background = "#fff";
-      toolConfirmBtn.disabled = true;
-      drawToolColorDisc();
-      showToolCongrats();
-    };
-
-    function openToolColorPickerForCurrentSquare() {
-      palettePreviewCell = { x: gridCursor.x, y: gridCursor.y };
-      previewColor = null;
-      discSelectedColor = null;
-      toolPreviewColor.style.background = "#fff";
-      toolConfirmBtn.disabled = true;
-      drawToolColorDisc();
+      colorPickerModal.style.background = "#222";
+      requestRedraw();
+      showCursor = true;
+      confirmColorBtn.disabled = true;
+      confirmColorBtn.style.color = "grey";
+      hideCoordPopup();
     }
-    function showToolCongrats() {
-      congratsMessage.textContent = "Congratulations! Your square has been colored.";
-      congratsMessage.style.display = "block";
-      setTimeout(() => {
-        congratsMessage.style.display = "none";
-      }, 2500);
-    }
+    hidePalette.shouldHide = false;
 
-    // Initial draw
-    setCanvasSize();
-    window.addEventListener('resize', setCanvasSize);
-    fetchGridState();
-
-    // Footer controls unchanged...
-    zoomInBtn.addEventListener('click', () => { setZoom(zoom * 1.1); });
-    zoomOutBtn.addEventListener('click', () => { setZoom(zoom / 1.1); });
+    // --- MODIFIED FOOTER BUTTONS: DO NOT HIDE PALETTE ---
+    zoomInBtn.addEventListener('click', () => { setZoom(zoom * 1.1); /* hidePalette(); */ });
+    zoomOutBtn.addEventListener('click', () => { setZoom(zoom / 1.1); /* hidePalette(); */ });
 
     function moveBy(deltaX, deltaY) {
       offsetX += deltaX;
       offsetY += deltaY;
       clampOffset();
       requestRedraw();
+      // hidePalette(); // REMOVED
     }
     function getMoveAmount() { return CELL_SIZE * zoom * 0.8; }
     arrowUpBtn.onclick = function() { moveBy(0, getMoveAmount()); };
@@ -825,16 +852,19 @@
       offsetY = 0;
       setZoom(MIN_ZOOM);
       requestRedraw();
+      // hidePalette(); // REMOVED
     };
     jumpBtn.addEventListener('click', () => {
       gridCursor.x = Math.min(GRID_SIZE-1, Math.max(0, Number(jumpX.value)));
       gridCursor.y = Math.min(GRID_SIZE-1, Math.max(0, Number(jumpY.value)));
       ensureCellVisible(gridCursor.x, gridCursor.y);
       requestRedraw();
+      // hidePalette(); // REMOVED
     });
 
     // Mouse wheel zoom/ctrl only for grid
     canvas.addEventListener('wheel', function(e) {
+      if (colorPickerModal.style.display === "flex") return;
       if (e.ctrlKey || e.metaKey) {
         e.preventDefault();
         setZoom(zoom * (e.deltaY < 0 ? 1.1 : 0.9), e.offsetX, e.offsetY);
@@ -899,6 +929,7 @@
       offsetStart.y = offsetY;
       canvas.classList.add('grabbing');
       canvas.setPointerCapture(e.pointerId || 0);
+      hidePalette();
     });
     window.addEventListener('mouseup', () => {
       isDragging = false;
@@ -910,11 +941,153 @@
       offsetY = offsetStart.y + (e.clientY - dragStart.y);
       clampOffset();
       requestRedraw();
+      hidePalette();
     });
 
-    // Initial tool panel setup
-    drawToolColorDisc();
+    // --- Random Square Button Logic (NO POPUP) ---
+    function handleRandomSquare() {
+      let tries = 2000;
+      let found = false;
+      while(tries-- > 0) {
+        const x = Math.floor(Math.random()*GRID_SIZE);
+        const y = Math.floor(Math.random()*GRID_SIZE);
+        const key = x + "," + y;
+        if (!coloredCells[key] || !coloredCells[key].locked) {
+          gridCursor.x = x;
+          gridCursor.y = y;
+          jumpX.value = x;
+          jumpY.value = y;
+          ensureCellVisible(x, y);
+          requestRedraw();
+          found = true;
+          break;
+        }
+      }
+      hidePalette();
+      if (!found) { alert("No available squares left!"); return; }
+      setTimeout(openColorPickerForCurrentSquare, 300);
+    }
 
+    // Donate Button Logic - transform on donate
+    donateBtn.onclick = function() {
+      if (!hasDonated && canDonate) {
+        hasDonated = true;
+        donationUsed = false;
+        canDonate = false;
+        awaitingColoring = true;
+        donateBtn.textContent = "Random Square";
+        donateBtn.classList.remove("dummy-btn");
+        donateBtn.classList.add("random-btn-pink");
+        handleRandomSquare();
+        donateBtn.disabled = true;
+      } else if (hasDonated && !awaitingColoring) {
+        handleRandomSquare();
+      } else if (awaitingColoring) {
+        donateBtn.disabled = true;
+        donateBtn.textContent = "Color your square first!";
+        setTimeout(() => {
+          donateBtn.textContent = "Random Square";
+          donateBtn.disabled = false;
+        }, 2500);
+      }
+    };
+
+    // --- Color Picker Palette Drawing and Selection ---
+    function drawColorDisc() {
+      const disc = document.getElementById('colorDisc');
+      const ctxDisc = disc.getContext('2d');
+      const w = disc.width;
+      const h = disc.height;
+      const r = w/2;
+      ctxDisc.clearRect(0,0,w,h);
+      for (let y = 0; y < h; y++) {
+        for (let x = 0; x < w; x++) {
+          const dx = x - r;
+          const dy = y - r;
+          const dist = Math.sqrt(dx*dx + dy*dy);
+          if (dist > r) continue;
+          let angle = Math.atan2(dy, dx);
+          if (angle < 0) angle += 2*Math.PI;
+          const hue = angle * 180 / Math.PI;
+          const sat = dist / r;
+          ctxDisc.fillStyle = `hsl(${hue},${sat*100}%,50%)`;
+          ctxDisc.fillRect(x, y, 1, 1);
+        }
+      }
+      if (discSelectedColor) {
+        ctxDisc.beginPath();
+        ctxDisc.arc(discSelectedColor.x, discSelectedColor.y, 8, 0, 2*Math.PI);
+        ctxDisc.strokeStyle = "#fff";
+        ctxDisc.lineWidth = 2;
+        ctxDisc.stroke();
+      }
+    }
+
+    // --- MODIFIED: Palette Tool and Menu Icon Logic ---
+    function openColorPickerForCurrentSquare() {
+      palettePreviewCell = { x: gridCursor.x, y: gridCursor.y };
+      previewColor = null;
+      colorPickerModal.style.display = "flex";
+      colorPickerModal.style.background = "#222";
+      drawColorDisc();
+      showCursor = false;
+      confirmColorBtn.disabled = true;
+      confirmColorBtn.style.color = "grey";
+      hidePalette.shouldHide = false;
+      disableMenuIcon(); // Disable menu icon when palette opens
+    }
+
+    // Palette Modal Handlers
+    randomColorBtn.onclick = function() {
+      const h = Math.floor(Math.random()*360);
+      const s = Math.floor(Math.random()*60)+40;
+      const l = Math.floor(Math.random()*30)+50;
+      previewColor = `hsl(${h},${s}%,${l}%)`;
+      confirmColorBtn.disabled = false;
+      confirmColorBtn.style.color = "#222";
+      discSelectedColor = null;
+      drawColorDisc();
+      requestRedraw();
+    };
+    cancelColorBtn.onclick = function() {
+      hidePalette(true);
+      enableMenuIcon();
+    };
+
+    colorDisc.addEventListener('click', function(e){
+      const rect = colorDisc.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+      const r = colorDisc.width/2;
+      const dx = x - r;
+      const dy = y - r;
+      const dist = Math.sqrt(dx*dx + dy*dy);
+      if (dist > r) return;
+      let angle = Math.atan2(dy, dx);
+      if (angle < 0) angle += 2*Math.PI;
+      const hue = angle * 180 / Math.PI;
+      const sat = dist / r;
+      previewColor = `hsl(${hue},${sat*100}%,50%)`;
+      confirmColorBtn.disabled = false;
+      confirmColorBtn.style.color = "#222";
+      discSelectedColor = {x,y};
+      drawColorDisc();
+      requestRedraw();
+    });
+
+    // --- MODIFIED: Palette OK Button disables menu icon for 7 seconds ---
+    confirmColorBtn.onclick = function() {
+      if (!palettePreviewCell || !previewColor) return;
+      sendCellColor(palettePreviewCell.x, palettePreviewCell.y, previewColor);
+      hidePalette(true);
+      setTimeout(() => {
+        enableMenuIcon(); // Re-enable menu icon after 7 seconds
+      }, 7000);
+    };
+
+    window.addEventListener('resize', setCanvasSize);
+    setCanvasSize();
+    fetchGridState();
   </script>
 </body>
 </html>
