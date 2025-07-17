@@ -159,22 +159,34 @@
       min-width: 260px;
       min-height: 260px;
       justify-content: center;
-      padding: 18px 20px 18px 20px;
+      padding: 27px 30px 27px 30px; /* 50% larger */
       transition: background .2s;
     }
     .color-picker-modal canvas {
-      width: 228px; height: 228px;
-      border: 2px solid #fff;
+      width: 342px; height: 342px; /* 50% larger */
+      border: 3px solid #fff;
       border-radius: 50%;
       background: transparent;
-      margin-bottom: 16px;
+      margin-bottom: 24px;
       display: block;
     }
     .color-picker-modal .modal-btns {
-      display: flex; flex-direction: column; gap: 14px; justify-content: center;
+      display: flex; flex-direction: column; gap: 21px; justify-content: center;
       align-items: center;
-      margin-top: 10px;
+      margin-top: 15px;
       width: 100%;
+    }
+    .color-picker-modal .fancy-btn {
+      font-size: 1.5em !important; /* 50% larger */
+      padding: 21px 63px;
+      min-width: 180px;
+      height: 48px;
+    }
+    .color-picker-modal button {
+      font-size: 1.5em !important; /* 50% larger */
+      padding: 21px 63px;
+      min-width: 180px;
+      height: 48px;
     }
     .palette-error, .palette-message, .donate-required-message {
       color: #fff;
@@ -226,7 +238,6 @@
       transform: translateX(-50%);
       outline: 2px solid #ccc;
     }
-    /* Donate button outside grid, low-left */
     .donate-btn-outer {
       position: absolute;
       left: 0;
@@ -264,7 +275,6 @@
       color: #111;
       outline: 3px solid #FF0070;
     }
-    /* Popup random overlay the donate button */
     .random-popup {
       position: absolute;
       left: 0;
@@ -303,78 +313,45 @@
       color: #111;
       outline: 3px solid #FF0070;
     }
-    /* Footer below grid, two rows */
-    .footer {
-      width: 100vw;
-      background: transparent;
-      color: #fff;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      font-size: 1.33em;
-      position: relative;
-      z-index: 10;
-      margin-top: 22px;
-      gap: 6px;
-    }
-    .footer-row {
+    /* NEW: Homogenized control row */
+    .controls-row {
       display: flex;
       flex-direction: row;
       align-items: center;
       justify-content: center;
-      gap: 40px;
+      gap: 22px;
       width: 100%;
+      margin-top: 18px;
       margin-bottom: 8px;
       flex-wrap: wrap;
+      background: transparent;
+      position: relative;
+      z-index: 10;
     }
-    .footer-row.footer-row-jump {
-      gap: 20px;
-      margin-bottom: 0;
-    }
-    .nav-btn-group-footer {
-      display: flex;
-      gap: 8px;
-      justify-content: center;
-      align-items: center;
-    }
-    .zoom-controls-footer {
-      display: flex; gap: 8px;
-      align-items: center;
-      height: 38px;
-    }
-    .jump-panel {
-      display: flex;
-      gap: 12px;
-      align-items: center;
-      justify-content: center;
-      flex-wrap: nowrap;
-      height: 40px;
-      white-space: nowrap;
-    }
-    .jump-panel label {
-      font-size: 1em;
-      margin-right: 4px;
-    }
-    .jump-panel input[type="number"] {
-      font-size: 1em;
-      width: 65px;
-      height: 32px;
-      border-radius: 6px;
-      border: 1px solid #bbb;
-      padding: 3px 12px;
-      background: #f8f8f8;
-      color: #222;
-      text-align: center;
+    .controls-row .ctrl-btn,
+    .controls-row .fancy-btn,
+    .controls-row .arrow-btn,
+    .controls-row .center-btn,
+    .controls-row input[type="number"] {
+      font-size: 1.3em;
+      min-width: 60px;
+      height: 44px;
+      margin: 0 4px;
+      border-radius: 8px;
       outline: 2px solid #ccc;
-      appearance: none;
-      -webkit-appearance: none;
-      -moz-appearance: textfield;
+      border: 1px solid #bbb;
+      padding: 6px 18px;
+      box-sizing: border-box;
+      background: #444;
+      color: #fff;
+      transition: background 0.2s, color 0.2s;
+      text-align: center;
+      font-family: inherit;
     }
-    .jump-panel input[type="number"]::-webkit-inner-spin-button,
-    .jump-panel input[type="number"]::-webkit-outer-spin-button {
-      -webkit-appearance: none;
-      margin: 0;
+    .controls-row label {
+      font-size: 1.05em;
+      margin-right: 4px;
+      color: #fff;
     }
     .footer-copyright {
       width: 100vw;
@@ -394,17 +371,15 @@
     @media (max-width: 700px) {
       header, .footer { min-height: 40px; height: 40px; }
       #frame { width: min(98vw, 70vh); height: min(98vw, 70vh);}
-      .color-picker-modal canvas { width: 114px; height: 114px; }
-      .color-picker-modal { min-width: 130px; min-height: 130px; }
+      .color-picker-modal canvas { width: 171px; height: 171px; }
+      .color-picker-modal { min-width: 195px; min-height: 195px; }
       .big-title { font-size: 1.3em !important; }
-      .arrow-btn, .center-btn, .fancy-btn, .jump-panel, .footer-content { font-size: 0.8em; height: 20px; min-width: 20px; }
-      .jump-panel input[type="number"] { height: 15px; width: 28px; font-size: 0.7em; }
-      #congratsMessage { padding: 18px 24px; font-size: 1.3em;}
-      .palette-error { font-size: 1.1em; padding: 12px 18px; }
-      .random-popup, .donate-btn-outer { min-width: 100px; width: 120px; left: 2px; }
-      .random-btn { padding: 7px 14px; font-size: 1em; }
-      .footer-copyright { font-size: 0.9em; padding: 7px 0 6px 0;}
-      .footer-row { gap: 8px; }
+      .controls-row .ctrl-btn,
+      .controls-row .fancy-btn,
+      .controls-row .arrow-btn,
+      .controls-row .center-btn,
+      .controls-row input[type="number"] { font-size: 1em; height: 30px; min-width: 36px; }
+      .color-picker-modal button { font-size: 1.2em !important; min-width: 120px; height: 32px;}
     }
   </style>
 </head>
@@ -426,7 +401,7 @@
           <canvas id="gridCanvas"></canvas>
           <div id="coordPopup"></div>
           <div id="colorPickerModal" class="color-picker-modal">
-            <canvas id="colorDisc" width="228" height="228"></canvas>
+            <canvas id="colorDisc" width="342" height="342"></canvas>
             <div class="modal-btns">
               <button id="randomColorBtn" type="button" class="fancy-btn">Random Color</button>
               <button id="confirmColorBtn" type="button" class="fancy-btn" disabled style="color:grey;">OK</button>
@@ -446,31 +421,21 @@
           </div>
         </div>
       </div>
-      <!-- Footer below grid -->
-      <div class="footer">
-        <div class="footer-row">
-          <div class="nav-btn-group-footer">
-            <button class="arrow-btn" id="arrowUpBtn">↑</button>
-            <button class="arrow-btn" id="arrowLeftBtn">←</button>
-            <button class="center-btn" id="centerBtn">⦿ Center</button>
-            <button class="arrow-btn" id="arrowRightBtn">→</button>
-            <button class="arrow-btn" id="arrowDownBtn">↓</button>
-          </div>
-          <div class="zoom-controls-footer">
-            <button id="zoomOutBtn" class="fancy-btn" title="Zoom out">−</button>
-            <span id="zoomDisplay" style="color:#fff;">100%</span>
-            <button id="zoomInBtn" class="fancy-btn" title="Zoom in">+</button>
-          </div>
-        </div>
-        <div class="footer-row footer-row-jump">
-          <div class="jump-panel">
-            <label for="jumpX">X:</label>
-            <input type="number" id="jumpX" min="0" max="1099" value="0" />
-            <label for="jumpY">Y:</label>
-            <input type="number" id="jumpY" min="0" max="1099" value="0" />
-            <button class="fancy-btn" id="jumpBtn">Jump</button>
-          </div>
-        </div>
+      <!-- NEW: Unified controls row below grid -->
+      <div class="controls-row">
+        <button class="arrow-btn ctrl-btn" id="arrowUpBtn">↑</button>
+        <button class="arrow-btn ctrl-btn" id="arrowLeftBtn">←</button>
+        <button class="center-btn ctrl-btn" id="centerBtn">⦿ Center</button>
+        <button class="arrow-btn ctrl-btn" id="arrowRightBtn">→</button>
+        <button class="arrow-btn ctrl-btn" id="arrowDownBtn">↓</button>
+        <label for="jumpX">X:</label>
+        <input type="number" id="jumpX" min="0" max="1099" value="0" />
+        <label for="jumpY">Y:</label>
+        <input type="number" id="jumpY" min="0" max="1099" value="0" />
+        <button class="fancy-btn ctrl-btn" id="jumpBtn">Jump</button>
+        <button id="zoomOutBtn" class="fancy-btn ctrl-btn" title="Zoom out">−</button>
+        <span id="zoomDisplay" style="color:#fff;font-size:1.3em;">100%</span>
+        <button id="zoomInBtn" class="fancy-btn ctrl-btn" title="Zoom in">+</button>
       </div>
     </div>
     <div class="popup-menu" id="popupMenu">
@@ -652,7 +617,6 @@
     });
     canvas.addEventListener('mouseleave', hideCoordPopup);
 
-    // Show donation required popup if user clicks grid before donating
     canvas.addEventListener('click', function(e){
       if (!hasDonated) {
         showDonateRequiredMessage(e.clientX, e.clientY);
@@ -772,7 +736,6 @@
       hidePalette();
     });
 
-    // Mouse wheel zoom/ctrl only for grid
     canvas.addEventListener('wheel', function(e) {
       if (colorPickerModal.style.display === "flex") return;
       if (e.ctrlKey || e.metaKey) {
@@ -781,7 +744,6 @@
       }
     }, {passive:false});
 
-    // Two finger: pinch and move
     canvas.addEventListener('touchstart', function(e) {
       if (e.touches.length === 2) {
         pinch2Last = {
@@ -875,6 +837,7 @@
       }
     };
 
+    // --- MODIFIED: Color picker always overlays grid; pop up includes grid center if random square is not centered ---
     popupRandomBtn.onclick = function() {
       let tries = 2000;
       let found = false;
@@ -895,29 +858,45 @@
       }
       hidePalette();
       if (!found) { alert("No available squares left!"); return; }
-      setTimeout(openColorPickerForCurrentSquare, 300);
+      setTimeout(function(){
+        // If random square is not near center, center the grid so random square includes center area
+        const centerX = Math.floor(GRID_SIZE / 2);
+        const centerY = Math.floor(GRID_SIZE / 2);
+        const visibleCols = Math.ceil(canvas.width/(CELL_SIZE*zoom));
+        const visibleRows = Math.ceil(canvas.height/(CELL_SIZE*zoom));
+        let showCenter = false;
+        if (Math.abs(gridCursor.x - centerX) > Math.floor(visibleCols/2) ||
+            Math.abs(gridCursor.y - centerY) > Math.floor(visibleRows/2)) {
+          ensureCellVisible(centerX, centerY); // Center grid so popup will overlay center
+          requestRedraw();
+          showCenter = true;
+        }
+        openColorPickerForCurrentSquare(true);
+      }, 300);
     };
 
-    function openColorPickerForCurrentSquare() {
+    // Modified: Color picker always overlays grid, never outside
+    function openColorPickerForCurrentSquare(forceCenter) {
       paletteError.style.display = "none";
       palettePreviewCell = {x: gridCursor.x, y: gridCursor.y};
       showCursor = true;
       previewColor = null;
       confirmColorBtn.disabled = true;
       confirmColorBtn.style.color = "grey";
-      requestRedraw();
+      requestPalettePreview();
       hideCoordPopup();
       colorPickerModal.style.background = "#222";
       let frameRect = frame.getBoundingClientRect();
       const scaledCellSize = CELL_SIZE * zoom;
-      const leftInFrame = offsetX + gridCursor.x * scaledCellSize + scaledCellSize / 2;
-      const topInFrame = offsetY + gridCursor.y * scaledCellSize + scaledCellSize / 2;
-      let left = frameRect.left + leftInFrame + scaledCellSize/2;
-      let top = frameRect.top + topInFrame - colorPickerModal.offsetHeight/2;
-      if (left + colorPickerModal.offsetWidth > window.innerWidth) {
-        left = frameRect.left + leftInFrame - colorPickerModal.offsetWidth - scaledCellSize/2;
-      }
-      if (top < 0) top = frameRect.top + topInFrame + scaledCellSize/2;
+      let left, top;
+      // Always place popup centered over grid frame
+      left = frameRect.left + frameRect.width/2 - colorPickerModal.offsetWidth/2;
+      top = frameRect.top + frameRect.height/2 - colorPickerModal.offsetHeight/2;
+      // If popup would overflow, adjust to keep inside grid frame
+      if (left < frameRect.left) left = frameRect.left + 8;
+      if (left + colorPickerModal.offsetWidth > frameRect.right) left = frameRect.right - colorPickerModal.offsetWidth - 8;
+      if (top < frameRect.top) top = frameRect.top + 8;
+      if (top + colorPickerModal.offsetHeight > frameRect.bottom) top = frameRect.bottom - colorPickerModal.offsetHeight - 8;
       colorPickerModal.style.left = left + "px";
       colorPickerModal.style.top = top + "px";
       colorPickerModal.style.display = "flex";
@@ -926,7 +905,6 @@
       colorPickerModal.style.height = "auto";
     }
 
-    // Color picker logic: enable OK only after color is picked
     colorDisc.addEventListener('click', function(e){
       const rect = colorDisc.getBoundingClientRect();
       const x = e.clientX - rect.left - colorDisc.width/2;
@@ -997,56 +975,17 @@
       const topInFrame = offsetY + gridCursor.y * scaledCellSize + scaledCellSize / 2;
       let mouseY = frameRect.top + topInFrame;
       let vpad = 10;
-      let top;
-      if (mouseY + congratsMessage.offsetHeight + vpad < window.innerHeight) {
-        top = mouseY + vpad;
-      } else {
-        top = mouseY - congratsMessage.offsetHeight - vpad;
-      }
-      congratsMessage.innerHTML = `🎉 Congratulations!<br>You have participated in The (In)Visible Million.<br>Thank you!<br><br>
-      <span style="font-size:0.8em;">Proof of participation is saved in your browser's local storage.<br>
-      See key <b>"invisibleMillionParticipation"</b> in <b>localStorage</b>.<br>
-      (You can view this in your browser's developer tools > Application > Local Storage)</span>`;
+      let top = mouseY - congratsMessage.offsetHeight/2;
+      let left = frameRect.left + leftInFrame - congratsMessage.offsetWidth/2;
+      if (left < frameRect.left) left = frameRect.left + 8;
+      if (left + congratsMessage.offsetWidth > frameRect.right) left = frameRect.right - congratsMessage.offsetWidth - 8;
+      if (top < frameRect.top) top = frameRect.top + vpad;
+      if (top + congratsMessage.offsetHeight > frameRect.bottom) top = frameRect.bottom - congratsMessage.offsetHeight - vpad;
+      congratsMessage.style.left = left + "px";
       congratsMessage.style.top = top + "px";
       congratsMessage.style.display = "block";
+      congratsMessage.textContent = "Congratulations! You've colored a square!";
     }
-    function saveParticipation() {
-      localStorage.setItem("invisibleMillionParticipation", "true");
-    }
-    function resetDonateButton() {
-      hasDonated = false;
-      donationUsed = false;
-      donateBtn.textContent = "Donate / Contribute";
-    }
-    function drawColorDisc() {
-      const cx = colorDisc.width / 2;
-      const cy = colorDisc.height / 2;
-      const radius = colorDisc.width / 2 - 3;
-      const ctxc = colorDisc.getContext('2d');
-      ctxc.clearRect(0, 0, colorDisc.width, colorDisc.height);
-      for (let angle=0; angle<360; angle+=1) {
-        const rad = angle * Math.PI / 180;
-        const grad = ctxc.createLinearGradient(
-          cx, cy,
-          cx + radius * Math.cos(rad), cy + radius * Math.sin(rad)
-        );
-        grad.addColorStop(0, 'white');
-        grad.addColorStop(1, `hsl(${angle},100%,50%)`);
-        ctxc.beginPath();
-        ctxc.moveTo(cx, cy);
-        ctxc.arc(cx, cy, radius, rad, rad+Math.PI/180, false);
-        ctxc.closePath();
-        ctxc.fillStyle = grad;
-        ctxc.fill();
-      }
-      ctxc.globalAlpha = 0.3;
-      ctxc.beginPath();
-      ctxc.arc(cx, cy, radius, 0, 2*Math.PI);
-      ctxc.fillStyle = 'black';
-      ctxc.fill();
-      ctxc.globalAlpha = 1.0;
-    }
-    drawColorDisc();
     function hsvToRgb(h, s, v) {
       let r, g, b;
       let i = Math.floor(h * 6);
@@ -1054,24 +993,29 @@
       let p = v * (1 - s);
       let q = v * (1 - f * s);
       let t = v * (1 - (1 - f) * s);
-      switch (i % 6) {
-        case 0: r = v, g = t, b = p; break;
-        case 1: r = q, g = v, b = p; break;
-        case 2: r = p, g = v, b = t; break;
-        case 3: r = p, g = q, b = v; break;
-        case 4: r = t, g = p, b = v; break;
-        case 5: r = v, g = p, b = q; break;
+      switch(i % 6){
+          case 0: r = v, g = t, b = p; break;
+          case 1: r = q, g = v, b = p; break;
+          case 2: r = p, g = v, b = t; break;
+          case 3: r = p, g = q, b = v; break;
+          case 4: r = t, g = p, b = v; break;
+          case 5: r = v, g = p, b = q; break;
       }
-      return [Math.round(r*255), Math.round(g*255), Math.round(b*255)];
+      return [Math.round(r * 255), Math.round(g * 255), Math.round(b * 255)];
     }
-    function rgbToHex(r,g,b) {
-      return "#" + [r,g,b].map(x => x.toString(16).padStart(2,'0')).join('');
+    function rgbToHex(r, g, b) {
+      return "#" + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1);
     }
+    function saveParticipation() {}
+    function resetDonateButton() {
+      donateBtn.textContent = "Donate / Contribute";
+      donationUsed = false;
+    }
+
     window.addEventListener('resize', setCanvasSize);
-    window.addEventListener('DOMContentLoaded', () => {
-      setCanvasSize();
-      fetchGridState();
-    });
+    setTimeout(setCanvasSize, 100);
+    fetchGridState();
+
   </script>
 </body>
 </html>
