@@ -38,6 +38,7 @@
       gap: 12px;
       position: relative;
       height: 70px;
+      flex-direction: column; /* CHANGED for vertical stacking */
     }
     .big-title {
       font-size: 2.1em;
@@ -47,139 +48,17 @@
       text-shadow: 0 2px 6px #111a;
       z-index: 2;
       flex: none;
+      margin-bottom: 16px;
     }
-    .menu-icon {
-      margin-left: 12px;
-      width: 38px; height: 38px;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      gap: 8px;
-      cursor: pointer;
-      z-index: 100;
-      background: none;
-      outline: 2px solid #ccc;
-      border-radius: 8px;
-    }
-    .menu-icon span {
-      display: block;
-      width: 28px;
-      height: 5px;
-      background: #fff;
-      border-radius: 3px;
-      margin: 0 auto;
-      transition: background 0.2s;
-    }
-    .menu-icon:focus {
-      outline: 3px solid #FF0070;
-    }
-    .popup-menu {
-      position: fixed;
-      top: 0; right: 0; left: 0; bottom: 0;
-      width: 100vw; height: 100vh;
-      background: rgba(30,30,30,0.98);
-      z-index: 5000;
-      display: none;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      gap: 24px;
-      font-size: 1.5em;
-    }
-    .popup-menu.active { display: flex; }
-    .popup-menu a,
-    .popup-menu .close-menu {
-      outline: 2px solid #ccc;
-      border-radius: 12px;
-    }
-    .popup-menu a {
-      color: #fff !important;
-      text-decoration: none;
-      padding: 14px 32px;
-      font-size: 1em;
-      background: #444;
-      margin: 8px 0;
-      border: 2px solid #fff;
-      transition: background 0.2s, color 0.2s;
-      display: flex;
-      align-items: center;
-    }
-    .popup-menu a:hover {
-      background: #fff;
-      color: #222 !important;
-      border-color: #fff;
-    }
-    .popup-menu .close-menu {
-      position: absolute;
-      top: 24px;
-      right: 24px;
-      color: #fff;
-      background: none;
-      border: none;
-      font-size: 2em;
-      cursor: pointer;
-      z-index: 5100;
-    }
-    #main-content {
-      position: relative;
-      width: 100vw;
-      flex: 1 1 auto;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-    }
-    .grid-container {
-      position: relative;
-      width: 100%;
-      max-width: 700px;
-      margin: 0 auto;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      min-height: 360px;
-    }
-    #frame {
-      outline: 3px solid #ccc;
-      background: #333;
-      width: 90vw;
-      max-width: 700px;
-      height: 90vw;
-      max-height: 700px;
-      aspect-ratio: 1;
-      position: relative;
-      overflow: hidden;
-      margin: 0 auto;
-      box-sizing: border-box;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      touch-action: none;
-    }
-    #gridCanvas {
-      width: 100%; height: 100%;
-      display: block;
-      user-select: none;
-      background: #333;
-      position: absolute;
-      left: 0; top: 0;
-      transition: cursor .15s;
-      cursor: pointer;
-      touch-action: none;
-    }
-    #gridCanvas.grabbing, #frame.grabbing { cursor: grabbing !important; }
+    /* Donate button below title, above grid */
     .donate-btn-outer {
-      position: absolute;
-      top: -50px;
-      right: 0;
-      z-index: 1002;
+      width: 100%;
       display: flex;
-      flex-direction: column;
-      align-items: flex-end;
-      width: 160px;
-      min-width: 90px;
+      justify-content: center;
+      align-items: center;
+      margin-bottom: 12px;
+      position: static;
+      top: unset; right: unset;
       background: none;
     }
     .dummy-btn {
@@ -195,7 +74,7 @@
       transition: background 0.2s, color 0.2s;
       min-width: 90px;
       outline: 2px solid #ccc;
-      margin-bottom: 8px;
+      margin-bottom: 0;
       height: 33px;
       display: flex;
       align-items: center;
@@ -225,27 +104,47 @@
     .random-popup.active {
       display: flex;
     }
-    .random-btn {
-      background: linear-gradient(160deg, #f0f0f0 70%, #bdbdbd 100%);
-      color: #222;
-      border: none;
-      border-radius: 9px;
-      padding: 9px 16px;
-      font-size: 1em;
+    /* --- GRID OUTLINE SQUARE FIX FOR MOBILE AND DESKTOP --- */
+    .grid-container {
+      position: relative;
+      width: 100%;
+      max-width: 700px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 360px;
+    }
+    #frame {
+      outline: 3px solid #ccc;
+      background: #333;
+      width: 90vw;
+      max-width: 700px;
+      height: 90vw;
+      max-height: 700px;
+      aspect-ratio: 1/1;
+      position: relative;
+      overflow: hidden;
+      margin: 0 auto;
+      box-sizing: border-box;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      touch-action: none;
+    }
+    #gridCanvas {
+      width: 100%; height: 100%;
+      display: block;
+      user-select: none;
+      background: #333;
+      position: absolute;
+      left: 0; top: 0;
+      transition: cursor .15s;
       cursor: pointer;
-      font-weight: bold;
-      box-shadow: 0 1px 6px #8883;
-      transition: background 0.2s, color 0.2s;
-      outline: 2px solid #ccc;
-      margin-bottom: 0;
-      min-width: 80px;
-      height: 33px;
+      touch-action: none;
     }
-    .random-btn:active, .random-btn:focus {
-      background: #e0e0e0;
-      color: #111;
-      outline: 3px solid #FF0070;
-    }
+    #gridCanvas.grabbing, #frame.grabbing { cursor: grabbing !important; }
     .color-picker-modal {
       position: fixed;
       z-index: 9999;
@@ -270,61 +169,24 @@
       margin-bottom: 12px;
       display: block;
     }
-    .color-picker-modal .modal-btns {
-      display: flex; flex-direction: column; gap: 10px; justify-content: center;
-      align-items: center;
-      margin-top: 7px;
-      width: 100%;
+    @media (max-width: 750px) {
+      .big-title { font-size: 1.1em; }
+      .header-content { height: 44px; min-height: 44px;}
+      header { min-height: 44px; height: 44px; }
+      #frame {
+        width: 98vw;
+        max-width: 98vw;
+        height: 98vw;   /* CHANGED: height matches width */
+        max-height: 98vw;
+        min-height: 220px;
+        aspect-ratio: 1/1; /* Force square */
+      }
+      .grid-container { max-width: 98vw; }
     }
-    .palette-error, .palette-message, .donate-required-message {
-      color: #fff;
-      background: #ff0070;
-      border-radius: 14px;
-      padding: 14px 24px;
-      font-size: 1.1em;
-      margin-bottom: 12px;
-      margin-top: 14px;
-      text-align: center;
-      z-index: 10001;
-      box-shadow: 0 0 22px #000;
-      display: none;
-      position: fixed;
-      left: 50%;
-      transform: translate(-50%, 0);
-      outline: 2px solid #ccc;
-    }
-    #coordPopup {
-      pointer-events: none;
-      position: fixed;
-      background: #111;
-      color: #fff;
-      border: 2px solid #fff;
-      border-radius: 0;
-      padding: 7px 10px;
-      font-size: 0.9em;
-      z-index: 1200;
-      box-shadow: 0 0 11px #000;
-      white-space: nowrap;
-      text-align: left;
-      display: none;
-    }
-    #congratsMessage {
-      position: fixed;
-      background: #fff;
-      color: #222;
-      border-radius: 20px;
-      border: 2px solid #ff0070;
-      padding: 24px 32px;
-      font-size: 1.3em;
-      z-index: 10001;
-      text-align: center;
-      box-shadow: 0 0 44px #000;
-      display: none;
-      max-width: 90vw;
-      pointer-events: auto;
-      left: 50%;
-      transform: translateX(-50%);
-      outline: 2px solid #ccc;
+    @media (max-width: 480px) {
+      .header-content { gap: 4px; }
+      .big-title { font-size: 0.8em; }
+      #frame { min-height: 150px; }
     }
     .footer {
       width: 100vw;
@@ -451,51 +313,19 @@
       z-index: 10000;
       border-top: 1px solid #666;
     }
-    @media (max-width: 750px) {
-      .big-title { font-size: 1.1em; }
-      .header-content { height: 44px; min-height: 44px;}
-      header { min-height: 44px; height: 44px; }
-      #frame {
-        width: 98vw;
-        max-width: 98vw;
-        height: 68vw;
-        max-height: 68vw;
-        min-height: 220px;
-      }
-      .grid-container { max-width: 98vw; }
-      .donate-btn-outer {
-        top: -44px;
-        right: 0;
-        min-width: 80px;
-        width: 100px;
-      }
-      .dummy-btn { font-size: 0.9em; min-width: 80px; padding: 5px 8px;}
-      .random-popup { min-width: 60px; width: 90px; padding: 6px 8px;}
-      .random-btn { font-size: 0.9em; min-width: 60px; height: 28px; padding: 7px 8px;}
-      .footer { font-size: 0.8em; max-width: 98vw;}
-      .footer-row { gap: 4px; padding: 5px 7px;}
-      .footer-copyright { font-size: 0.8em; }
-      .color-picker-modal canvas { width: 80px; height: 80px;}
-      .color-picker-modal { min-width: 120px; min-height: 120px; padding: 8px 5px;}
-      #congratsMessage { padding: 10px 14px; font-size: 1em;}
-      .palette-error { font-size: 0.9em; padding: 7px 12px; }
-    }
-    @media (max-width: 480px) {
-      .header-content { gap: 4px; }
-      .big-title { font-size: 0.8em; }
-      .donate-btn-outer { top: -36px; right: 0; min-width: 60px; width: 80px;}
-      #frame { min-height: 150px; }
-      .dummy-btn { font-size: 0.8em; min-width: 60px; padding: 4px 4px;}
-      .random-popup { min-width: 40px; width: 60px; padding: 3px 4px;}
-      .random-btn { font-size: 0.8em; min-width: 40px; height: 22px; padding: 3px 4px;}
-    }
   </style>
 </head>
 <body>
   <header>
     <div class="header-content">
       <span class="big-title">The (In)Visible Million Project</span>
-      <div class="menu-icon" id="menuIcon" title="Menu" tabindex="0">
+      <div class="donate-btn-outer" id="donateBtnOuter">
+        <button class="dummy-btn" id="donateBtn">Donate / Contribute</button>
+        <div class="random-popup" id="randomPopup">
+          <button class="random-btn" id="popupRandomBtn">⟳ Random Square</button>
+        </div>
+      </div>
+      <div class="menu-icon" id="menuIcon" title="Menu" tabindex="0" style="margin-top:8px;">
         <span></span>
         <span></span>
         <span></span>
@@ -505,12 +335,6 @@
   <main>
     <div id="main-content">
       <div class="grid-container">
-        <div class="donate-btn-outer" id="donateBtnOuter">
-          <button class="dummy-btn" id="donateBtn">Donate / Contribute</button>
-          <div class="random-popup" id="randomPopup">
-            <button class="random-btn" id="popupRandomBtn">⟳ Random Square</button>
-          </div>
-        </div>
         <div id="frame" tabindex="0">
           <canvas id="gridCanvas"></canvas>
           <div id="coordPopup"></div>
@@ -532,13 +356,14 @@
           <div class="footer-group" id="footer-joystick">
             <button class="arrow-btn" id="arrowUpBtn">↑</button>
             <button class="arrow-btn" id="arrowLeftBtn">←</button>
-            <button class="center-btn" id="centerBtn">⦿ Center</button>
+            <button class="center-btn" id="centerBtn">Full View</button>
+            <!-- RENAMED BUTTON -->
             <button class="arrow-btn" id="arrowRightBtn">→</button>
             <button class="arrow-btn" id="arrowDownBtn">↓</button>
           </div>
           <div class="footer-group" id="footer-zoom">
             <button id="zoomOutBtn" class="fancy-btn" title="Zoom out">−</button>
-            <span class="zoom-display" id="zoomDisplay">100%</span>
+            <span class="zoom-display" id="zoomDisplay">50%</span>
             <button id="zoomInBtn" class="fancy-btn" title="Zoom in">+</button>
           </div>
           <div class="footer-group jump-panel" id="footer-jumper">
@@ -568,16 +393,25 @@
     const menuIcon = document.getElementById('menuIcon');
     const popupMenu = document.getElementById('popupMenu');
     const closeMenuBtn = document.getElementById('closeMenuBtn');
-    menuIcon.addEventListener('click', () => popupMenu.classList.add('active'));
-    closeMenuBtn.addEventListener('click', () => popupMenu.classList.remove('active'));
+    menuIcon.addEventListener('click', () => { 
+      popupMenu.classList.add('active'); 
+      hidePalette(); // Hide color picker when menu is opened (change #3)
+    });
+    closeMenuBtn.addEventListener('click', () => { 
+      popupMenu.classList.remove('active'); 
+      hidePalette(); // Hide color picker when menu is closed (change #3)
+    });
     popupMenu.addEventListener('click', (e) => {
-      if (e.target === popupMenu) popupMenu.classList.remove('active');
+      if (e.target === popupMenu) {
+        popupMenu.classList.remove('active');
+        hidePalette(); // Hide color picker when menu background is clicked (change #3)
+      }
     });
 
     // --- GRID ---
     const GRID_SIZE = 1100;
     const CELL_SIZE = 24;
-    let zoom = 1;
+    let zoom = 0.5; // CHANGE #1: DEFAULT ZOOM 50%
     let MIN_ZOOM = 0.1;
     const MAX_ZOOM = 3;
     let offsetX = 0, offsetY = 0;
@@ -804,7 +638,9 @@
         })
         .catch(err => {});
     }
-    function hidePalette() {
+    // CHANGE #3: Only hide color picker if not clicking inside the picker
+    function hidePalette(force) {
+      // Only hide if force is true, or if not clicking inside color picker
       colorPickerModal.style.display = "none";
       palettePreviewCell = null;
       previewColor = null;
@@ -816,15 +652,15 @@
       hideCoordPopup();
     }
 
-    zoomInBtn.addEventListener('click', () => { setZoom(zoom * 1.1); hidePalette(); });
-    zoomOutBtn.addEventListener('click', () => { setZoom(zoom / 1.1); hidePalette(); });
+    zoomInBtn.addEventListener('click', () => { setZoom(zoom * 1.1); hidePalette(true); });
+    zoomOutBtn.addEventListener('click', () => { setZoom(zoom / 1.1); hidePalette(true); });
 
     function moveBy(deltaX, deltaY) {
       offsetX += deltaX;
       offsetY += deltaY;
       clampOffset();
       requestRedraw();
-      hidePalette();
+      hidePalette(true);
     }
     function getMoveAmount() { return CELL_SIZE * zoom * 0.8; }
     arrowUpBtn.onclick = function() { moveBy(0, getMoveAmount()); };
@@ -838,16 +674,16 @@
       jumpY.value = gridCursor.y;
       offsetX = 0;
       offsetY = 0;
-      setZoom(MIN_ZOOM);
+      setZoom(0.5); // CHANGE #1: Center button sets zoom to 50%
       requestRedraw();
-      hidePalette();
+      hidePalette(true);
     };
     jumpBtn.addEventListener('click', () => {
       gridCursor.x = Math.min(GRID_SIZE-1, Math.max(0, Number(jumpX.value)));
       gridCursor.y = Math.min(GRID_SIZE-1, Math.max(0, Number(jumpY.value)));
       ensureCellVisible(gridCursor.x, gridCursor.y);
       requestRedraw();
-      hidePalette();
+      hidePalette(true);
     });
 
     // Mouse wheel zoom/ctrl only for grid
@@ -893,6 +729,8 @@
         } else {
           const lastCx = (pinch2Last.x1 + pinch2Last.x2) / 2;
           const lastCy = (pinch2Last.y1 + pinch2Last.y2) / 2;
+          const newCx = (x1 + x2) / 2;
+          const newCy = (y1 + y2) / 2;
           offsetX = pinch2Origin.offsetX + (newCx - lastCx);
           offsetY = pinch2Origin.offsetY + (newCy - lastCy);
           clampOffset();
@@ -915,7 +753,7 @@
       offsetStart.y = offsetY;
       canvas.classList.add('grabbing');
       canvas.setPointerCapture(e.pointerId || 0);
-      hidePalette();
+      hidePalette(true);
     });
     window.addEventListener('mouseup', () => {
       isDragging = false;
@@ -927,7 +765,7 @@
       offsetY = offsetStart.y + (e.clientY - dragStart.y);
       clampOffset();
       requestRedraw();
-      hidePalette();
+      hidePalette(true);
     });
 
     // --- RANDOM SQUARE BUTTON POPUP LOGIC ---
@@ -953,6 +791,7 @@
       } else {
         showRandomPopup();
       }
+      hidePalette(true); // Ensure color picker closes when donate is clicked (change #3)
     };
 
     popupRandomBtn.onclick = function() {
@@ -973,7 +812,7 @@
           break;
         }
       }
-      hidePalette();
+      hidePalette(true);
       hideRandomPopup();
       if (!found) { alert("No available squares left!"); return; }
       setTimeout(openColorPickerForCurrentSquare, 300);
@@ -998,119 +837,17 @@
       if (left + colorPickerModal.offsetWidth > window.innerWidth) {
         left = frameRect.left + leftInFrame - colorPickerModal.offsetWidth - scaledCellSize/2;
       }
-      if (top < 0) top = frameRect.top + topInFrame + scaledCellSize/2;
       colorPickerModal.style.left = left + "px";
       colorPickerModal.style.top = top + "px";
       colorPickerModal.style.display = "flex";
-      colorPickerModal.style.position = "fixed";
-      colorPickerModal.style.width = "auto";
-      colorPickerModal.style.height = "auto";
     }
 
-    // Color picker logic: enable OK only after color is picked
-    colorDisc.addEventListener('click', function(e){
-      const rect = colorDisc.getBoundingClientRect();
-      const x = e.clientX - rect.left - colorDisc.width/2;
-      const y = e.clientY - rect.top - colorDisc.height/2;
-      const r = Math.sqrt(x*x + y*y);
-      const radius = colorDisc.width / 2 - 6;
-      if (r > radius) return;
-      const hue = (Math.atan2(y,x)*180/Math.PI+360)%360;
-      const sat = r / radius;
-      const rgb = hsvToRgb(hue/360, sat, 1);
-      previewColor = rgbToHex(rgb[0], rgb[1], rgb[2]);
-      colorPickerModal.style.background = previewColor;
-      requestPalettePreview();
-      confirmColorBtn.disabled = false;
-      confirmColorBtn.style.color = "#111";
-    });
-    randomColorBtn.onclick = () => {
-      const hue = Math.floor(Math.random() * 360);
-      const sat = 1;
-      const rgb = hsvToRgb(hue/360, sat, 1);
-      previewColor = rgbToHex(rgb[0], rgb[1], rgb[2]);
-      colorPickerModal.style.background = previewColor;
-      requestPalettePreview();
-      confirmColorBtn.disabled = false;
-      confirmColorBtn.style.color = "#111";
-    };
-
-    function requestPalettePreview() {
-      palettePreviewCell = {x: gridCursor.x, y: gridCursor.y};
-      requestRedraw();
-    }
-    confirmColorBtn.onclick = function() {
-      if (confirmColorBtn.disabled) return;
-      colorPickerModal.style.display = "none";
-      showCursor = false;
-      placeCongratsMessageDynamic();
-      const color = previewColor;
-      sendCellColor(gridCursor.x, gridCursor.y, color);
-      donationUsed = true;
-      hideRandomPopup(); // <-- This hides the popup ONLY after OK is clicked
-      setTimeout(() => { showCursor = true; requestRedraw(); }, 2200);
-    };
-    cancelColorBtn.onclick = function() {
-      hidePalette();
-    };
-
-    // HSV to RGB/HEX helpers
-    function hsvToRgb(h, s, v) {
-      let r, g, b;
-      let i = Math.floor(h * 6);
-      let f = h * 6 - i;
-      let p = v * (1 - s);
-      let q = v * (1 - f * s);
-      let t = v * (1 - (1 - f) * s);
-      switch (i % 6) {
-        case 0: r = v, g = t, b = p; break;
-        case 1: r = q, g = v, b = p; break;
-        case 2: r = p, g = v, b = t; break;
-        case 3: r = p, g = q, b = v; break;
-        case 4: r = t, g = p, b = v; break;
-        case 5: r = v, g = p, b = q; break;
-      }
-      return [Math.round(r * 255), Math.round(g * 255), Math.round(b * 255)];
-    }
-    function rgbToHex(r, g, b) {
-      return "#" + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1);
-    }
-
-    // Draw color wheel for picker
-    function drawColorDisc() {
-      const ctx = colorDisc.getContext("2d");
-      const w = colorDisc.width;
-      const h = colorDisc.height;
-      ctx.clearRect(0, 0, w, h);
-      const img = ctx.createImageData(w, h);
-      for (let y = 0; y < h; y++) {
-        for (let x = 0; x < w; x++) {
-          const dx = x - w / 2, dy = y - h / 2;
-          const r = Math.sqrt(dx*dx + dy*dy);
-          const radius = w / 2 - 6;
-          if (r > radius) continue;
-          const hue = (Math.atan2(dy, dx) * 180 / Math.PI + 360) % 360;
-          const sat = r / radius;
-          const rgb = hsvToRgb(hue / 360, sat, 1);
-          const i = (y * w + x) * 4;
-          img.data[i+0] = rgb[0];
-          img.data[i+1] = rgb[1];
-          img.data[i+2] = rgb[2];
-          img.data[i+3] = 255;
-        }
-      }
-      ctx.putImageData(img, 0, 0);
-    }
-    drawColorDisc();
-
-    function placeCongratsMessageDynamic() {
-      congratsMessage.textContent = "Congratulations! Your square is now colored.";
-      congratsMessage.style.display = "block";
-      setTimeout(() => { congratsMessage.style.display = "none"; }, 2200);
-    }
-
+    // Ensure default zoom is set to 50% on first load
     window.addEventListener('resize', setCanvasSize);
-    window.addEventListener('DOMContentLoaded', setCanvasSize);
+    window.addEventListener('DOMContentLoaded', function() {
+      setCanvasSize();
+      setZoom(0.5);
+    });
     fetchGridState();
   </script>
 </body>
