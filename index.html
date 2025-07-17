@@ -955,15 +955,6 @@
       }
     };
 
-    // Clicking outside popup closes it
-    document.addEventListener('mousedown', function(e) {
-      if (randomPopupActive) {
-        if (!randomPopup.contains(e.target) && !donateBtn.contains(e.target)) {
-          hideRandomPopup();
-        }
-      }
-    });
-
     popupRandomBtn.onclick = function() {
       let tries = 2000;
       let found = false;
@@ -1056,6 +1047,7 @@
       const color = previewColor;
       sendCellColor(gridCursor.x, gridCursor.y, color);
       donationUsed = true;
+      hideRandomPopup(); // <-- This hides the popup ONLY after OK is clicked
       setTimeout(() => { showCursor = true; requestRedraw(); }, 2200);
     };
     cancelColorBtn.onclick = function() {
