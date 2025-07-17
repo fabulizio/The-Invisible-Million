@@ -229,15 +229,15 @@
     /* Donate button above grid, upper-right */
     .donate-btn-outer {
       position: absolute;
-      top: -60px;
-      right: -20px;
+      /* Place above upper right of the grid frame */
+      top: calc(50% - min(80vw, 80vh)/2 - 60px); /* 60px above the top of grid */
+      left: calc(50% + min(80vw, 80vh)/2 - 200px); /* right edge of grid minus button width */
       z-index: 200;
       display: flex;
       flex-direction: column;
       align-items: flex-end;
       width: 200px;
       min-width: 120px;
-      padding-right: 8px;
       background: none;
     }
     .dummy-btn {
@@ -473,7 +473,7 @@
           <div class="palette-error" id="paletteError"></div>
           <div class="donate-required-message" id="donateRequiredMsg"></div>
           <div id="congratsMessage"></div>
-          <!-- Donate button & random popup above upper-right grid corner -->
+          <!-- Donate button & random popup above upper-right grid corner, OUTSIDE #frame -->
           <div class="donate-btn-outer" id="donateBtnOuter">
             <button class="dummy-btn" id="donateBtn">Donate / Contribute</button>
             <div class="random-popup" id="randomPopup">
