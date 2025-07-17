@@ -562,6 +562,18 @@
       if (e.target === popupMenu) popupMenu.classList.remove('active');
     });
 
+    // --- MENU ICON DISABLE/ENABLE LOGIC ---
+    function disableMenuIcon() {
+      menuIcon.setAttribute('disabled', 'disabled');
+      menuIcon.style.pointerEvents = 'none';
+      menuIcon.style.opacity = '0.4';
+    }
+    function enableMenuIcon() {
+      menuIcon.removeAttribute('disabled');
+      menuIcon.style.pointerEvents = '';
+      menuIcon.style.opacity = '';
+    }
+
     // --- GRID ---
     const GRID_SIZE = 1100;
     const CELL_SIZE = 24;
@@ -815,15 +827,16 @@
     }
     hidePalette.shouldHide = false;
 
-    zoomInBtn.addEventListener('click', () => { setZoom(zoom * 1.1); hidePalette(); });
-    zoomOutBtn.addEventListener('click', () => { setZoom(zoom / 1.1); hidePalette(); });
+    // --- MODIFIED FOOTER BUTTONS: DO NOT HIDE PALETTE ---
+    zoomInBtn.addEventListener('click', () => { setZoom(zoom * 1.1); /* hidePalette(); */ });
+    zoomOutBtn.addEventListener('click', () => { setZoom(zoom / 1.1); /* hidePalette(); */ });
 
     function moveBy(deltaX, deltaY) {
       offsetX += deltaX;
       offsetY += deltaY;
       clampOffset();
       requestRedraw();
-      hidePalette();
+      // hidePalette(); // REMOVED
     }
     function getMoveAmount() { return CELL_SIZE * zoom * 0.8; }
     arrowUpBtn.onclick = function() { moveBy(0, getMoveAmount()); };
@@ -839,14 +852,14 @@
       offsetY = 0;
       setZoom(MIN_ZOOM);
       requestRedraw();
-      hidePalette();
+      // hidePalette(); // REMOVED
     };
     jumpBtn.addEventListener('click', () => {
       gridCursor.x = Math.min(GRID_SIZE-1, Math.max(0, Number(jumpX.value)));
       gridCursor.y = Math.min(GRID_SIZE-1, Math.max(0, Number(jumpY.value)));
       ensureCellVisible(gridCursor.x, gridCursor.y);
       requestRedraw();
-      hidePalette();
+      // hidePalette(); // REMOVED
     });
 
     // Mouse wheel zoom/ctrl only for grid
@@ -1001,9 +1014,47 @@
           ctxDisc.fillRect(x, y, 1, 1);
         }
       }
+      if (discSelectedColor) {
+        ctxDisc.beginPath();
+        ctxDisc.arc(discSelectedColor.x, discSelectedColor.y, 8, 0, 2*Math.PI);
+        ctxDisc.strokeStyle = "#fff";
+        ctxDisc.lineWidth = 2;
+        ctxDisc.stroke();
+      }
     }
 
-    colorDisc.addEventListener('mousedown', function(e) {
+    // --- MODIFIED: Palette Tool and Menu Icon Logic ---
+    function openColorPickerForCurrentSquare() {
+      palettePreviewCell = { x: gridCursor.x, y: gridCursor.y };
+      previewColor = null;
+      colorPickerModal.style.display = "flex";
+      colorPickerModal.style.background = "#222";
+      drawColorDisc();
+      showCursor = false;
+      confirmColorBtn.disabled = true;
+      confirmColorBtn.style.color = "grey";
+      hidePalette.shouldHide = false;
+      disableMenuIcon(); // Disable menu icon when palette opens
+    }
+
+    // Palette Modal Handlers
+    randomColorBtn.onclick = function() {
+      const h = Math.floor(Math.random()*360);
+      const s = Math.floor(Math.random()*60)+40;
+      const l = Math.floor(Math.random()*30)+50;
+      previewColor = `hsl(${h},${s}%,${l}%)`;
+      confirmColorBtn.disabled = false;
+      confirmColorBtn.style.color = "#222";
+      discSelectedColor = null;
+      drawColorDisc();
+      requestRedraw();
+    };
+    cancelColorBtn.onclick = function() {
+      hidePalette(true);
+      enableMenuIcon();
+    };
+
+    colorDisc.addEventListener('click', function(e){
       const rect = colorDisc.getBoundingClientRect();
       const x = e.clientX - rect.left;
       const y = e.clientY - rect.top;
@@ -1016,80 +1067,27 @@
       if (angle < 0) angle += 2*Math.PI;
       const hue = angle * 180 / Math.PI;
       const sat = dist / r;
-      discSelectedColor = `hsl(${hue},${sat*100}%,50%)`;
-      previewColor = discSelectedColor;
+      previewColor = `hsl(${hue},${sat*100}%,50%)`;
       confirmColorBtn.disabled = false;
       confirmColorBtn.style.color = "#222";
-      colorPickerModal.style.background = discSelectedColor;
-      requestRedraw();
-    });
-    colorDisc.addEventListener('mousemove', function(e) {
-      if (e.buttons === 1) {
-        colorDisc.dispatchEvent(new MouseEvent('mousedown', e));
-      }
-    });
-    randomColorBtn.addEventListener('click', function() {
-      const hue = Math.floor(Math.random()*360);
-      const sat = 0.7 + Math.random()*0.3;
-      discSelectedColor = `hsl(${hue},${sat*100}%,50%)`;
-      previewColor = discSelectedColor;
-      confirmColorBtn.disabled = false;
-      confirmColorBtn.style.color = "#222";
-      colorPickerModal.style.background = discSelectedColor;
-      requestRedraw();
-    });
-
-    function openColorPickerForCurrentSquare() {
-      paletteError.style.display = "none";
-      palettePreviewCell = {x: gridCursor.x, y: gridCursor.y};
-      showCursor = true;
-      previewColor = null;
-      confirmColorBtn.disabled = true;
-      confirmColorBtn.style.color = "grey";
-      requestRedraw();
-      hideCoordPopup();
+      discSelectedColor = {x,y};
       drawColorDisc();
-      colorPickerModal.style.background = "#222";
-      let frameRect = frame.getBoundingClientRect();
-      const scaledCellSize = CELL_SIZE * zoom;
-      const leftInFrame = offsetX + gridCursor.x * scaledCellSize + scaledCellSize / 2;
-      const topInFrame = offsetY + gridCursor.y * scaledCellSize + scaledCellSize / 2;
-      let left = frameRect.left + leftInFrame + scaledCellSize/2;
-      let top = frameRect.top + topInFrame - colorPickerModal.offsetHeight/2;
-      if (left + colorPickerModal.offsetWidth > window.innerWidth) {
-        left = frameRect.left + leftInFrame - colorPickerModal.offsetWidth - scaledCellSize/2;
-      }
-      colorPickerModal.style.left = left + 'px';
-      colorPickerModal.style.top = top + 'px';
-      colorPickerModal.style.display = "flex";
-      hidePalette.shouldHide = true;
-    }
+      requestRedraw();
+    });
 
-    // Color Picker Modal Buttons (disable disappearance except for OK/menu)
-    confirmColorBtn.addEventListener('click', function() {
-      if (palettePreviewCell && previewColor) {
-        sendCellColor(palettePreviewCell.x, palettePreviewCell.y, previewColor);
-        palettePreviewCell = null;
-        previewColor = null;
-        hidePalette.shouldHide = true;
-        colorPickerModal.style.background = "#222";
-        hidePalette(true);
-      }
-    });
-    cancelColorBtn.addEventListener('click', function() {
-      hidePalette.shouldHide = false;
-      // Do not hide on Cancel
-    });
-    randomColorBtn.addEventListener('click', function() {
-      // Do not hide on Random Color
-    });
+    // --- MODIFIED: Palette OK Button disables menu icon for 7 seconds ---
+    confirmColorBtn.onclick = function() {
+      if (!palettePreviewCell || !previewColor) return;
+      sendCellColor(palettePreviewCell.x, palettePreviewCell.y, previewColor);
+      hidePalette(true);
+      setTimeout(() => {
+        enableMenuIcon(); // Re-enable menu icon after 7 seconds
+      }, 7000);
+    };
 
     window.addEventListener('resize', setCanvasSize);
-    window.addEventListener('DOMContentLoaded', function() {
-      setCanvasSize();
-      zoomDisplay.textContent = Math.round(zoom * 100) + '%';
-      fetchGridState();
-    });
+    setCanvasSize();
+    fetchGridState();
   </script>
 </body>
 </html>
