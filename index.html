@@ -226,18 +226,19 @@
       transform: translateX(-50%);
       outline: 2px solid #ccc;
     }
-    /* Donate button outside grid, low-left */
+    /* Donate button above grid, upper-right */
     .donate-btn-outer {
       position: absolute;
-      left: 0;
-      bottom: -70px;
-      z-index: 100;
+      top: -60px;
+      right: -20px;
+      z-index: 200;
       display: flex;
       flex-direction: column;
-      align-items: flex-start;
+      align-items: flex-end;
       width: 200px;
       min-width: 120px;
-      padding-left: 16px;
+      padding-right: 8px;
+      background: none;
     }
     .dummy-btn {
       background: linear-gradient(160deg, #f0f0f0 70%, #bdbdbd 100%);
@@ -264,22 +265,22 @@
       color: #111;
       outline: 3px solid #FF0070;
     }
-    /* Popup random overlay the donate button */
+    /* Popup random overlay the donate button, simplified */
     .random-popup {
       position: absolute;
-      left: 0;
-      bottom: 0;
-      z-index: 999;
+      top: 38px;
+      right: 0;
+      z-index: 201;
       display: none;
       flex-direction: column;
-      align-items: flex-start;
+      align-items: flex-end;
       background: #222;
       border-radius: 14px;
       box-shadow: 0 0 22px #000;
-      padding: 18px 24px;
+      padding: 10px 16px;
       border: 2px solid #FF0070;
-      min-width: 170px;
-      width: 200px;
+      min-width: 100px;
+      width: 140px;
     }
     .random-popup.active {
       display: flex;
@@ -296,7 +297,7 @@
       box-shadow: 0 1px 6px #8883;
       transition: background 0.2s, color 0.2s;
       outline: 2px solid #ccc;
-      margin-bottom: 10px;
+      margin-bottom: 0;
     }
     .random-btn:active, .random-btn:focus {
       background: #e0e0e0;
@@ -437,7 +438,7 @@
       .jump-panel input[type="number"] { height: 15px; width: 28px; font-size: 0.7em; }
       #congratsMessage { padding: 18px 24px; font-size: 1.3em;}
       .palette-error { font-size: 1.1em; padding: 12px 18px; }
-      .random-popup, .donate-btn-outer { min-width: 100px; width: 120px; left: 2px; }
+      .random-popup, .donate-btn-outer { min-width: 100px; width: 120px; top: -40px; right: 0px; }
       .random-btn { padding: 7px 14px; font-size: 1em; }
       .footer-copyright { font-size: 0.9em; padding: 7px 0 6px 0;}
       .footer-row { gap: 8px; }
@@ -472,13 +473,12 @@
           <div class="palette-error" id="paletteError"></div>
           <div class="donate-required-message" id="donateRequiredMsg"></div>
           <div id="congratsMessage"></div>
-        </div>
-        <!-- Donate button & random popup outside grid, low-left -->
-        <div class="donate-btn-outer" id="donateBtnOuter">
-          <button class="dummy-btn" id="donateBtn">Donate / Contribute</button>
-          <div class="random-popup" id="randomPopup">
-            <button class="random-btn" id="popupRandomBtn">⟳ Random Square</button>
-            <span style="color:#fff; font-size:0.93em;">Click until you find a square you like,<br>then color it!</span>
+          <!-- Donate button & random popup above upper-right grid corner -->
+          <div class="donate-btn-outer" id="donateBtnOuter">
+            <button class="dummy-btn" id="donateBtn">Donate / Contribute</button>
+            <div class="random-popup" id="randomPopup">
+              <button class="random-btn" id="popupRandomBtn">⟳ Random Square</button>
+            </div>
           </div>
         </div>
       </div>
@@ -897,17 +897,35 @@
     }
     hideRandomPopup();
 
+    // Move donate button above upper-right corner of grid
+    function positionDonateBtn() {
+      // This is already handled by CSS absolute positioning within #frame
+      // left empty for clarity
+    }
+    window.addEventListener('resize', positionDonateBtn);
+
     donateBtn.onclick = function() {
       if (!hasDonated) {
         hasDonated = true;
         donationUsed = false;
         donateBtn.textContent = "Thanks for your support!";
+        showRandomPopup();
         setTimeout(() => { 
           if (!donationUsed) donateBtn.textContent = "Donate / Contribute";
         }, 4000);
+      } else {
         showRandomPopup();
       }
     };
+
+    // Clicking outside popup closes it
+    document.addEventListener('mousedown', function(e) {
+      if (randomPopupActive) {
+        if (!randomPopup.contains(e.target) && !donateBtn.contains(e.target)) {
+          hideRandomPopup();
+        }
+      }
+    });
 
     popupRandomBtn.onclick = function() {
       let tries = 2000;
@@ -928,6 +946,7 @@
         }
       }
       hidePalette();
+      hideRandomPopup();
       if (!found) { alert("No available squares left!"); return; }
       setTimeout(openColorPickerForCurrentSquare, 300);
     };
@@ -998,89 +1017,15 @@
       showCursor = false;
       placeCongratsMessageDynamic();
       const color = previewColor;
-      const key = gridCursor.x + "," + gridCursor.y;
-      coloredCells[key] = {color: color, locked: true};
       sendCellColor(gridCursor.x, gridCursor.y, color);
-      fetchGridState();
-      palettePreviewCell = null;
-      requestRedraw();
-      saveParticipation();
       donationUsed = true;
-      setTimeout(resetDonateButton, 5000);
-      hideRandomPopup();
-      confirmColorBtn.disabled = true;
-      confirmColorBtn.style.color = "grey";
+      setTimeout(() => { showCursor = true; requestRedraw(); }, 2200);
     };
     cancelColorBtn.onclick = function() {
       hidePalette();
     };
-    document.addEventListener('mousedown', function(e) {
-      if (colorPickerModal.style.display === "flex" && !colorPickerModal.contains(e.target)) {
-        hidePalette();
-      }
-      if (congratsMessage.style.display === "block" && !congratsMessage.contains(e.target)) {
-        congratsMessage.style.display = "none";
-        showCursor = true;
-        requestRedraw();
-      }
-    });
-    function placeCongratsMessageDynamic() {
-      const scaledCellSize = CELL_SIZE * zoom;
-      const frameRect = frame.getBoundingClientRect();
-      const leftInFrame = offsetX + gridCursor.x * scaledCellSize + scaledCellSize / 2;
-      const topInFrame = offsetY + gridCursor.y * scaledCellSize + scaledCellSize / 2;
-      let mouseY = frameRect.top + topInFrame;
-      let vpad = 10;
-      let top;
-      if (mouseY + congratsMessage.offsetHeight + vpad < window.innerHeight) {
-        top = mouseY + vpad;
-      } else {
-        top = mouseY - congratsMessage.offsetHeight - vpad;
-      }
-      congratsMessage.innerHTML = `🎉 Congratulations!<br>You have participated in The (In)Visible Million.<br>Thank you!<br><br>
-      <span style="font-size:0.8em;">Proof of participation is saved in your browser's local storage.<br>
-      See key <b>"invisibleMillionParticipation"</b> in <b>localStorage</b>.<br>
-      (You can view this in your browser's developer tools > Application > Local Storage)</span>`;
-      congratsMessage.style.top = top + "px";
-      congratsMessage.style.display = "block";
-    }
-    function saveParticipation() {
-      localStorage.setItem("invisibleMillionParticipation", "true");
-    }
-    function resetDonateButton() {
-      hasDonated = false;
-      donationUsed = false;
-      donateBtn.textContent = "Donate / Contribute";
-    }
-    function drawColorDisc() {
-      const cx = colorDisc.width / 2;
-      const cy = colorDisc.height / 2;
-      const radius = colorDisc.width / 2 - 3;
-      const ctxc = colorDisc.getContext('2d');
-      ctxc.clearRect(0, 0, colorDisc.width, colorDisc.height);
-      for (let angle=0; angle<360; angle+=1) {
-        const rad = angle * Math.PI / 180;
-        const grad = ctxc.createLinearGradient(
-          cx, cy,
-          cx + radius * Math.cos(rad), cy + radius * Math.sin(rad)
-        );
-        grad.addColorStop(0, 'white');
-        grad.addColorStop(1, `hsl(${angle},100%,50%)`);
-        ctxc.beginPath();
-        ctxc.moveTo(cx, cy);
-        ctxc.arc(cx, cy, radius, rad, rad+Math.PI/180, false);
-        ctxc.closePath();
-        ctxc.fillStyle = grad;
-        ctxc.fill();
-      }
-      ctxc.globalAlpha = 0.3;
-      ctxc.beginPath();
-      ctxc.arc(cx, cy, radius, 0, 2*Math.PI);
-      ctxc.fillStyle = 'black';
-      ctxc.fill();
-      ctxc.globalAlpha = 1.0;
-    }
-    drawColorDisc();
+
+    // HSV to RGB/HEX helpers
     function hsvToRgb(h, s, v) {
       let r, g, b;
       let i = Math.floor(h * 6);
@@ -1096,16 +1041,48 @@
         case 4: r = t, g = p, b = v; break;
         case 5: r = v, g = p, b = q; break;
       }
-      return [Math.round(r*255), Math.round(g*255), Math.round(b*255)];
+      return [Math.round(r * 255), Math.round(g * 255), Math.round(b * 255)];
     }
-    function rgbToHex(r,g,b) {
-      return "#" + [r,g,b].map(x => x.toString(16).padStart(2,'0')).join('');
+    function rgbToHex(r, g, b) {
+      return "#" + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1);
     }
+
+    // Draw color wheel for picker
+    function drawColorDisc() {
+      const ctx = colorDisc.getContext("2d");
+      const w = colorDisc.width;
+      const h = colorDisc.height;
+      ctx.clearRect(0, 0, w, h);
+      const img = ctx.createImageData(w, h);
+      for (let y = 0; y < h; y++) {
+        for (let x = 0; x < w; x++) {
+          const dx = x - w / 2, dy = y - h / 2;
+          const r = Math.sqrt(dx*dx + dy*dy);
+          const radius = w / 2 - 6;
+          if (r > radius) continue;
+          const hue = (Math.atan2(dy, dx) * 180 / Math.PI + 360) % 360;
+          const sat = r / radius;
+          const rgb = hsvToRgb(hue / 360, sat, 1);
+          const i = (y * w + x) * 4;
+          img.data[i+0] = rgb[0];
+          img.data[i+1] = rgb[1];
+          img.data[i+2] = rgb[2];
+          img.data[i+3] = 255;
+        }
+      }
+      ctx.putImageData(img, 0, 0);
+    }
+    drawColorDisc();
+
+    function placeCongratsMessageDynamic() {
+      congratsMessage.textContent = "Congratulations! Your square is now colored.";
+      congratsMessage.style.display = "block";
+      setTimeout(() => { congratsMessage.style.display = "none"; }, 2200);
+    }
+
     window.addEventListener('resize', setCanvasSize);
-    window.addEventListener('DOMContentLoaded', () => {
-      setCanvasSize();
-      fetchGridState();
-    });
+    window.addEventListener('DOMContentLoaded', setCanvasSize);
+    fetchGridState();
   </script>
 </body>
 </html>
