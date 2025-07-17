@@ -171,10 +171,34 @@
       display: block;
     }
     .color-picker-modal .modal-btns {
-      display: flex; flex-direction: column; gap: 14px; justify-content: center;
+      display: flex; flex-direction: column; gap: 21px; justify-content: center;
       align-items: center;
-      margin-top: 10px;
+      margin-top: 15px;
       width: 100%;
+    }
+    .color-picker-modal .fancy-btn {
+      background: linear-gradient(160deg, #f0f0f0 70%, #bdbdbd 100%);
+      color: #222;
+      border: none;
+      border-radius: 14px;
+      padding: 12px 24px;
+      font-size: 1.59em;
+      cursor: pointer;
+      font-weight: bold;
+      box-shadow: 0 1px 6px #8883;
+      transition: background 0.2s, color 0.2s;
+      height: auto;
+      min-width: 120px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      outline: 2px solid #ccc;
+    }
+    .color-picker-modal .fancy-btn:active, 
+    .color-picker-modal .fancy-btn:focus {
+      background: #e0e0e0;
+      color: #111;
+      outline: 3px solid #FF0070;
     }
     .palette-error, .palette-message, .donate-required-message {
       color: #fff;
@@ -303,7 +327,7 @@
       color: #111;
       outline: 3px solid #FF0070;
     }
-    /* Footer below grid, two rows */
+    /* Footer below grid, single row */
     .footer {
       width: 100vw;
       background: transparent;
@@ -323,7 +347,7 @@
       flex-direction: row;
       align-items: center;
       justify-content: center;
-      gap: 40px;
+      gap: 20px;
       width: 100%;
       margin-bottom: 8px;
       flex-wrap: wrap;
@@ -349,7 +373,7 @@
       align-items: center;
       justify-content: center;
       flex-wrap: nowrap;
-      height: 40px;
+      height: 38px;
       white-space: nowrap;
     }
     .jump-panel label {
@@ -359,7 +383,7 @@
     .jump-panel input[type="number"] {
       font-size: 1em;
       width: 65px;
-      height: 32px;
+      height: 38px;
       border-radius: 6px;
       border: 1px solid #bbb;
       padding: 3px 12px;
@@ -370,6 +394,32 @@
       appearance: none;
       -webkit-appearance: none;
       -moz-appearance: textfield;
+    }
+    /* Consistent button styling for footer navigation */
+    .arrow-btn, .center-btn, .fancy-btn {
+      background: linear-gradient(160deg, #f0f0f0 70%, #bdbdbd 100%);
+      color: #222;
+      border: none;
+      border-radius: 9px;
+      padding: 8px 16px;
+      font-size: 1.06em;
+      cursor: pointer;
+      font-weight: bold;
+      box-shadow: 0 1px 4px #8883;
+      transition: background 0.2s, color 0.2s;
+      height: 38px;
+      min-width: 38px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      outline: 2px solid #ccc;
+    }
+    .arrow-btn:active, .arrow-btn:focus,
+    .center-btn:active, .center-btn:focus,
+    .fancy-btn:active, .fancy-btn:focus {
+      background: #e0e0e0;
+      color: #111;
+      outline: 3px solid #FF0070;
     }
     .jump-panel input[type="number"]::-webkit-inner-spin-button,
     .jump-panel input[type="number"]::-webkit-outer-spin-button {
@@ -396,9 +446,10 @@
       #frame { width: min(98vw, 70vh); height: min(98vw, 70vh);}
       .color-picker-modal canvas { width: 114px; height: 114px; }
       .color-picker-modal { min-width: 130px; min-height: 130px; }
+      .color-picker-modal .fancy-btn { font-size: 1.2em; padding: 9px 18px; }
       .big-title { font-size: 1.3em !important; }
-      .arrow-btn, .center-btn, .fancy-btn, .jump-panel, .footer-content { font-size: 0.8em; height: 20px; min-width: 20px; }
-      .jump-panel input[type="number"] { height: 15px; width: 28px; font-size: 0.7em; }
+      .arrow-btn, .center-btn, .fancy-btn, .jump-panel, .footer-content { font-size: 0.8em; height: 30px; min-width: 30px; }
+      .jump-panel input[type="number"] { height: 30px; width: 50px; font-size: 0.7em; }
       #congratsMessage { padding: 18px 24px; font-size: 1.3em;}
       .palette-error { font-size: 1.1em; padding: 12px 18px; }
       .random-popup, .donate-btn-outer { min-width: 100px; width: 120px; left: 2px; }
@@ -461,8 +512,6 @@
             <span id="zoomDisplay" style="color:#fff;">100%</span>
             <button id="zoomInBtn" class="fancy-btn" title="Zoom in">+</button>
           </div>
-        </div>
-        <div class="footer-row footer-row-jump">
           <div class="jump-panel">
             <label for="jumpX">X:</label>
             <input type="number" id="jumpX" min="0" max="1099" value="0" />
@@ -908,19 +957,45 @@
       requestRedraw();
       hideCoordPopup();
       colorPickerModal.style.background = "#222";
+      
+      // Calculate positioning to keep modal within grid and include center of visible area
       let frameRect = frame.getBoundingClientRect();
       const scaledCellSize = CELL_SIZE * zoom;
+      
+      // Calculate the center of the visible grid area
+      const visibleCenterX = frameRect.left + frameRect.width / 2;
+      const visibleCenterY = frameRect.top + frameRect.height / 2;
+      
+      // Get modal dimensions (ensure modal is rendered to get accurate size)
+      colorPickerModal.style.display = "flex";
+      colorPickerModal.style.visibility = "hidden";
+      const modalRect = colorPickerModal.getBoundingClientRect();
+      const modalWidth = modalRect.width || 300; // fallback width
+      const modalHeight = modalRect.height || 350; // fallback height
+      colorPickerModal.style.visibility = "visible";
+      
+      // Calculate desired position based on grid cursor
       const leftInFrame = offsetX + gridCursor.x * scaledCellSize + scaledCellSize / 2;
       const topInFrame = offsetY + gridCursor.y * scaledCellSize + scaledCellSize / 2;
-      let left = frameRect.left + leftInFrame + scaledCellSize/2;
-      let top = frameRect.top + topInFrame - colorPickerModal.offsetHeight/2;
-      if (left + colorPickerModal.offsetWidth > window.innerWidth) {
-        left = frameRect.left + leftInFrame - colorPickerModal.offsetWidth - scaledCellSize/2;
+      let targetLeft = frameRect.left + leftInFrame;
+      let targetTop = frameRect.top + topInFrame - modalHeight / 2;
+      
+      // Ensure modal stays within grid bounds
+      let left = Math.max(frameRect.left, Math.min(frameRect.right - modalWidth, targetLeft - modalWidth / 2));
+      let top = Math.max(frameRect.top, Math.min(frameRect.bottom - modalHeight, targetTop));
+      
+      // Ensure the modal always includes the center of the visible area
+      if (left > visibleCenterX || left + modalWidth < visibleCenterX) {
+        left = visibleCenterX - modalWidth / 2;
+        left = Math.max(frameRect.left, Math.min(frameRect.right - modalWidth, left));
       }
-      if (top < 0) top = frameRect.top + topInFrame + scaledCellSize/2;
+      if (top > visibleCenterY || top + modalHeight < visibleCenterY) {
+        top = visibleCenterY - modalHeight / 2;
+        top = Math.max(frameRect.top, Math.min(frameRect.bottom - modalHeight, top));
+      }
+      
       colorPickerModal.style.left = left + "px";
       colorPickerModal.style.top = top + "px";
-      colorPickerModal.style.display = "flex";
       colorPickerModal.style.position = "fixed";
       colorPickerModal.style.width = "auto";
       colorPickerModal.style.height = "auto";
