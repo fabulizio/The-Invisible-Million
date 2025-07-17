@@ -270,7 +270,6 @@
       padding: 16px 12px;
       transition: background .2s;
       background: #222;
-      /* Default position: right of grid */
       left: calc(50vw + 370px);
       top: 120px;
     }
@@ -488,7 +487,7 @@
       bottom: 0;
       z-index: 10000;
       border-top: 1px solid #666;
-    /* Pearl shimmer effect for congrats message */
+    }
     .pearl-bg {
       background: linear-gradient(135deg, #fff, #f8f6ff 70%, #e6e6ea 100%);
       position: relative;
@@ -513,9 +512,6 @@
       position: relative;
       z-index: 2;
     }
-      
-    }
-    /* --- MOBILE RESPONSIVE --- */
     @media (max-width: 1000px) {
       .color-picker-modal {
         left: 50vw;
@@ -556,7 +552,6 @@
         border-radius: 12px !important;
         padding: 8px 3vw !important;
       }
-      /* Overlay congrats message for mobile */
       #congratsMessage {
         left: 50vw !important;
         top: 60vw !important;
@@ -580,6 +575,8 @@
       }
     }
   </style>
+  <!-- Screenshot library -->
+  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
 </head>
 <body>
   <header>
@@ -654,564 +651,563 @@
       &copy; 2025 The (In)Visible Million Project. All rights reserved.
     </div>
   </main>
-      <script>
-      // --- MENU ---
-      const menuIcon = document.getElementById('menuIcon');
-      const popupMenu = document.getElementById('popupMenu');
-      const closeMenuBtn = document.getElementById('closeMenuBtn');
-      menuIcon.addEventListener('click', () => popupMenu.classList.add('active'));
-      closeMenuBtn.addEventListener('click', () => popupMenu.classList.remove('active'));
-      popupMenu.addEventListener('click', (e) => {
-        if (e.target === popupMenu) popupMenu.classList.remove('active');
-      });
-    
-      // --- GRID ---
-      const GRID_SIZE = 1100;
-      const CELL_SIZE = 24;
-      let zoom = 0.5;
-      let MIN_ZOOM = 0.1;
-      const MAX_ZOOM = 3;
-      let offsetX = 0, offsetY = 0;
-      let coloredCells = {};
-      let redrawPending = false;
-      let isDragging = false;
-      let dragStart = {x: 0, y: 0};
-      let offsetStart = {x: 0, y: 0};
-      let palettePreviewCell = null;
-      let showCursor = true;
-      let hasDonated = false;
-      let donationUsed = false;
-      let pinch2Last = null;
-      let pinch2Mode = null;
-      let pinch2Origin = null;
-      const canvas = document.getElementById('gridCanvas');
-      const ctx = canvas.getContext('2d');
-      const frame = document.getElementById('frame');
-      const zoomDisplay = document.getElementById('zoomDisplay');
-      const arrowUpBtn = document.getElementById('arrowUpBtn');
-      const arrowDownBtn = document.getElementById('arrowDownBtn');
-      const arrowLeftBtn = document.getElementById('arrowLeftBtn');
-      const arrowRightBtn = document.getElementById('arrowRightBtn');
-      const centerBtn = document.getElementById('centerBtn');
-      const zoomInBtn = document.getElementById('zoomInBtn');
-      const zoomOutBtn = document.getElementById('zoomOutBtn');
-      const jumpX = document.getElementById('jumpX');
-      const jumpY = document.getElementById('jumpY');
-      const jumpBtn = document.getElementById('jumpBtn');
-      const donateBtn = document.getElementById('donateBtn');
-      const randomSquareBtn = document.getElementById('randomSquareBtn');
-      const donateBtnOuter = document.getElementById('donateBtnOuter');
-      const coordPopup = document.getElementById('coordPopup');
-      const congratsMessage = document.getElementById('congratsMessage');
-      const paletteError = document.getElementById('paletteError');
-      const colorPickerModal = document.getElementById('colorPickerModal');
-      const colorDisc = document.getElementById('colorDisc');
-      const confirmColorBtn = document.getElementById('confirmColorBtn');
-      const cancelColorBtn = document.getElementById('cancelColorBtn');
-      const randomColorBtn = document.getElementById('randomColorBtn');
-      const randomPopup = document.getElementById('randomPopup');
-      const popupRandomBtn = document.getElementById('popupRandomBtn');
-      const donateRequiredMsg = document.getElementById('donateRequiredMsg');
-      let gridCursor = { x: Math.floor(GRID_SIZE / 2), y: Math.floor(GRID_SIZE / 2) };
-      let previewColor = null;
-      let randomPopupActive = false;
-    
-      function setCanvasSize() {
-        const rect = frame.getBoundingClientRect();
-        canvas.width = rect.width;
-        canvas.height = rect.height;
-        MIN_ZOOM = Math.min(
-          canvas.width / (GRID_SIZE * CELL_SIZE),
-          canvas.height / (GRID_SIZE * CELL_SIZE)
-        );
-        zoom = Math.max(zoom, MIN_ZOOM);
-        clampOffset();
-        drawGrid();
+<script>
+const menuIcon = document.getElementById('menuIcon');
+const popupMenu = document.getElementById('popupMenu');
+const closeMenuBtn = document.getElementById('closeMenuBtn');
+menuIcon.addEventListener('click', () => popupMenu.classList.add('active'));
+closeMenuBtn.addEventListener('click', () => popupMenu.classList.remove('active'));
+popupMenu.addEventListener('click', (e) => {
+  if (e.target === popupMenu) popupMenu.classList.remove('active');
+});
+
+const GRID_SIZE = 1100;
+const CELL_SIZE = 24;
+let zoom = 0.5;
+let MIN_ZOOM = 0.1;
+const MAX_ZOOM = 3;
+let offsetX = 0, offsetY = 0;
+let coloredCells = {};
+let redrawPending = false;
+let isDragging = false;
+let dragStart = {x: 0, y: 0};
+let offsetStart = {x: 0, y: 0};
+let palettePreviewCell = null;
+let showCursor = true;
+let hasDonated = false;
+let donationUsed = false;
+let pinch2Last = null;
+let pinch2Mode = null;
+let pinch2Origin = null;
+const canvas = document.getElementById('gridCanvas');
+const ctx = canvas.getContext('2d');
+const frame = document.getElementById('frame');
+const zoomDisplay = document.getElementById('zoomDisplay');
+const arrowUpBtn = document.getElementById('arrowUpBtn');
+const arrowDownBtn = document.getElementById('arrowDownBtn');
+const arrowLeftBtn = document.getElementById('arrowLeftBtn');
+const arrowRightBtn = document.getElementById('arrowRightBtn');
+const centerBtn = document.getElementById('centerBtn');
+const zoomInBtn = document.getElementById('zoomInBtn');
+const zoomOutBtn = document.getElementById('zoomOutBtn');
+const jumpX = document.getElementById('jumpX');
+const jumpY = document.getElementById('jumpY');
+const jumpBtn = document.getElementById('jumpBtn');
+const donateBtn = document.getElementById('donateBtn');
+const randomSquareBtn = document.getElementById('randomSquareBtn');
+const donateBtnOuter = document.getElementById('donateBtnOuter');
+const coordPopup = document.getElementById('coordPopup');
+const congratsMessage = document.getElementById('congratsMessage');
+const paletteError = document.getElementById('paletteError');
+const colorPickerModal = document.getElementById('colorPickerModal');
+const colorDisc = document.getElementById('colorDisc');
+const confirmColorBtn = document.getElementById('confirmColorBtn');
+const cancelColorBtn = document.getElementById('cancelColorBtn');
+const randomColorBtn = document.getElementById('randomColorBtn');
+const randomPopup = document.getElementById('randomPopup');
+const popupRandomBtn = document.getElementById('popupRandomBtn');
+const donateRequiredMsg = document.getElementById('donateRequiredMsg');
+let gridCursor = { x: Math.floor(GRID_SIZE / 2), y: Math.floor(GRID_SIZE / 2) };
+let previewColor = null;
+let randomPopupActive = false;
+
+function setCanvasSize() {
+  const rect = frame.getBoundingClientRect();
+  canvas.width = rect.width;
+  canvas.height = rect.height;
+  MIN_ZOOM = Math.min(
+    canvas.width / (GRID_SIZE * CELL_SIZE),
+    canvas.height / (GRID_SIZE * CELL_SIZE)
+  );
+  zoom = Math.max(zoom, MIN_ZOOM);
+  clampOffset();
+  drawGrid();
+}
+function clampOffset() {
+  const scaledCellSize = CELL_SIZE * zoom;
+  const gridWidthPx = GRID_SIZE * scaledCellSize;
+  const gridHeightPx = GRID_SIZE * scaledCellSize;
+  offsetX = Math.min(0, Math.max(canvas.width - gridWidthPx, offsetX));
+  offsetY = Math.min(0, Math.max(canvas.height - gridHeightPx, offsetY));
+}
+function drawGrid() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  ctx.fillStyle = "#333";
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  const scaledCellSize = CELL_SIZE * zoom;
+  const startCol = Math.floor(-offsetX / scaledCellSize);
+  const startRow = Math.floor(-offsetY / scaledCellSize);
+  const visibleCols = Math.ceil(canvas.width / scaledCellSize) + 2;
+  const visibleRows = Math.ceil(canvas.height / scaledCellSize) + 2;
+
+  ctx.strokeStyle = "#bbb";
+  ctx.lineWidth = 1;
+  for(let c = startCol; c <= startCol + visibleCols; c++) {
+    if (c < 0 || c >= GRID_SIZE) continue;
+    const x = offsetX + c * scaledCellSize;
+    ctx.beginPath();
+    ctx.moveTo(x + 0.5, 0);
+    ctx.lineTo(x + 0.5, canvas.height);
+    ctx.stroke();
+  }
+  for(let r = startRow; r <= startRow + visibleRows; r++) {
+    if (r < 0 || r >= GRID_SIZE) continue;
+    const y = offsetY + r * scaledCellSize;
+    ctx.beginPath();
+    ctx.moveTo(0, y + 0.5);
+    ctx.lineTo(canvas.width, y + 0.5);
+    ctx.stroke();
+  }
+
+  for (const key in coloredCells) {
+    const [x, y] = key.split(',').map(Number);
+    if (
+      x >= startCol-1 && x <= startCol + visibleCols+1 &&
+      y >= startRow-1 && y <= startRow + visibleRows+1
+    ) {
+      const cellX = offsetX + x * scaledCellSize;
+      const cellY = offsetY + y * scaledCellSize;
+      ctx.fillStyle = coloredCells[key].color;
+      ctx.fillRect(cellX + 1, cellY + 1, scaledCellSize - 2, scaledCellSize - 2);
+    }
+  }
+
+  if (palettePreviewCell && previewColor) {
+    const cellX = offsetX + palettePreviewCell.x * scaledCellSize;
+    const cellY = offsetY + palettePreviewCell.y * scaledCellSize;
+    ctx.fillStyle = previewColor;
+    ctx.globalAlpha = 1;
+    ctx.fillRect(cellX + 1, cellY + 1, scaledCellSize - 2, scaledCellSize - 2);
+    ctx.globalAlpha = 1;
+  }
+
+  if (showCursor) {
+    const highlightX = offsetX + gridCursor.x * scaledCellSize;
+    const highlightY = offsetY + gridCursor.y * scaledCellSize;
+    ctx.save();
+    ctx.strokeStyle = "#fff";
+    ctx.lineWidth = Math.max(2, scaledCellSize * 0.08);
+    ctx.beginPath();
+    ctx.moveTo(highlightX + scaledCellSize / 2 - scaledCellSize*0.25, highlightY + scaledCellSize / 2);
+    ctx.lineTo(highlightX + scaledCellSize / 2 + scaledCellSize*0.25, highlightY + scaledCellSize / 2);
+    ctx.moveTo(highlightX + scaledCellSize / 2, highlightY + scaledCellSize / 2 - scaledCellSize*0.25);
+    ctx.lineTo(highlightX + scaledCellSize / 2, highlightY + scaledCellSize / 2 + scaledCellSize*0.25);
+    ctx.stroke();
+    ctx.restore();
+  }
+}
+function showCoordPopup(cell, mouseX, mouseY) {
+  if (colorPickerModal.style.display === "flex") return;
+  coordPopup.innerHTML = `<span>X: ${cell.x}, Y: ${cell.y}</span>`;
+  coordPopup.style.left = (mouseX + 9) + "px";
+  coordPopup.style.top = (mouseY + 9) + "px";
+  coordPopup.style.display = "block";
+}
+function hideCoordPopup() {
+  coordPopup.style.display = "none";
+}
+canvas.addEventListener('mousemove', function(e) {
+  if (colorPickerModal.style.display === "flex") return;
+  const rect = canvas.getBoundingClientRect();
+  const mouseX = e.clientX - rect.left;
+  const mouseY = e.clientY - rect.top;
+  const cell = pixelToCell(mouseX, mouseY);
+  showCoordPopup(cell, e.clientX, e.clientY);
+});
+canvas.addEventListener('mouseleave', hideCoordPopup);
+
+canvas.addEventListener('click', function(e){
+  if (!hasDonated) {
+    showDonateRequiredMessage(e.clientX, e.clientY);
+    return;
+  }
+});
+
+function showDonateRequiredMessage(mouseX, mouseY) {
+  donateRequiredMsg.textContent = "You must donate/contribute before you can select a square to color.";
+  donateRequiredMsg.style.left = "50%";
+  donateRequiredMsg.style.top = "30%";
+  donateRequiredMsg.style.transform = "translate(-50%, 0)";
+  donateRequiredMsg.style.display = "block";
+  setTimeout(() => { donateRequiredMsg.style.display = "none"; }, 2200);
+}
+
+function pixelToCell(x, y) {
+  const scaledCellSize = CELL_SIZE * zoom;
+  const cellX = Math.floor((x - offsetX) / scaledCellSize);
+  const cellY = Math.floor((y - offsetY) / scaledCellSize);
+  return {x: cellX, y: cellY};
+}
+function ensureCellVisible(cellX, cellY) {
+  const scaledCellSize = CELL_SIZE * zoom;
+  offsetX = canvas.width / 2 - (cellX + 0.5) * scaledCellSize;
+  offsetY = canvas.height / 2 - (cellY + 0.5) * scaledCellSize;
+  clampOffset();
+  requestRedraw();
+}
+function setZoom(newZoom, centerX, centerY) {
+  hidePalette();
+  const oldZoom = zoom;
+  zoom = Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, newZoom));
+  if (centerX === undefined || centerY === undefined) {
+    centerX = canvas.width / 2;
+    centerY = canvas.height / 2;
+  }
+  offsetX = centerX - ((centerX - offsetX) * (zoom / oldZoom));
+  offsetY = centerY - ((centerY - offsetY) * (zoom / oldZoom));
+  clampOffset();
+  zoomDisplay.textContent = Math.round(zoom * 100) + '%';
+  requestRedraw();
+}
+function requestRedraw() {
+  if (redrawPending) return;
+  redrawPending = true;
+  requestAnimationFrame(() => {
+    drawGrid();
+    redrawPending = false;
+  });
+}
+function sendCellColor(x, y, color) {
+  fetch(`https://155ca338-0e90-4f5a-88ec-b6163921baae-00-181dgn4pq10j7.janeway.replit.dev/paint`, {
+    method: "POST",
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify({x, y, color})
+  })
+  .then(res => res.json())
+  .then(_ => fetchGridState())
+  .catch(err => {});
+}
+function fetchGridState() {
+  fetch(`https://155ca338-0e90-4f5a-88ec-b6163921baae-00-181dgn4pq10j7.janeway.replit.dev/painted`)
+    .then(res => res.json())
+    .then(data => {
+      coloredCells = {};
+      for (const key in data) {
+        coloredCells[key] = {color: data[key].color, locked: true};
       }
-      function clampOffset() {
-        const scaledCellSize = CELL_SIZE * zoom;
-        const gridWidthPx = GRID_SIZE * scaledCellSize;
-        const gridHeightPx = GRID_SIZE * scaledCellSize;
-        offsetX = Math.min(0, Math.max(canvas.width - gridWidthPx, offsetX));
-        offsetY = Math.min(0, Math.max(canvas.height - gridHeightPx, offsetY));
+      requestRedraw();
+    })
+    .catch(err => {});
+}
+function hidePalette(force = false) {
+  if (!force) {
+    if (!hidePalette.shouldHide) return;
+  }
+  colorPickerModal.style.display = "none";
+  palettePreviewCell = null;
+  previewColor = null;
+  colorPickerModal.style.background = "#222";
+  requestRedraw();
+  showCursor = true;
+  confirmColorBtn.disabled = true;
+  confirmColorBtn.style.color = "grey";
+  hideCoordPopup();
+}
+hidePalette.shouldHide = false;
+
+zoomInBtn.addEventListener('click', () => { setZoom(zoom * 1.1); hidePalette(); });
+zoomOutBtn.addEventListener('click', () => { setZoom(zoom / 1.1); hidePalette(); });
+
+function moveBy(deltaX, deltaY) {
+  offsetX += deltaX;
+  offsetY += deltaY;
+  clampOffset();
+  requestRedraw();
+  hidePalette();
+}
+function getMoveAmount() { return CELL_SIZE * zoom * 0.8; }
+arrowUpBtn.onclick = function() { moveBy(0, getMoveAmount()); };
+arrowDownBtn.onclick = function() { moveBy(0, -getMoveAmount()); };
+arrowLeftBtn.onclick = function() { moveBy(getMoveAmount(), 0); };
+arrowRightBtn.onclick = function() { moveBy(-getMoveAmount(), 0); };
+centerBtn.onclick = function() {
+  gridCursor.x = Math.floor(GRID_SIZE / 2);
+  gridCursor.y = Math.floor(GRID_SIZE / 2);
+  jumpX.value = gridCursor.x;
+  jumpY.value = gridCursor.y;
+  offsetX = 0;
+  offsetY = 0;
+  setZoom(MIN_ZOOM);
+  requestRedraw();
+  hidePalette();
+};
+jumpBtn.addEventListener('click', () => {
+  gridCursor.x = Math.min(GRID_SIZE-1, Math.max(0, Number(jumpX.value)));
+  gridCursor.y = Math.min(GRID_SIZE-1, Math.max(0, Number(jumpY.value)));
+  ensureCellVisible(gridCursor.x, gridCursor.y);
+  requestRedraw();
+  hidePalette();
+});
+
+canvas.addEventListener('wheel', function(e) {
+  if (colorPickerModal.style.display === "flex") return;
+  if (e.ctrlKey || e.metaKey) {
+    e.preventDefault();
+    setZoom(zoom * (e.deltaY < 0 ? 1.1 : 0.9), e.offsetX, e.offsetY);
+  }
+}, {passive:false});
+
+canvas.addEventListener('touchstart', function(e) {
+  if (e.touches.length === 2) {
+    pinch2Last = {
+      x1: e.touches[0].clientX, y1: e.touches[0].clientY,
+      x2: e.touches[1].clientX, y2: e.touches[1].clientY
+    };
+    pinch2Mode = null;
+    pinch2Origin = {offsetX, offsetY, zoom};
+    e.preventDefault();
+  }
+}, {passive:false});
+canvas.addEventListener('touchmove', function(e) {
+  if (e.touches.length === 2 && pinch2Last) {
+    const x1 = e.touches[0].clientX, y1 = e.touches[0].clientY;
+    const x2 = e.touches[1].clientX, y2 = e.touches[1].clientY;
+    const lastDist = Math.hypot(
+      pinch2Last.x1 - pinch2Last.x2,
+      pinch2Last.y1 - pinch2Last.y2
+    );
+    const newDist = Math.hypot(x1 - x2, y1 - y2);
+    if (pinch2Mode === null) {
+      if (Math.abs(newDist - lastDist) > 10) {
+        pinch2Mode = "zoom";
+      } else {
+        pinch2Mode = "move";
       }
-      function drawGrid() {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        ctx.fillStyle = "#333";
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-    
-        const scaledCellSize = CELL_SIZE * zoom;
-        const startCol = Math.floor(-offsetX / scaledCellSize);
-        const startRow = Math.floor(-offsetY / scaledCellSize);
-        const visibleCols = Math.ceil(canvas.width / scaledCellSize) + 2;
-        const visibleRows = Math.ceil(canvas.height / scaledCellSize) + 2;
-    
-        ctx.strokeStyle = "#bbb";
-        ctx.lineWidth = 1;
-        for(let c = startCol; c <= startCol + visibleCols; c++) {
-          if (c < 0 || c >= GRID_SIZE) continue;
-          const x = offsetX + c * scaledCellSize;
-          ctx.beginPath();
-          ctx.moveTo(x + 0.5, 0);
-          ctx.lineTo(x + 0.5, canvas.height);
-          ctx.stroke();
-        }
-        for(let r = startRow; r <= startRow + visibleRows; r++) {
-          if (r < 0 || r >= GRID_SIZE) continue;
-          const y = offsetY + r * scaledCellSize;
-          ctx.beginPath();
-          ctx.moveTo(0, y + 0.5);
-          ctx.lineTo(canvas.width, y + 0.5);
-          ctx.stroke();
-        }
-    
-        for (const key in coloredCells) {
-          const [x, y] = key.split(',').map(Number);
-          if (
-            x >= startCol-1 && x <= startCol + visibleCols+1 &&
-            y >= startRow-1 && y <= startRow + visibleRows+1
-          ) {
-            const cellX = offsetX + x * scaledCellSize;
-            const cellY = offsetY + y * scaledCellSize;
-            ctx.fillStyle = coloredCells[key].color;
-            ctx.fillRect(cellX + 1, cellY + 1, scaledCellSize - 2, scaledCellSize - 2);
-          }
-        }
-    
-        if (palettePreviewCell && previewColor) {
-          const cellX = offsetX + palettePreviewCell.x * scaledCellSize;
-          const cellY = offsetY + palettePreviewCell.y * scaledCellSize;
-          ctx.fillStyle = previewColor;
-          ctx.globalAlpha = 1;
-          ctx.fillRect(cellX + 1, cellY + 1, scaledCellSize - 2, scaledCellSize - 2);
-          ctx.globalAlpha = 1;
-        }
-    
-        if (showCursor) {
-          const highlightX = offsetX + gridCursor.x * scaledCellSize;
-          const highlightY = offsetY + gridCursor.y * scaledCellSize;
-          ctx.save();
-          ctx.strokeStyle = "#fff";
-          ctx.lineWidth = Math.max(2, scaledCellSize * 0.08);
-          ctx.beginPath();
-          ctx.moveTo(highlightX + scaledCellSize / 2 - scaledCellSize*0.25, highlightY + scaledCellSize / 2);
-          ctx.lineTo(highlightX + scaledCellSize / 2 + scaledCellSize*0.25, highlightY + scaledCellSize / 2);
-          ctx.moveTo(highlightX + scaledCellSize / 2, highlightY + scaledCellSize / 2 - scaledCellSize*0.25);
-          ctx.lineTo(highlightX + scaledCellSize / 2, highlightY + scaledCellSize / 2 + scaledCellSize*0.25);
-          ctx.stroke();
-          ctx.restore();
-        }
-      }
-      function showCoordPopup(cell, mouseX, mouseY) {
-        if (colorPickerModal.style.display === "flex") return;
-        coordPopup.innerHTML = `<span>X: ${cell.x}, Y: ${cell.y}</span>`;
-        coordPopup.style.left = (mouseX + 9) + "px";
-        coordPopup.style.top = (mouseY + 9) + "px";
-        coordPopup.style.display = "block";
-      }
-      function hideCoordPopup() {
-        coordPopup.style.display = "none";
-      }
-      canvas.addEventListener('mousemove', function(e) {
-        if (colorPickerModal.style.display === "flex") return;
-        const rect = canvas.getBoundingClientRect();
-        const mouseX = e.clientX - rect.left;
-        const mouseY = e.clientY - rect.top;
-        const cell = pixelToCell(mouseX, mouseY);
-        showCoordPopup(cell, e.clientX, e.clientY);
-      });
-      canvas.addEventListener('mouseleave', hideCoordPopup);
-    
-      // Show donation required popup if user clicks grid before donating
-      canvas.addEventListener('click', function(e){
-        if (!hasDonated) {
-          showDonateRequiredMessage(e.clientX, e.clientY);
-          return;
-        }
-      });
-    
-      function showDonateRequiredMessage(mouseX, mouseY) {
-        donateRequiredMsg.textContent = "You must donate/contribute before you can select a square to color.";
-        donateRequiredMsg.style.left = "50%";
-        donateRequiredMsg.style.top = "30%";
-        donateRequiredMsg.style.transform = "translate(-50%, 0)";
-        donateRequiredMsg.style.display = "block";
-        setTimeout(() => { donateRequiredMsg.style.display = "none"; }, 2200);
-      }
-    
-      function pixelToCell(x, y) {
-        const scaledCellSize = CELL_SIZE * zoom;
-        const cellX = Math.floor((x - offsetX) / scaledCellSize);
-        const cellY = Math.floor((y - offsetY) / scaledCellSize);
-        return {x: cellX, y: cellY};
-      }
-      function ensureCellVisible(cellX, cellY) {
-        const scaledCellSize = CELL_SIZE * zoom;
-        offsetX = canvas.width / 2 - (cellX + 0.5) * scaledCellSize;
-        offsetY = canvas.height / 2 - (cellY + 0.5) * scaledCellSize;
-        clampOffset();
-        requestRedraw();
-      }
-      function setZoom(newZoom, centerX, centerY) {
-        hidePalette();
-        const oldZoom = zoom;
-        zoom = Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, newZoom));
-        if (centerX === undefined || centerY === undefined) {
-          centerX = canvas.width / 2;
-          centerY = canvas.height / 2;
-        }
-        offsetX = centerX - ((centerX - offsetX) * (zoom / oldZoom));
-        offsetY = centerY - ((centerY - offsetY) * (zoom / oldZoom));
-        clampOffset();
-        zoomDisplay.textContent = Math.round(zoom * 100) + '%';
-        requestRedraw();
-      }
-      function requestRedraw() {
-        if (redrawPending) return;
-        redrawPending = true;
-        requestAnimationFrame(() => {
-          drawGrid();
-          redrawPending = false;
-        });
-      }
-      function sendCellColor(x, y, color) {
-        fetch(`https://155ca338-0e90-4f5a-88ec-b6163921baae-00-181dgn4pq10j7.janeway.replit.dev/paint`, {
-          method: "POST",
-          headers: {"Content-Type": "application/json"},
-          body: JSON.stringify({x, y, color})
-        })
-        .then(res => res.json())
-        .then(_ => fetchGridState())
-        .catch(err => {});
-      }
-      function fetchGridState() {
-        fetch(`https://155ca338-0e90-4f5a-88ec-b6163921baae-00-181dgn4pq10j7.janeway.replit.dev/painted`)
-          .then(res => res.json())
-          .then(data => {
-            coloredCells = {};
-            for (const key in data) {
-              coloredCells[key] = {color: data[key].color, locked: true};
-            }
-            requestRedraw();
-          })
-          .catch(err => {});
-      }
-      function hidePalette(force = false) {
-        if (!force) {
-          if (!hidePalette.shouldHide) return;
-        }
-        colorPickerModal.style.display = "none";
-        palettePreviewCell = null;
-        previewColor = null;
-        colorPickerModal.style.background = "#222";
-        requestRedraw();
-        showCursor = true;
-        confirmColorBtn.disabled = true;
-        confirmColorBtn.style.color = "grey";
-        hideCoordPopup();
-      }
-      hidePalette.shouldHide = false;
-    
-      zoomInBtn.addEventListener('click', () => { setZoom(zoom * 1.1); hidePalette(); });
-      zoomOutBtn.addEventListener('click', () => { setZoom(zoom / 1.1); hidePalette(); });
-    
-      function moveBy(deltaX, deltaY) {
-        offsetX += deltaX;
-        offsetY += deltaY;
-        clampOffset();
-        requestRedraw();
-        hidePalette();
-      }
-      function getMoveAmount() { return CELL_SIZE * zoom * 0.8; }
-      arrowUpBtn.onclick = function() { moveBy(0, getMoveAmount()); };
-      arrowDownBtn.onclick = function() { moveBy(0, -getMoveAmount()); };
-      arrowLeftBtn.onclick = function() { moveBy(getMoveAmount(), 0); };
-      arrowRightBtn.onclick = function() { moveBy(-getMoveAmount(), 0); };
-      centerBtn.onclick = function() {
-        gridCursor.x = Math.floor(GRID_SIZE / 2);
-        gridCursor.y = Math.floor(GRID_SIZE / 2);
-        jumpX.value = gridCursor.x;
-        jumpY.value = gridCursor.y;
-        offsetX = 0;
-        offsetY = 0;
-        setZoom(MIN_ZOOM);
-        requestRedraw();
-        hidePalette();
-      };
-      jumpBtn.addEventListener('click', () => {
-        gridCursor.x = Math.min(GRID_SIZE-1, Math.max(0, Number(jumpX.value)));
-        gridCursor.y = Math.min(GRID_SIZE-1, Math.max(0, Number(jumpY.value)));
-        ensureCellVisible(gridCursor.x, gridCursor.y);
-        requestRedraw();
-        hidePalette();
-      });
-    
-      // Mouse wheel zoom/ctrl only for grid
-      canvas.addEventListener('wheel', function(e) {
-        if (colorPickerModal.style.display === "flex") return;
-        if (e.ctrlKey || e.metaKey) {
-          e.preventDefault();
-          setZoom(zoom * (e.deltaY < 0 ? 1.1 : 0.9), e.offsetX, e.offsetY);
-        }
-      }, {passive:false});
-    
-      // Two finger: pinch and move
-      canvas.addEventListener('touchstart', function(e) {
-        if (e.touches.length === 2) {
-          pinch2Last = {
-            x1: e.touches[0].clientX, y1: e.touches[0].clientY,
-            x2: e.touches[1].clientX, y2: e.touches[1].clientY
-          };
-          pinch2Mode = null;
-          pinch2Origin = {offsetX, offsetY, zoom};
-          e.preventDefault();
-        }
-      }, {passive:false});
-      canvas.addEventListener('touchmove', function(e) {
-        if (e.touches.length === 2 && pinch2Last) {
-          const x1 = e.touches[0].clientX, y1 = e.touches[0].clientY;
-          const x2 = e.touches[1].clientX, y2 = e.touches[1].clientY;
-          const lastDist = Math.hypot(
-            pinch2Last.x1 - pinch2Last.x2,
-            pinch2Last.y1 - pinch2Last.y2
-          );
-          const newDist = Math.hypot(x1 - x2, y1 - y2);
-          if (pinch2Mode === null) {
-            if (Math.abs(newDist - lastDist) > 10) {
-              pinch2Mode = "zoom";
-            } else {
-              pinch2Mode = "move";
-            }
-          }
-          if (pinch2Mode === "zoom") {
-            const delta = newDist / lastDist;
-            setZoom(pinch2Origin.zoom * delta);
-          } else {
-            const lastCx = (pinch2Last.x1 + pinch2Last.x2) / 2;
-            const lastCy = (pinch2Last.y1 + pinch2Last.y2) / 2;
-            const newCx = (x1 + x2) / 2;
-            const newCy = (y1 + y2) / 2;
-            offsetX = pinch2Origin.offsetX + (newCx - lastCx);
-            offsetY = pinch2Origin.offsetY + (newCy - lastCy);
-            clampOffset();
-            requestRedraw();
-          }
-          pinch2Last = {x1, y1, x2, y2};
-          e.preventDefault();
-        }
-      }, {passive:false});
-      canvas.addEventListener('touchend', function(e) {
-        pinch2Last = null;
-        pinch2Mode = null;
-      });
-    
-      canvas.addEventListener('mousedown', (e) => {
-        isDragging = true;
-        dragStart.x = e.clientX;
-        dragStart.y = e.clientY;
-        offsetStart.x = offsetX;
-        offsetStart.y = offsetY;
-        canvas.classList.add('grabbing');
-        canvas.setPointerCapture(e.pointerId || 0);
-        hidePalette();
-      });
-      window.addEventListener('mouseup', () => {
-        isDragging = false;
-        canvas.classList.remove('grabbing');
-      });
-      window.addEventListener('mousemove', (e) => {
-        if(!isDragging) return;
-        offsetX = offsetStart.x + (e.clientX - dragStart.x);
-        offsetY = offsetStart.y + (e.clientY - dragStart.y);
-        clampOffset();
-        requestRedraw();
-        hidePalette();
-      });
-    
-      // --- DONATE BUTTON LOGIC ---
-      donateBtn.onclick = function() {
-        if (!hasDonated) {
-          hasDonated = true;
-          donationUsed = false;
-          donateBtn.disabled = true;
-          donateBtn.style.display = "none";
-          randomSquareBtn.style.display = "inline-flex";
-        }
-      };
-    
-      // --- RANDOM SQUARE BUTTON LOGIC ---
-      randomSquareBtn.onclick = function() {
-        let tries = 2000;
-        let found = false;
-        while(tries-- > 0) {
-          const x = Math.floor(Math.random()*GRID_SIZE);
-          const y = Math.floor(Math.random()*GRID_SIZE);
-          const key = x + "," + y;
-          if (!coloredCells[key] || !coloredCells[key].locked) {
-            gridCursor.x = x;
-            gridCursor.y = y;
-            jumpX.value = x;
-            jumpY.value = y;
-            ensureCellVisible(x, y);
-            requestRedraw();
-            found = true;
-            break;
-          }
-        }
-        hidePalette();
-        if (!found) { alert("No available squares left!"); return; }
-        setTimeout(openColorPickerForCurrentSquare, 300);
-      };
-    
-      popupRandomBtn.onclick = function() {
-        let tries = 2000;
-        let found = false;
-        while(tries-- > 0) {
-          const x = Math.floor(Math.random()*GRID_SIZE);
-          const y = Math.floor(Math.random()*GRID_SIZE);
-          const key = x + "," + y;
-          if (!coloredCells[key] || !coloredCells[key].locked) {
-            gridCursor.x = x;
-            gridCursor.y = y;
-            jumpX.value = x;
-            jumpY.value = y;
-            ensureCellVisible(x, y);
-            requestRedraw();
-            found = true;
-            break;
-          }
-        }
-        hidePalette();
-        hideRandomPopup();
-        if (!found) { alert("No available squares left!"); return; }
-        setTimeout(openColorPickerForCurrentSquare, 300);
-      };
-    
-      function openColorPickerForCurrentSquare() {
-        paletteError.style.display = "none";
-        palettePreviewCell = {x: gridCursor.x, y: gridCursor.y};
-        showCursor = true;
-        previewColor = null;
-        confirmColorBtn.disabled = true;
-        confirmColorBtn.style.color = "grey";
-        requestRedraw();
-        hideCoordPopup();
-        colorPickerModal.style.background = "#222";
-        colorPickerModal.style.display = "flex";
-      }
-    
-      // --- COLOR PICKER LOGIC ---
-      // Simple color disc mock
-      function drawColorDisc() {
-        const ctxDisc = colorDisc.getContext("2d");
-        const w = colorDisc.width, h = colorDisc.height;
-        for(let angle=0; angle<360; angle+=1) {
-          ctxDisc.save();
-          ctxDisc.translate(w/2, h/2);
-          ctxDisc.rotate((angle*Math.PI)/180);
-          ctxDisc.beginPath();
-          ctxDisc.moveTo(0,0);
-          ctxDisc.arc(0,0,w/2,0,Math.PI/180, false);
-          ctxDisc.closePath();
-          ctxDisc.fillStyle = `hsl(${angle}, 90%, 50%)`;
-          ctxDisc.fill();
-          ctxDisc.restore();
-        }
-        ctxDisc.beginPath();
-        ctxDisc.arc(w/2,h/2,w/2-2,0,2*Math.PI);
-        ctxDisc.lineWidth = 2;
-        ctxDisc.strokeStyle = "#fff";
-        ctxDisc.stroke();
-      }
-      drawColorDisc();
-    
-      colorDisc.addEventListener("click", function(e) {
-        const rect = colorDisc.getBoundingClientRect();
-        const x = e.clientX - rect.left - rect.width/2;
-        const y = e.clientY - rect.top - rect.height/2;
-        const r = Math.sqrt(x*x + y*y);
-        if(r > rect.width/2) return;
-        let angle = Math.atan2(y,x)*(180/Math.PI);
-        if(angle<0) angle+=360;
-        previewColor = `hsl(${Math.round(angle)}, 90%, 50%)`;
-        confirmColorBtn.disabled = false;
-        confirmColorBtn.style.color = "#222";
-        requestRedraw();
-      });
-      randomColorBtn.onclick = function() {
-        previewColor = `hsl(${Math.floor(Math.random()*360)}, 90%, 50%)`;
-        confirmColorBtn.disabled = false;
-        confirmColorBtn.style.color = "#222";
-        requestRedraw();
-      };
-      cancelColorBtn.onclick = function() {
-        hidePalette(true);
-      };
-    
-      // --- NEW OK BUTTON LOGIC ---
-      confirmColorBtn.onclick = function() {
-        // Only proceed if color and cell are selected.
-        if (!palettePreviewCell || !previewColor) return;
-    
-        // Lock the square in local state
-        coloredCells[palettePreviewCell.x+","+palettePreviewCell.y] = {color: previewColor, locked: true};
-    
-        // Hide the color picker modal immediately
-        hidePalette(true);
-    
-        // Send color to backend
-        sendCellColor(palettePreviewCell.x, palettePreviewCell.y, previewColor);
-    
-        // Redraw grid to show the color immediately
-        requestRedraw();
-    
-        // Show congratulation message after 3 seconds, for 7 seconds
-        setTimeout(function() {
-          showCongratsMessage(palettePreviewCell.x, palettePreviewCell.y, previewColor);
-        }, 3000);
-      };
-    
-      // --- CELEBRATIVE CONGRATS MESSAGE LOGIC ---
-      function showCongratsMessage(x, y, color) {
-        congratsMessage.innerHTML = `
-          <span style="font-size:2em;">🎉🥳</span>
-          <span style="font-weight:bold;color:#222;display:block;margin-top:6px;">
-            Congratulation you colored in 
-            <span style="
-              color:${color};
-              background:#fff;
-              padding:2px 8px;
-              border-radius:8px;
-              border: 2px solid #ff0070;
-              box-shadow: 0 0 10px #ff007044;
-              font-weight: bold;
-              ">
-              ${color}
-            </span>
-            the ${x}.. ${y} (In)Visible square! Thanks to be part of this.
-          </span>
-          <span style="font-size:2em;">🎉🥳</span>
-        `;
-        congratsMessage.style.display = "block";
-        congratsMessage.classList.add("pearl-bg");
-        congratsMessage.style.border = "2px solid #ff0070";
-        congratsMessage.style.color = "#222";
-        congratsMessage.style.fontWeight = "bold";
-        // Hide after 7 seconds
-        setTimeout(function() {
-          congratsMessage.style.display = "none";
-          congratsMessage.classList.remove("pearl-bg");
-        }, 7000);
-      }
-    
-      // --- INITIALIZE ---
-      window.onload = function() {
-        setCanvasSize();
-        fetchGridState();
-      };
-      window.onresize = function() {
-        setCanvasSize();
-      };
-    </script>
+    }
+    if (pinch2Mode === "zoom") {
+      const delta = newDist / lastDist;
+      setZoom(pinch2Origin.zoom * delta);
+    } else {
+      const lastCx = (pinch2Last.x1 + pinch2Last.x2) / 2;
+      const lastCy = (pinch2Last.y1 + pinch2Last.y2) / 2;
+      const newCx = (x1 + x2) / 2;
+      const newCy = (y1 + y2) / 2;
+      offsetX = pinch2Origin.offsetX + (newCx - lastCx);
+      offsetY = pinch2Origin.offsetY + (newCy - lastCy);
+      clampOffset();
+      requestRedraw();
+    }
+    pinch2Last = {x1, y1, x2, y2};
+    e.preventDefault();
+  }
+}, {passive:false});
+canvas.addEventListener('touchend', function(e) {
+  pinch2Last = null;
+  pinch2Mode = null;
+});
+
+canvas.addEventListener('mousedown', (e) => {
+  isDragging = true;
+  dragStart.x = e.clientX;
+  dragStart.y = e.clientY;
+  offsetStart.x = offsetX;
+  offsetStart.y = offsetY;
+  canvas.classList.add('grabbing');
+  canvas.setPointerCapture(e.pointerId || 0);
+  hidePalette();
+});
+window.addEventListener('mouseup', () => {
+  isDragging = false;
+  canvas.classList.remove('grabbing');
+});
+window.addEventListener('mousemove', (e) => {
+  if(!isDragging) return;
+  offsetX = offsetStart.x + (e.clientX - dragStart.x);
+  offsetY = offsetStart.y + (e.clientY - dragStart.y);
+  clampOffset();
+  requestRedraw();
+  hidePalette();
+});
+
+donateBtn.onclick = function() {
+  if (!hasDonated) {
+    hasDonated = true;
+    donationUsed = false;
+    donateBtn.disabled = true;
+    donateBtn.style.display = "none";
+    randomSquareBtn.style.display = "inline-flex";
+  }
+};
+
+randomSquareBtn.onclick = function() {
+  let tries = 2000;
+  let found = false;
+  while(tries-- > 0) {
+    const x = Math.floor(Math.random()*GRID_SIZE);
+    const y = Math.floor(Math.random()*GRID_SIZE);
+    const key = x + "," + y;
+    if (!coloredCells[key] || !coloredCells[key].locked) {
+      gridCursor.x = x;
+      gridCursor.y = y;
+      jumpX.value = x;
+      jumpY.value = y;
+      ensureCellVisible(x, y);
+      requestRedraw();
+      found = true;
+      break;
+    }
+  }
+  hidePalette();
+  if (!found) { alert("No available squares left!"); return; }
+  setTimeout(openColorPickerForCurrentSquare, 300);
+};
+
+popupRandomBtn.onclick = function() {
+  let tries = 2000;
+  let found = false;
+  while(tries-- > 0) {
+    const x = Math.floor(Math.random()*GRID_SIZE);
+    const y = Math.floor(Math.random()*GRID_SIZE);
+    const key = x + "," + y;
+    if (!coloredCells[key] || !coloredCells[key].locked) {
+      gridCursor.x = x;
+      gridCursor.y = y;
+      jumpX.value = x;
+      jumpY.value = y;
+      ensureCellVisible(x, y);
+      requestRedraw();
+      found = true;
+      break;
+    }
+  }
+  hidePalette();
+  hideRandomPopup();
+  if (!found) { alert("No available squares left!"); return; }
+  setTimeout(openColorPickerForCurrentSquare, 300);
+};
+
+function openColorPickerForCurrentSquare() {
+  paletteError.style.display = "none";
+  palettePreviewCell = {x: gridCursor.x, y: gridCursor.y};
+  showCursor = true;
+  previewColor = null;
+  confirmColorBtn.disabled = true;
+  confirmColorBtn.style.color = "grey";
+  requestRedraw();
+  hideCoordPopup();
+  colorPickerModal.style.background = "#222";
+  colorPickerModal.style.display = "flex";
+}
+
+// Simple color disc mock
+function drawColorDisc() {
+  const ctxDisc = colorDisc.getContext("2d");
+  const w = colorDisc.width, h = colorDisc.height;
+  for(let angle=0; angle<360; angle+=1) {
+    ctxDisc.save();
+    ctxDisc.translate(w/2, h/2);
+    ctxDisc.rotate((angle*Math.PI)/180);
+    ctxDisc.beginPath();
+    ctxDisc.moveTo(0,0);
+    ctxDisc.arc(0,0,w/2,0,Math.PI/180, false);
+    ctxDisc.closePath();
+    ctxDisc.fillStyle = `hsl(${angle}, 90%, 50%)`;
+    ctxDisc.fill();
+    ctxDisc.restore();
+  }
+  ctxDisc.beginPath();
+  ctxDisc.arc(w/2,h/2,w/2-2,0,2*Math.PI);
+  ctxDisc.lineWidth = 2;
+  ctxDisc.strokeStyle = "#fff";
+  ctxDisc.stroke();
+}
+drawColorDisc();
+
+colorDisc.addEventListener("click", function(e) {
+  const rect = colorDisc.getBoundingClientRect();
+  const x = e.clientX - rect.left - rect.width/2;
+  const y = e.clientY - rect.top - rect.height/2;
+  const r = Math.sqrt(x*x + y*y);
+  if(r > rect.width/2) return;
+  let angle = Math.atan2(y,x)*(180/Math.PI);
+  if(angle<0) angle+=360;
+  previewColor = `hsl(${Math.round(angle)}, 90%, 50%)`;
+  confirmColorBtn.disabled = false;
+  confirmColorBtn.style.color = "#222";
+  requestRedraw();
+});
+randomColorBtn.onclick = function() {
+  previewColor = `hsl(${Math.floor(Math.random()*360)}, 90%, 50%)`;
+  confirmColorBtn.disabled = false;
+  confirmColorBtn.style.color = "#222";
+  requestRedraw();
+};
+cancelColorBtn.onclick = function() {
+  hidePalette(true);
+};
+
+confirmColorBtn.onclick = function() {
+  if (!palettePreviewCell || !previewColor) return;
+  coloredCells[palettePreviewCell.x+","+palettePreviewCell.y] = {color: previewColor, locked: true};
+  hidePalette(true);
+  sendCellColor(palettePreviewCell.x, palettePreviewCell.y, previewColor);
+  requestRedraw();
+  setTimeout(function() {
+    showCongratsMessage(palettePreviewCell.x, palettePreviewCell.y, previewColor);
+  }, 3000);
+};
+
+function showCongratsMessage(x, y, color) {
+  congratsMessage.innerHTML = `
+    <span style="font-size:2em;">🎉🥳</span>
+    <span style="font-weight:bold;color:#222;display:block;margin-top:6px;">
+      Congratulation you colored in 
+      <span style="
+        color:${color};
+        background:#fff;
+        padding:2px 8px;
+        border-radius:8px;
+        border: 2px solid #ff0070;
+        box-shadow: 0 0 10px #ff007044;
+        font-weight: bold;
+        ">
+        ${color}
+      </span>
+      the ${x}, ${y} (In)Visible square! Thanks for being part of this.
+    </span>
+    <span style="font-size:2em;">🎉🥳</span>
+    <button class="congrats-screenshot-btn" id="congratsScreenshotBtn">Take Screenshot</button>
+    <button class="congrats-close-btn" id="congratsCloseBtn">Close</button>
+  `;
+  congratsMessage.style.display = "block";
+  congratsMessage.classList.add("pearl-bg");
+  congratsMessage.style.border = "2px solid #ff0070";
+  congratsMessage.style.color = "#222";
+  congratsMessage.style.fontWeight = "bold";
+  document.getElementById("congratsScreenshotBtn").onclick = function() {
+    html2canvas(congratsMessage).then(function(canvas) {
+      const a = document.createElement('a');
+      a.href = canvas.toDataURL('image/png');
+      a.download = 'congrats.png';
+      a.click();
+    });
+  };
+  document.getElementById("congratsCloseBtn").onclick = function() {
+    congratsMessage.style.display = "none";
+    congratsMessage.classList.remove("pearl-bg");
+    donateBtn.disabled = false;
+    donateBtn.style.display = "inline-flex";
+    randomSquareBtn.style.display = "none";
+    hasDonated = false;
+  };
+  setTimeout(function() {
+    congratsMessage.style.display = "none";
+    congratsMessage.classList.remove("pearl-bg");
+    donateBtn.disabled = false;
+    donateBtn.style.display = "inline-flex";
+    randomSquareBtn.style.display = "none";
+    hasDonated = false;
+  }, 7000);
+}
+
+window.onload = function() {
+  setCanvasSize();
+  fetchGridState();
+};
+window.onresize = function() {
+  setCanvasSize();
+};
+</script>
 </body>
 </html>
