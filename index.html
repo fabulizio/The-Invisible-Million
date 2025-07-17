@@ -50,7 +50,6 @@
       z-index: 2;
       flex: none;
     }
-    /* --- MODIFIED MENU ICON --- */
     .menu-icon {
       margin-left: 12px;
       width: 38px; height: 38px;
@@ -58,25 +57,25 @@
       flex-direction: column;
       justify-content: center;
       align-items: center;
+      gap: 8px;
       cursor: pointer;
       z-index: 100;
       background: none;
       outline: 2px solid #ccc;
       border-radius: 8px;
-      transition: outline 0.2s;
-      /* Remove gap, will use SVG */
-      padding: 0;
+    }
+    .menu-icon span {
+      display: block;
+      width: 28px;
+      height: 5px;
+      background: #fff;
+      border-radius: 3px;
+      margin: 0 auto;
+      transition: background 0.2s;
     }
     .menu-icon:focus {
       outline: 3px solid #FF0070;
     }
-    .menu-grid-svg {
-      width: 28px;
-      height: 28px;
-      display: block;
-    }
-    /* --- END MODIFIED MENU ICON --- */
-
     .popup-menu {
       position: fixed;
       top: 0; right: 0; left: 0; bottom: 0;
@@ -203,8 +202,8 @@
       max-width: 700px;
       margin: 0 auto;
       display: flex;
-      flex-direction: row; /* MODIFIED: Now row for grid + palette */
-      align-items: flex-start;
+      flex-direction: column;
+      align-items: center;
       justify-content: center;
       min-height: 360px;
       z-index: 1;
@@ -238,13 +237,9 @@
       touch-action: none;
     }
     #gridCanvas.grabbing, #frame.grabbing { cursor: grabbing !important; }
-
-    /* --- MODIFIED COLOR PICKER TOOL --- */
     .color-picker-modal {
-      position: absolute;
-      left: 100%; /* Place to the right of #frame */
-      top: 0;
-      margin-left: 24px; /* space between grid and modal */
+      position: fixed;
+      z-index: 9999;
       display: none;
       flex-direction: column;
       align-items: center;
@@ -256,10 +251,8 @@
       justify-content: center;
       padding: 16px 12px;
       transition: background .2s;
-      /* background will be set dynamically by JS! */
-      /* background: #222; */
+      background: #222;
     }
-    .color-picker-modal.active { display: flex; }
     .color-picker-modal canvas {
       width: 120px; height: 120px;
       border: 2px solid #fff;
@@ -274,8 +267,6 @@
       margin-top: 7px;
       width: 100%;
     }
-    /* --- END MODIFIED COLOR PICKER TOOL --- */
-
     .palette-error, .palette-message, .donate-required-message {
       color: #fff;
       background: #ff0070;
@@ -463,8 +454,7 @@
         min-height: 220px;
         aspect-ratio: 1/1;
       }
-      .grid-container { max-width: 98vw; flex-direction: column; align-items: center;}
-      .color-picker-modal { position: static; left: auto; top: auto; margin-left: 0; margin-top: 12px; }
+      .grid-container { max-width: 98vw; }
       .dummy-btn { font-size: 0.9em; min-width: 80px; padding: 5px 8px;}
       .random-btn-pink { font-size: 0.9em; min-width: 80px; padding: 5px 8px;}
       .footer { font-size: 0.8em; max-width: 98vw;}
@@ -488,18 +478,11 @@
   <header>
     <div class="header-content">
       <span class="big-title">The (In)Visible Million Project</span>
-      <!-- MODIFIED MENU ICON: SVG GRID ICON -->
       <div class="menu-icon" id="menuIcon" title="Menu" tabindex="0">
-        <svg class="menu-grid-svg" viewBox="0 0 28 28" aria-hidden="true" focusable="false">
-          <!-- Two horizontal lines -->
-          <rect x="4" y="8" width="20" height="2" rx="1" fill="#fff"/>
-          <rect x="4" y="18" width="20" height="2" rx="1" fill="#fff"/>
-          <!-- Two vertical lines -->
-          <rect x="8" y="4" width="2" height="20" rx="1" fill="#fff"/>
-          <rect x="18" y="4" width="2" height="20" rx="1" fill="#fff"/>
-        </svg>
+        <span></span>
+        <span></span>
+        <span></span>
       </div>
-      <!-- END MODIFIED MENU ICON -->
     </div>
   </header>
   <div id="donateBtnOuter">
@@ -511,21 +494,18 @@
         <div id="frame" tabindex="0">
           <canvas id="gridCanvas"></canvas>
           <div id="coordPopup"></div>
-          <!-- MODIFIED: color picker modal moved outside frame, placed to right via CSS -->
-        </div>
-        <!-- MODIFIED: color picker modal rendered as sibling to grid, not inside frame -->
-        <div id="colorPickerModal" class="color-picker-modal">
-          <canvas id="colorDisc" width="120" height="120"></canvas>
-          <div class="modal-btns">
-            <button id="randomColorBtn" type="button" class="fancy-btn">Random Color</button>
-            <button id="confirmColorBtn" type="button" class="fancy-btn" disabled style="color:grey;">OK</button>
-            <button id="cancelColorBtn" type="button" class="fancy-btn">Cancel</button>
+          <div id="colorPickerModal" class="color-picker-modal">
+            <canvas id="colorDisc" width="120" height="120"></canvas>
+            <div class="modal-btns">
+              <button id="randomColorBtn" type="button" class="fancy-btn">Random Color</button>
+              <button id="confirmColorBtn" type="button" class="fancy-btn" disabled style="color:grey;">OK</button>
+              <button id="cancelColorBtn" type="button" class="fancy-btn">Cancel</button>
+            </div>
           </div>
+          <div class="palette-error" id="paletteError"></div>
+          <div class="donate-required-message" id="donateRequiredMsg"></div>
+          <div id="congratsMessage"></div>
         </div>
-        <!-- END MODIFIED COLOR PICKER TOOL -->
-        <div class="palette-error" id="paletteError"></div>
-        <div class="donate-required-message" id="donateRequiredMsg"></div>
-        <div id="congratsMessage"></div>
       </div>
       <div class="footer">
         <div class="footer-row">
@@ -731,7 +711,7 @@
       }
     }
     function showCoordPopup(cell, mouseX, mouseY) {
-      if (colorPickerModal.style.display === "flex" || colorPickerModal.classList.contains('active')) return;
+      if (colorPickerModal.style.display === "flex") return;
       coordPopup.innerHTML = `<span>X: ${cell.x}, Y: ${cell.y}</span>`;
       coordPopup.style.left = (mouseX + 9) + "px";
       coordPopup.style.top = (mouseY + 9) + "px";
@@ -741,7 +721,7 @@
       coordPopup.style.display = "none";
     }
     canvas.addEventListener('mousemove', function(e) {
-      if (colorPickerModal.style.display === "flex" || colorPickerModal.classList.contains('active')) return;
+      if (colorPickerModal.style.display === "flex") return;
       const rect = canvas.getBoundingClientRect();
       const mouseX = e.clientX - rect.left;
       const mouseY = e.clientY - rect.top;
@@ -830,13 +810,11 @@
         .catch(err => {});
     }
 
-    // --- MODIFIED PALETTE HIDE/SHOW ---
     function hidePalette(force = false) {
       if (!force) {
         // Only hide on OK button or menu open; otherwise, do not hide
         if (!hidePalette.shouldHide) return;
       }
-      colorPickerModal.classList.remove('active');
       colorPickerModal.style.display = "none";
       palettePreviewCell = null;
       previewColor = null;
@@ -848,27 +826,6 @@
       hideCoordPopup();
     }
     hidePalette.shouldHide = false;
-
-    // --- MODIFIED: palette shown as .active class, and position right of grid ---
-    function openColorPickerForCurrentSquare() {
-      palettePreviewCell = {x: gridCursor.x, y: gridCursor.y};
-      previewColor = null;
-      colorPickerModal.classList.add('active');
-      colorPickerModal.style.display = "flex";
-      // Set initial background color (default or last picked)
-      updateColorPickerBackground();
-      drawColorDisc();
-      showCursor = false;
-      confirmColorBtn.disabled = true;
-      confirmColorBtn.style.color = "grey";
-    }
-
-    // --- MODIFIED: update color picker tool background to currently selected color ---
-    function updateColorPickerBackground() {
-      // Use discSelectedColor if available, else previewColor, else default
-      let bg = discSelectedColor || previewColor || "#222";
-      colorPickerModal.style.background = bg;
-    }
 
     // --- MODIFIED FOOTER BUTTONS: DO NOT HIDE PALETTE ---
     zoomInBtn.addEventListener('click', () => { setZoom(zoom * 1.1); /* hidePalette(); */ });
@@ -907,7 +864,7 @@
 
     // Mouse wheel zoom/ctrl only for grid
     canvas.addEventListener('wheel', function(e) {
-      if (colorPickerModal.style.display === "flex" || colorPickerModal.classList.contains('active')) return;
+      if (colorPickerModal.style.display === "flex") return;
       if (e.ctrlKey || e.metaKey) {
         e.preventDefault();
         setZoom(zoom * (e.deltaY < 0 ? 1.1 : 0.9), e.offsetX, e.offsetY);
@@ -1035,88 +992,102 @@
       }
     };
 
-    // --- MODIFIED Color Picker Palette Drawing and Selection ---
+    // --- Color Picker Palette Drawing and Selection ---
     function drawColorDisc() {
       const disc = document.getElementById('colorDisc');
       const ctxDisc = disc.getContext('2d');
       const w = disc.width;
       const h = disc.height;
-      ctxDisc.clearRect(0, 0, w, h);
-      // Draw color wheel (unchanged, left as implementation detail)
+      const r = w/2;
+      ctxDisc.clearRect(0,0,w,h);
       for (let y = 0; y < h; y++) {
         for (let x = 0; x < w; x++) {
-          const dx = x - w/2;
-          const dy = y - h/2;
+          const dx = x - r;
+          const dy = y - r;
           const dist = Math.sqrt(dx*dx + dy*dy);
-          if (dist > w/2) continue;
-          const angle = Math.atan2(dy, dx);
-          const hue = ((angle*180/Math.PI)+360)%360;
-          const sat = dist/(w/2)*100;
-          ctxDisc.fillStyle = `hsl(${hue},${sat}%,50%)`;
+          if (dist > r) continue;
+          let angle = Math.atan2(dy, dx);
+          if (angle < 0) angle += 2*Math.PI;
+          const hue = angle * 180 / Math.PI;
+          const sat = dist / r;
+          ctxDisc.fillStyle = `hsl(${hue},${sat*100}%,50%)`;
           ctxDisc.fillRect(x, y, 1, 1);
         }
       }
-      // If a color is selected, show a marker
       if (discSelectedColor) {
         ctxDisc.beginPath();
-        ctxDisc.arc(w/2, h/2, w/2-5, 0, 2*Math.PI);
-        ctxDisc.strokeStyle = '#fff';
-        ctxDisc.lineWidth = 3;
+        ctxDisc.arc(discSelectedColor.x, discSelectedColor.y, 8, 0, 2*Math.PI);
+        ctxDisc.strokeStyle = "#fff";
+        ctxDisc.lineWidth = 2;
         ctxDisc.stroke();
       }
     }
+
+    // --- MODIFIED: Palette Tool and Menu Icon Logic ---
+    function openColorPickerForCurrentSquare() {
+      palettePreviewCell = { x: gridCursor.x, y: gridCursor.y };
+      previewColor = null;
+      colorPickerModal.style.display = "flex";
+      colorPickerModal.style.background = "#222";
+      drawColorDisc();
+      showCursor = false;
+      confirmColorBtn.disabled = true;
+      confirmColorBtn.style.color = "grey";
+      hidePalette.shouldHide = false;
+      disableMenuIcon(); // Disable menu icon when palette opens
+    }
+
+    // Palette Modal Handlers
+    randomColorBtn.onclick = function() {
+      const h = Math.floor(Math.random()*360);
+      const s = Math.floor(Math.random()*60)+40;
+      const l = Math.floor(Math.random()*30)+50;
+      previewColor = `hsl(${h},${s}%,${l}%)`;
+      confirmColorBtn.disabled = false;
+      confirmColorBtn.style.color = "#222";
+      discSelectedColor = null;
+      drawColorDisc();
+      requestRedraw();
+    };
+    cancelColorBtn.onclick = function() {
+      hidePalette(true);
+      enableMenuIcon();
+    };
+
     colorDisc.addEventListener('click', function(e){
       const rect = colorDisc.getBoundingClientRect();
       const x = e.clientX - rect.left;
       const y = e.clientY - rect.top;
-      const dx = x - colorDisc.width/2;
-      const dy = y - colorDisc.height/2;
+      const r = colorDisc.width/2;
+      const dx = x - r;
+      const dy = y - r;
       const dist = Math.sqrt(dx*dx + dy*dy);
-      if (dist > colorDisc.width/2) return;
-      const angle = Math.atan2(dy, dx);
-      const hue = ((angle*180/Math.PI)+360)%360;
-      const sat = dist/(colorDisc.width/2)*100;
-      const color = `hsl(${hue},${sat}%,50%)`;
-      discSelectedColor = color;
-      previewColor = color;
-      updateColorPickerBackground();
-      drawColorDisc();
+      if (dist > r) return;
+      let angle = Math.atan2(dy, dx);
+      if (angle < 0) angle += 2*Math.PI;
+      const hue = angle * 180 / Math.PI;
+      const sat = dist / r;
+      previewColor = `hsl(${hue},${sat*100}%,50%)`;
       confirmColorBtn.disabled = false;
       confirmColorBtn.style.color = "#222";
-    });
-    randomColorBtn.addEventListener('click', function(){
-      const hue = Math.random()*360;
-      const sat = 60+Math.random()*40;
-      discSelectedColor = `hsl(${hue},${sat}%,50%)`;
-      previewColor = discSelectedColor;
-      updateColorPickerBackground();
+      discSelectedColor = {x,y};
       drawColorDisc();
-      confirmColorBtn.disabled = false;
-      confirmColorBtn.style.color = "#222";
+      requestRedraw();
     });
-    cancelColorBtn.addEventListener('click', function(){
-      hidePalette(true);
-    });
-    confirmColorBtn.addEventListener('click', function(){
+
+    // --- MODIFIED: Palette OK Button disables menu icon for 7 seconds ---
+    confirmColorBtn.onclick = function() {
       if (!palettePreviewCell || !previewColor) return;
       sendCellColor(palettePreviewCell.x, palettePreviewCell.y, previewColor);
       hidePalette(true);
-      discSelectedColor = null;
-      previewColor = null;
-      updateColorPickerBackground();
-    });
+      setTimeout(() => {
+        enableMenuIcon(); // Re-enable menu icon after 7 seconds
+      }, 7000);
+    };
 
-    // If you want to open the color picker for the current square from other parts, use openColorPickerForCurrentSquare()
-
-    // --- END MODIFIED Color Picker Palette Drawing and Selection ---
-
-    // On window resize, update canvas and palette position
     window.addEventListener('resize', setCanvasSize);
-    setTimeout(setCanvasSize, 50);
-
-    // Load colored cells from backend
+    setCanvasSize();
     fetchGridState();
-
   </script>
 </body>
 </html>
