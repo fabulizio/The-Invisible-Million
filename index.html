@@ -125,11 +125,10 @@
       min-height: 50vh;
       margin-bottom: 80px;
     }
-    /* Center the grid and sidebar in a flex row, grid always centered */
     .grid-centered-row {
       display: flex;
       flex-direction: row;
-      align-items: flex-start;
+      align-items: center;
       justify-content: center;
       width: 100vw;
       gap: 0;
@@ -184,6 +183,7 @@
       text-align: left;
       display: none;
     }
+    /* Hide message by default */
     #congratsMessage {
       position: absolute;
       left: 50%; top: 50%;
@@ -201,6 +201,39 @@
       max-width: 90vw;
       pointer-events: auto;
       outline: 2px solid #ccc;
+    }
+    .congrats-close {
+      position: absolute;
+      top: 14px;
+      right: 24px;
+      font-size: 2em;
+      color: #ff0070;
+      background: none;
+      border: none;
+      cursor: pointer;
+      z-index: 10002;
+      font-weight: bold;
+    }
+    .congrats-save {
+      margin-top: 24px;
+      padding: 12px 32px;
+      font-size: 1.1em;
+      border-radius: 11px;
+      border: 2px solid #ff0070;
+      background: #fff0f8;
+      color: #222;
+      font-weight: bold;
+      cursor: pointer;
+      transition: background .2s, border-color .2s;
+    }
+    .congrats-saved {
+      margin-top: 14px;
+      font-size: 1em;
+      color: #ff0070;
+      font-weight: bold;
+      background: #fff0f8;
+      border-radius: 6px;
+      padding: 6px 12px;
     }
     .palette-error, .donate-required-message {
       color: #fff;
@@ -266,7 +299,6 @@
       margin-top: 10px;
       width: 100%;
     }
-    /* Footer constrained to grid width */
     .footer {
       width: min(70vw, 70vh);
       margin: 0 auto;
@@ -307,7 +339,6 @@
       z-index: 10000;
       border-top: 1px solid #666;
     }
-    /* Unified button style */
     .custom-btn {
       background: linear-gradient(160deg, #f0f0f0 70%, #bdbdbd 100%);
       color: #222;
@@ -328,17 +359,26 @@
       margin: 0 2px;
       margin-bottom: 0;
       user-select: none;
+      position: relative;
     }
     .custom-btn.bright {
       border-color: #FF0070 !important;
       box-shadow: 0 0 0 4px #FF0070;
-      transition: border-color 0.2s, box-shadow 2.8s;
+      animation: btnFade 3s linear forwards;
+    }
+    @keyframes btnFade {
+      0% { border-color: #FF0070; box-shadow: 0 0 0 4px #FF0070; }
+      70% { border-color: #FF0070; box-shadow: 0 0 0 4px #FF0070; }
+      100% { border-color: #ccc; box-shadow: 0 0 0 0px #FF0070; }
     }
     .custom-btn:active, .custom-btn:focus {
       background: #e0e0e0;
       color: #111;
     }
-    /* Inputs */
+    .custom-btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
     .jump-panel label {
       font-size: 1em;
       margin-right: 4px;
@@ -364,7 +404,6 @@
       -webkit-appearance: none;
       margin: 0;
     }
-    /* Responsive */
     @media (max-width: 900px) {
       #main-content {
         flex-direction: column;
@@ -504,6 +543,7 @@
     let congratsTimeout = null;
     let paletteError = document.getElementById('paletteError');
     let donateRequiredMsg = document.getElementById('donateRequiredMsg');
+    let messageClosed = true;
 
     // DOM elements
     const canvas = document.getElementById('gridCanvas');
@@ -520,7 +560,7 @@
     const jumpX = document.getElementById('jumpX');
     const jumpY = document.getElementById('jumpY');
     const jumpBtn = document.getElementById('jumpBtn');
-    const donateBtn = document.getElementById('donateBtn');
+    let donateBtn = document.getElementById('donateBtn');
     const donateArea = document.getElementById('donateArea');
     const coordPopup = document.getElementById('coordPopup');
     const congratsMessage = document.getElementById('congratsMessage');
@@ -530,7 +570,20 @@
     const cancelColorBtn = document.getElementById('cancelColorBtn');
     const randomColorBtn = document.getElementById('randomColorBtn');
     const colorPickerSidebar = document.getElementById('colorPickerSidebar');
+    const footerBtns = [
+      arrowUpBtn, arrowDownBtn, arrowLeftBtn, arrowRightBtn,
+      centerBtn, zoomInBtn, zoomOutBtn, jumpBtn
+    ];
 
+    // Enable/disable all main buttons
+    function setAllButtonsEnabled(enabled) {
+      footerBtns.forEach(btn => { btn.disabled = !enabled; });
+      if (donateBtn) donateBtn.disabled = !enabled;
+      let rsq = document.getElementById('randomSquareBtn');
+      if (rsq) rsq.disabled = !enabled;
+    }
+
+    // --- GRID CENTERING LOGIC ---
     function setCanvasSize() {
       const rect = frame.getBoundingClientRect();
       canvas.width = rect.width;
@@ -693,15 +746,11 @@
       });
     }
     function sendCellColor(x, y, color) {
-      // Replace with your actual paint endpoint if needed
-      // For demo, just update local state
       const key = x + "," + y;
       coloredCells[key] = {color: color, locked: true};
       requestRedraw();
     }
     function fetchGridState() {
-      // Replace with your actual fetch endpoint if needed
-      // For demo, just leave coloredCells as is
       requestRedraw();
     }
 
@@ -713,25 +762,43 @@
       confirmColorBtn.disabled = true;
       confirmColorBtn.style.color = "grey";
       requestPalettePreview();
+      colorPickerSidebar.classList.add('visible');
+      colorPickerVisible = true;
     }
 
-    // --- Button styling ---
+    function closeColorPicker() {
+      colorPickerSidebar.classList.remove('visible');
+      colorPickerVisible = false;
+      palettePreviewCell = null;
+      previewColor = null;
+      confirmColorBtn.disabled = true;
+      confirmColorBtn.style.color = "grey";
+      requestRedraw();
+    }
+
+    // --- BUTTON FADING ---
     function brightenButton(btn) {
       btn.classList.add('bright');
       setTimeout(() => btn.classList.remove('bright'), 3000);
     }
-    document.querySelectorAll('.custom-btn').forEach(btn => {
-      btn.addEventListener('click', function() {
-        brightenButton(btn);
+    function attachBrightListeners() {
+      document.querySelectorAll('.custom-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+          brightenButton(btn);
+        });
       });
-    });
+    }
+    attachBrightListeners();
 
-    // --- Donate / Random Square logic ---
+    // --- DONATE LOGIC ---
     function showRandomSquareBtn() {
       donateArea.innerHTML = `
         <button class="custom-btn" id="randomSquareBtn">⟳ Random Square</button>
       `;
-      document.getElementById('randomSquareBtn').addEventListener('click', function() {
+      donateBtn = document.getElementById('randomSquareBtn');
+      attachBrightListeners();
+      donateBtn.disabled = false;
+      donateBtn.addEventListener('click', function() {
         brightenButton(this);
         let tries = 2000, found = false;
         while(tries-- > 0) {
@@ -751,7 +818,7 @@
         }
         if (!found) { alert("No available squares left!"); return; }
         openColorPickerForCurrentSquare();
-      });
+      }, {once:true});
     }
     donateBtn.onclick = function() {
       brightenButton(donateBtn);
@@ -759,19 +826,11 @@
         hasDonated = true;
         donationUsed = false;
         donateBtn.textContent = "Thanks for your support!";
-        setTimeout(() => { 
-          if (!donationUsed) donateBtn.textContent = "Donate / Contribute";
-        }, 4000);
-        setTimeout(showRandomSquareBtn, 4000);
-        // Show color picker sidebar after donation
-        colorPickerSidebar.classList.add('visible');
-        colorPickerVisible = true;
+        setTimeout(showRandomSquareBtn, 1000);
       }
     };
 
-    // --- Color picker ---
-    colorPickerVisible = false;
-
+    // --- COLOR PICKER LOGIC ---
     colorDisc.addEventListener('click', function(e){
       const rect = colorDisc.getBoundingClientRect();
       const x = e.clientX - rect.left - colorDisc.width/2;
@@ -818,17 +877,11 @@
       donationUsed = true;
       confirmColorBtn.disabled = true;
       confirmColorBtn.style.color = "grey";
-      // Show congrats after 3s, hide after 7s
       setTimeout(() => {
-        congratsMessage.textContent = 'Congratulations! Your square is now part of the (In)Visible Million.';
-        congratsMessage.style.display = 'block';
-        if (congratsTimeout) clearTimeout(congratsTimeout);
-        congratsTimeout = setTimeout(() => {
-          congratsMessage.style.display = 'none';
-          showCursor = true;
-          requestRedraw();
-        }, 7000);
-      }, 3000);
+        closeColorPicker();
+        showCongratsMessage();
+        setAllButtonsEnabled(false); // disable all buttons
+      }, 2000);
     };
     cancelColorBtn.onclick = function() {
       brightenButton(cancelColorBtn);
@@ -838,9 +891,40 @@
       confirmColorBtn.disabled = true;
       confirmColorBtn.style.color = "grey";
       requestRedraw();
+      closeColorPicker();
     };
 
-    // --- Controls ---
+    // --- SHOW CONGRATS MESSAGE + SAVE BUTTON ---
+    function showCongratsMessage() {
+      const text = 'Congratulations! Your square is now part of the (In)Visible Million.';
+      congratsMessage.innerHTML = `
+        <button class="congrats-close" style="display:none;">&times;</button>
+        <div id="congratsText">${text}</div>
+        <button class="congrats-save">Save this message as your proof of participation</button>
+        <div class="congrats-saved" style="display:none;">Saved locally!</div>
+      `;
+      congratsMessage.style.display = 'block';
+      messageClosed = false;
+      // Save button event
+      const saveBtn = congratsMessage.querySelector('.congrats-save');
+      const savedDiv = congratsMessage.querySelector('.congrats-saved');
+      const closeBtn = congratsMessage.querySelector('.congrats-close');
+      saveBtn.onclick = function() {
+        localStorage.setItem('invisibleMillionProof', document.getElementById('congratsText').innerText);
+        saveBtn.style.display = "none";
+        savedDiv.style.display = "block";
+        closeBtn.style.display = "block";
+      };
+      closeBtn.onclick = function() {
+        congratsMessage.style.display = "none";
+        messageClosed = true;
+        setAllButtonsEnabled(true);
+        // Re-enable donation for another participation
+        if (donateBtn) donateBtn.disabled = false;
+      };
+    }
+
+    // --- CONTROLS ---
     zoomInBtn.addEventListener('click', () => { setZoom(zoom * 1.1); });
     zoomOutBtn.addEventListener('click', () => { setZoom(zoom / 1.1); });
     function moveBy(deltaX, deltaY) {
@@ -850,11 +934,12 @@
       requestRedraw();
     }
     function getMoveAmount() { return CELL_SIZE * zoom * 0.8; }
-    arrowUpBtn.onclick = function() { moveBy(0, getMoveAmount()); };
-    arrowDownBtn.onclick = function() { moveBy(0, -getMoveAmount()); };
-    arrowLeftBtn.onclick = function() { moveBy(getMoveAmount(), 0); };
-    arrowRightBtn.onclick = function() { moveBy(-getMoveAmount(), 0); };
+    arrowUpBtn.onclick = function() { if (!arrowUpBtn.disabled) moveBy(0, getMoveAmount()); };
+    arrowDownBtn.onclick = function() { if (!arrowDownBtn.disabled) moveBy(0, -getMoveAmount()); };
+    arrowLeftBtn.onclick = function() { if (!arrowLeftBtn.disabled) moveBy(getMoveAmount(), 0); };
+    arrowRightBtn.onclick = function() { if (!arrowRightBtn.disabled) moveBy(-getMoveAmount(), 0); };
     centerBtn.onclick = function() {
+      if (centerBtn.disabled) return;
       gridCursor.x = Math.floor(GRID_SIZE / 2);
       gridCursor.y = Math.floor(GRID_SIZE / 2);
       jumpX.value = gridCursor.x;
@@ -865,22 +950,23 @@
       requestRedraw();
     };
     jumpBtn.addEventListener('click', () => {
+      if (jumpBtn.disabled) return;
       gridCursor.x = Math.min(GRID_SIZE-1, Math.max(0, Number(jumpX.value)));
       gridCursor.y = Math.min(GRID_SIZE-1, Math.max(0, Number(jumpY.value)));
       ensureCellVisible(gridCursor.x, gridCursor.y);
       requestRedraw();
     });
 
-    // Mouse wheel zoom/ctrl only for grid
     canvas.addEventListener('wheel', function(e) {
+      if (zoomInBtn.disabled || zoomOutBtn.disabled) return;
       if (e.ctrlKey || e.metaKey) {
         e.preventDefault();
         setZoom(zoom * (e.deltaY < 0 ? 1.1 : 0.9), e.offsetX, e.offsetY);
       }
     }, {passive:false});
 
-    // Dragging
     canvas.addEventListener('mousedown', (e) => {
+      if (!footerBtns.every(btn => !btn.disabled)) return;
       isDragging = true;
       dragStart.x = e.clientX;
       dragStart.y = e.clientY;
@@ -920,7 +1006,6 @@
     }
     drawColorDisc();
 
-    // HSV/RGB helpers
     function hsvToRgb(h, s, v) {
       let r, g, b;
       let i = Math.floor(h * 6);
@@ -942,14 +1027,9 @@
       return "#" + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1);
     }
 
-    // Initial placement
     window.addEventListener('resize', setCanvasSize);
     setTimeout(setCanvasSize, 300);
     setCanvasSize();
-
-    // Don't show color picker sidebar until donation complete
-    // openColorPickerForCurrentSquare(); // removed from initial placement
-
   </script>
 </body>
 </html>
