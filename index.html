@@ -120,7 +120,7 @@
       align-items: center;
       justify-content: center;
     }
-    /* Donate area above grid, below title */
+    /* Donate area above grid, below title, 33% smaller */
     .donate-row {
       width: min(80vw, 80vh);
       display: flex;
@@ -130,55 +130,112 @@
       gap: 22px;
       margin-bottom: 16px;
     }
-    .donate-btn {
-      background: linear-gradient(160deg, #f0f0f0 70%, #bdbdbd 100%);
+    .copilot-btn {
+      background: #ededed;
       color: #222;
       border: none;
       border-radius: 9px;
-      padding: 14px 36px;
-      font-size: 2.12em;
+      padding: 9px 24px;
+      font-size: 1.42em;
       cursor: pointer;
       font-weight: bold;
       box-shadow: 0 1px 4px #8883;
-      transition: background 0.2s, color 0.2s;
-      min-width: 220px;
-      height: 56px;
+      transition: outline-color 0.2s, background 0.2s, color 0.2s;
+      min-width: 150px;
+      height: 37px;
       display: flex;
       align-items: center;
       justify-content: center;
-      outline: 2px solid #ccc;
+      outline: 2px solid #444;
       margin-bottom: 0;
+      position: relative;
     }
-    .donate-btn:active, .donate-btn:focus {
-      background: #e0e0e0;
-      color: #111;
-      outline: 3px solid #FF0070;
+    .copilot-btn.active-outline {
+      outline: 3px solid #FF0070 !important;
+      transition: outline-color 2s;
     }
-    .random-btn {
-      background: linear-gradient(160deg, #f0f0f0 70%, #bdbdbd 100%);
-      color: #222;
-      border: none;
+    /* Footer */
+    .footer {
+      width: min(80vw, 80vh);
+      background: transparent;
+      color: #fff;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.33em;
+      position: relative;
+      z-index: 10;
+      margin-top: 24px; /* Space between grid and footer */
+      gap: 0;
+    }
+    .footer-row {
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      justify-content: center;
+      gap: 18px;
+      width: 100%;
+      margin-bottom: 8px;
+      flex-wrap: wrap;
+      font-size: 1em;
+    }
+    .footer-copyright {
+      width: 100vw;
+      text-align: center;
+      background: #151515;
+      color: #fff;
+      font-size: 1em;
+      padding: 10px 0 8px 0;
+      letter-spacing: 1px;
+      opacity: 0.8;
+      position: fixed;
+      left: 0;
+      bottom: 0;
+      z-index: 10000;
+      border-top: 1px solid #666;
+    }
+    .footer .copilot-btn, .footer input[type="number"] {
+      font-size: 1em;
+      height: 37px;
+      min-width: 65px;
       border-radius: 9px;
-      padding: 14px 36px;
-      font-size: 2.12em;
-      cursor: pointer;
-      font-weight: bold;
-      box-shadow: 0 1px 4px #8883;
-      transition: background 0.2s, color 0.2s;
-      min-width: 220px;
-      height: 56px;
+      border: none;
+      background: #ededed;
+      color: #222;
+      margin: 0 2px;
+      outline: 2px solid #444;
+      transition: outline-color 0.2s, background 0.2s, color 0.2s;
+      padding: 0 14px;
       display: flex;
       align-items: center;
       justify-content: center;
-      outline: 2px solid #ccc;
-      margin-bottom: 0;
     }
-    .random-btn:active, .random-btn:focus {
-      background: #e0e0e0;
-      color: #111;
-      outline: 3px solid #FF0070;
+    .footer .copilot-btn.active-outline {
+      outline: 3px solid #FF0070 !important;
+      transition: outline-color 2s;
     }
-    /* Place grid frame */
+    .footer input[type="number"] {
+      background: #f8f8f8;
+      color: #222;
+      text-align: center;
+      outline: 2px solid #444;
+      appearance: none;
+      -webkit-appearance: none;
+      -moz-appearance: textfield;
+      margin: 0 4px;
+      width: 70px;
+      height: 37px;
+      font-size: 1em;
+      border-radius: 9px;
+      border: none;
+    }
+    .footer input[type="number"]::-webkit-inner-spin-button,
+    .footer input[type="number"]::-webkit-outer-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
+    }
+    /* Grid frame */
     #frame {
       outline: 3px solid #ccc;
       background: #333;
@@ -206,8 +263,9 @@
       touch-action: none;
     }
     #gridCanvas.grabbing, #frame.grabbing { cursor: grabbing !important; }
+    /* Palette modal - below grid, 40% larger buttons, same style */
     .color-picker-modal {
-      position: fixed;
+      position: absolute;
       z-index: 9999;
       display: none;
       flex-direction: column;
@@ -220,6 +278,9 @@
       justify-content: center;
       padding: 18px 20px 18px 20px;
       transition: background .2s;
+      left: 50%;
+      transform: translateX(-50%);
+      top: calc(100% + 28px); /* Below grid frame */
     }
     .color-picker-modal canvas {
       width: 228px; height: 228px;
@@ -285,89 +346,17 @@
       transform: translateX(-50%);
       outline: 2px solid #ccc;
     }
-    /* Footer (all controls in one row, placed directly below grid outline) */
-    .footer {
-      width: min(80vw, 80vh);
-      background: transparent;
-      color: #fff;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      font-size: 1.33em;
-      position: relative;
-      z-index: 10;
-      margin-top: 0;
-      gap: 0;
+    /* Palette modal buttons */
+    .color-picker-modal .copilot-btn {
+      font-size: 2em;
+      height: 54px;
+      min-width: 140px;
+      padding: 12px 34px;
     }
-    .footer-row {
-      display: flex;
-      flex-direction: row;
-      align-items: center;
-      justify-content: center;
-      gap: 18px;
-      width: 100%;
-      margin-bottom: 8px;
-      flex-wrap: wrap;
-      font-size: 1em;
+    .color-picker-modal .copilot-btn.active-outline {
+      outline: 3px solid #FF0070 !important;
+      transition: outline-color 2s;
     }
-    .footer-copyright {
-      width: 100vw;
-      text-align: center;
-      background: #151515;
-      color: #fff;
-      font-size: 1em;
-      padding: 10px 0 8px 0;
-      letter-spacing: 1px;
-      opacity: 0.8;
-      position: fixed;
-      left: 0;
-      bottom: 0;
-      z-index: 10000;
-      border-top: 1px solid #666;
-    }
-    .footer button, .footer input[type="number"] {
-      font-size: 1em;
-      height: 38px;
-      min-width: 65px;
-      border-radius: 9px;
-      border: 2px solid #fff;
-      background: #444;
-      color: #fff;
-      margin: 0 2px;
-      outline: 2px solid #ccc;
-      transition: background 0.2s, color 0.2s;
-      padding: 0 14px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-    .footer button:active, .footer button:focus {
-      background: #fff;
-      color: #222;
-      outline: 3px solid #FF0070;
-    }
-    .footer input[type="number"] {
-      background: #f8f8f8;
-      color: #222;
-      text-align: center;
-      outline: 2px solid #ccc;
-      appearance: none;
-      -webkit-appearance: none;
-      -moz-appearance: textfield;
-      margin: 0 4px;
-      width: 70px;
-      height: 38px;
-      font-size: 1em;
-      border-radius: 9px;
-      border: 2px solid #fff;
-    }
-    .footer input[type="number"]::-webkit-inner-spin-button,
-    .footer input[type="number"]::-webkit-outer-spin-button {
-      -webkit-appearance: none;
-      margin: 0;
-    }
-
     @media (max-width: 700px) {
       header { min-height: 40px; height: 40px;}
       #frame { width: min(98vw, 70vh); height: min(98vw, 70vh);}
@@ -375,13 +364,14 @@
       .color-picker-modal { min-width: 130px; min-height: 130px;}
       .big-title { font-size: 1.3em !important;}
       .donate-row { width: 98vw; gap: 10px;}
-      .donate-btn, .random-btn { font-size: 1.1em; height: 34px; min-width: 110px; padding: 7px 16px;}
+      .copilot-btn { font-size: 0.8em; height: 21px; min-width: 60px; padding: 5px 10px;}
       .footer { width: 98vw; }
       .footer-row { gap: 6px; }
-      .footer button, .footer input[type="number"] { font-size: 0.8em; height: 22px; min-width: 28px; padding: 0 6px;}
+      .footer .copilot-btn, .footer input[type="number"] { font-size: 0.7em; height: 20px; min-width: 22px; padding: 0 6px;}
       #congratsMessage { padding: 18px 24px; font-size: 1.3em;}
       .palette-error { font-size: 1.1em; padding: 12px 18px;}
       .footer-copyright { font-size: 0.9em; padding: 7px 0 6px 0;}
+      .color-picker-modal .copilot-btn { font-size: 1em; height: 28px; min-width: 70px; padding: 6px 18px;}
     }
   </style>
 </head>
@@ -398,44 +388,45 @@
   </header>
   <main>
     <div id="main-content">
-      <!-- Donate and random square row (above grid, below title) -->
+      <!-- Donate and random square row (above grid, below title, 33% smaller) -->
       <div class="donate-row">
-        <button class="donate-btn" id="donateBtn">Donate / Contribute</button>
-        <button class="random-btn" id="randomSquareBtn">⟳ Random Square</button>
+        <button class="copilot-btn" id="donateBtn">Donate / Contribute</button>
+        <button class="copilot-btn" id="randomSquareBtn">⟳ Random Square</button>
       </div>
       <div style="position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;">
         <div id="frame" tabindex="0">
           <canvas id="gridCanvas"></canvas>
           <div id="coordPopup"></div>
-          <div id="colorPickerModal" class="color-picker-modal">
-            <canvas id="colorDisc" width="228" height="228"></canvas>
-            <div class="modal-btns">
-              <button id="randomColorBtn" type="button" class="fancy-btn">Random Color</button>
-              <button id="confirmColorBtn" type="button" class="fancy-btn" disabled style="color:grey;">OK</button>
-              <button id="cancelColorBtn" type="button" class="fancy-btn">Cancel</button>
-            </div>
-          </div>
-          <div class="palette-error" id="paletteError"></div>
-          <div class="donate-required-message" id="donateRequiredMsg"></div>
-          <div id="congratsMessage"></div>
+          <!-- Palette modal appears outside grid frame, just below -->
         </div>
+        <div id="colorPickerModal" class="color-picker-modal">
+          <canvas id="colorDisc" width="228" height="228"></canvas>
+          <div class="modal-btns">
+            <button id="randomColorBtn" type="button" class="copilot-btn">Random Color</button>
+            <button id="confirmColorBtn" type="button" class="copilot-btn" disabled style="color:grey;">OK</button>
+            <button id="cancelColorBtn" type="button" class="copilot-btn">Cancel</button>
+          </div>
+        </div>
+        <div class="palette-error" id="paletteError"></div>
+        <div class="donate-required-message" id="donateRequiredMsg"></div>
+        <div id="congratsMessage"></div>
       </div>
       <!-- Footer: all controls in one row directly below grid -->
       <div class="footer">
         <div class="footer-row">
-          <button class="arrow-btn" id="arrowUpBtn">↑</button>
-          <button class="arrow-btn" id="arrowLeftBtn">←</button>
-          <button class="center-btn" id="centerBtn">⦿ Center</button>
-          <button class="arrow-btn" id="arrowRightBtn">→</button>
-          <button class="arrow-btn" id="arrowDownBtn">↓</button>
-          <button id="zoomOutBtn" class="fancy-btn" title="Zoom out">−</button>
-          <span id="zoomDisplay" style="color:#fff;">100%</span>
-          <button id="zoomInBtn" class="fancy-btn" title="Zoom in">+</button>
-          <label for="jumpX">X:</label>
+          <button class="copilot-btn" id="arrowUpBtn">↑</button>
+          <button class="copilot-btn" id="arrowLeftBtn">←</button>
+          <button class="copilot-btn" id="centerBtn">⦿ Center</button>
+          <button class="copilot-btn" id="arrowRightBtn">→</button>
+          <button class="copilot-btn" id="arrowDownBtn">↓</button>
+          <button class="copilot-btn" id="zoomOutBtn" title="Zoom out">−</button>
+          <span id="zoomDisplay" style="color:#222;background:#ededed;border-radius:9px;padding:0 12px;outline:2px solid #444;">100%</span>
+          <button class="copilot-btn" id="zoomInBtn" title="Zoom in">+</button>
+          <label for="jumpX" style="color:#fff;">X:</label>
           <input type="number" id="jumpX" min="0" max="1099" value="0" />
-          <label for="jumpY">Y:</label>
+          <label for="jumpY" style="color:#fff;">Y:</label>
           <input type="number" id="jumpY" min="0" max="1099" value="0" />
-          <button class="fancy-btn" id="jumpBtn">Jump</button>
+          <button class="copilot-btn" id="jumpBtn">Jump</button>
         </div>
       </div>
       <div class="footer-copyright">
@@ -510,6 +501,24 @@
     let previewColor = null; // null means no color selected
     let paletteModalActive = false;
 
+    // --- BUTTON HIGHLIGHT LOGIC ---
+    function copilotButtonPulse(btn) {
+      btn.classList.add('active-outline');
+      setTimeout(() => {
+        btn.classList.remove('active-outline');
+      }, 2000);
+    }
+
+    // Attach to all copilot-btn buttons
+    function attachCopilotBtnPulse() {
+      document.querySelectorAll('.copilot-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+          copilotButtonPulse(btn);
+        });
+      });
+    }
+    attachCopilotBtnPulse();
+
     function setCanvasSize() {
       const rect = frame.getBoundingClientRect();
       canvas.width = rect.width;
@@ -521,6 +530,7 @@
       zoom = Math.max(zoom, MIN_ZOOM);
       clampOffset();
       drawGrid();
+      movePaletteModal();
     }
     function clampOffset() {
       const scaledCellSize = CELL_SIZE * zoom;
@@ -645,6 +655,7 @@
       offsetY = canvas.height / 2 - (cellY + 0.5) * scaledCellSize;
       clampOffset();
       requestRedraw();
+      movePaletteModal();
     }
     function setZoom(newZoom, centerX, centerY) {
       hidePalette();
@@ -659,6 +670,7 @@
       clampOffset();
       zoomDisplay.textContent = Math.round(zoom * 100) + '%';
       requestRedraw();
+      movePaletteModal();
     }
     function requestRedraw() {
       if (redrawPending) return;
@@ -702,7 +714,6 @@
       hideCoordPopup();
       paletteModalActive = false;
     }
-
     zoomInBtn.addEventListener('click', () => { setZoom(zoom * 1.1); hidePalette(); });
     zoomOutBtn.addEventListener('click', () => { setZoom(zoom / 1.1); hidePalette(); });
 
@@ -712,6 +723,7 @@
       clampOffset();
       requestRedraw();
       hidePalette();
+      movePaletteModal();
     }
     function getMoveAmount() { return CELL_SIZE * zoom * 0.8; }
     arrowUpBtn.onclick = function() { moveBy(0, getMoveAmount()); };
@@ -728,6 +740,7 @@
       setZoom(MIN_ZOOM);
       requestRedraw();
       hidePalette();
+      movePaletteModal();
     };
     jumpBtn.addEventListener('click', () => {
       gridCursor.x = Math.min(GRID_SIZE-1, Math.max(0, Number(jumpX.value)));
@@ -735,6 +748,7 @@
       ensureCellVisible(gridCursor.x, gridCursor.y);
       requestRedraw();
       hidePalette();
+      movePaletteModal();
     });
 
     // Mouse wheel zoom/ctrl only for grid
@@ -784,6 +798,7 @@
           offsetY = pinch2Origin.offsetY + (newCy - lastCy);
           clampOffset();
           requestRedraw();
+          movePaletteModal();
         }
         pinch2Last = {x1, y1, x2, y2};
         e.preventDefault();
@@ -815,6 +830,7 @@
       clampOffset();
       requestRedraw();
       hidePalette();
+      movePaletteModal();
     });
 
     // --- RANDOM SQUARE BUTTON LOGIC ---
@@ -863,23 +879,20 @@
       requestRedraw();
       hideCoordPopup();
       colorPickerModal.style.background = "#222";
-      let frameRect = frame.getBoundingClientRect();
-      const scaledCellSize = CELL_SIZE * zoom;
-      const leftInFrame = offsetX + gridCursor.x * scaledCellSize + scaledCellSize / 2;
-      const topInFrame = offsetY + gridCursor.y * scaledCellSize + scaledCellSize / 2;
-      let left = frameRect.left + leftInFrame + scaledCellSize/2;
-      let top = frameRect.top + topInFrame - colorPickerModal.offsetHeight/2;
-      if (left + colorPickerModal.offsetWidth > window.innerWidth) {
-        left = frameRect.left + leftInFrame - colorPickerModal.offsetWidth - scaledCellSize/2;
-      }
-      if (top < 0) top = frameRect.top + topInFrame + scaledCellSize/2;
-      colorPickerModal.style.left = left + "px";
-      colorPickerModal.style.top = top + "px";
       colorPickerModal.style.display = "flex";
-      colorPickerModal.style.position = "fixed";
-      colorPickerModal.style.width = "auto";
-      colorPickerModal.style.height = "auto";
+      colorPickerModal.style.position = "absolute";
+      movePaletteModal();
       paletteModalActive = true;
+    }
+
+    // Move palette modal just below grid, centered
+    function movePaletteModal() {
+      if (colorPickerModal.style.display === "none") return;
+      const frameRect = frame.getBoundingClientRect();
+      colorPickerModal.style.left = `${frameRect.left + frameRect.width/2}px`;
+      colorPickerModal.style.top = `${frameRect.bottom + 28}px`;
+      colorPickerModal.style.transform = "translateX(-50%)";
+      colorPickerModal.style.position = "absolute";
     }
 
     // Color picker logic: enable OK only after color is picked
@@ -1034,6 +1047,7 @@
     window.addEventListener('DOMContentLoaded', () => {
       setCanvasSize();
       fetchGridState();
+      movePaletteModal();
     });
   </script>
 </body>
