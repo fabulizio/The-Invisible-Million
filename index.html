@@ -125,6 +125,15 @@
       min-height: 50vh;
       margin-bottom: 80px;
     }
+    /* Center the grid and sidebar in a flex row, grid always centered */
+    .grid-centered-row {
+      display: flex;
+      flex-direction: row;
+      align-items: flex-start;
+      justify-content: center;
+      width: 100vw;
+      gap: 0;
+    }
     #frame-area {
       display: flex;
       flex-direction: column;
@@ -210,18 +219,21 @@
       transform: translate(-50%, 0);
       outline: 2px solid #ccc;
     }
-    /* Color picker fixed to right of grid */
+    /* Color picker sidebar - hidden until donation is complete */
     #colorPickerSidebar {
       position: relative;
-      display: flex;
+      display: none;
       flex-direction: column;
       align-items: flex-start;
       justify-content: flex-start;
-      min-width: 300px;
+      min-width: 280px;
       max-width: 340px;
       padding-left: 30px;
       margin-top: 18px;
       height: min(70vw, 70vh);
+    }
+    #colorPickerSidebar.visible {
+      display: flex;
     }
     .color-picker-modal {
       position: sticky;
@@ -254,9 +266,10 @@
       margin-top: 10px;
       width: 100%;
     }
-    /* Unified footer */
+    /* Footer constrained to grid width */
     .footer {
-      width: 100vw;
+      width: min(70vw, 70vh);
+      margin: 0 auto;
       background: transparent;
       color: #fff;
       display: flex;
@@ -274,7 +287,7 @@
       flex-direction: row;
       align-items: center;
       justify-content: center;
-      gap: 22px;
+      gap: 14px;
       width: 100%;
       margin-bottom: 8px;
       flex-wrap: wrap;
@@ -300,24 +313,26 @@
       color: #222;
       border: 2px solid #ccc;
       border-radius: 9px;
-      padding: 10px 28px;
-      font-size: 1.1em;
+      padding: 6px 14px;
+      font-size: 0.85em;
       cursor: pointer;
       font-weight: bold;
       box-shadow: 0 1px 4px #8883;
       transition: border-color 0.2s, background 0.2s, color 0.2s;
-      min-width: 120px;
-      min-height: 40px;
+      min-width: 60px;
+      min-height: 28px;
       outline: none;
       display: flex;
       align-items: center;
       justify-content: center;
-      margin: 0 4px;
+      margin: 0 2px;
       margin-bottom: 0;
       user-select: none;
     }
     .custom-btn.bright {
       border-color: #FF0070 !important;
+      box-shadow: 0 0 0 4px #FF0070;
+      transition: border-color 0.2s, box-shadow 2.8s;
     }
     .custom-btn:active, .custom-btn:focus {
       background: #e0e0e0;
@@ -329,12 +344,12 @@
       margin-right: 4px;
     }
     .jump-panel input[type="number"] {
-      font-size: 1em;
-      width: 65px;
-      height: 36px;
+      font-size: 0.85em;
+      width: 43px;
+      height: 24px;
       border-radius: 6px;
       border: 1px solid #bbb;
-      padding: 3px 12px;
+      padding: 2px 6px;
       background: #f8f8f8;
       color: #222;
       text-align: center;
@@ -342,7 +357,7 @@
       appearance: none;
       -webkit-appearance: none;
       -moz-appearance: textfield;
-      margin-right: 7px;
+      margin-right: 5px;
     }
     .jump-panel input[type="number"]::-webkit-inner-spin-button,
     .jump-panel input[type="number"]::-webkit-outer-spin-button {
@@ -375,13 +390,15 @@
       #frame {
         width: min(98vw, 70vh); height: min(98vw, 70vh);
       }
+      .footer { width: 98vw !important; }
     }
     @media (max-width:700px) {
       .big-title { font-size: 1.3em !important; }
-      .custom-btn { font-size: 0.9em; min-width: 80px; min-height: 32px; padding: 7px 10px;}
-      .jump-panel input[type="number"] { height: 22px; width: 40px; font-size: 0.7em; }
-      #congratsMessage { padding: 18px 24px; font-size: 1.1em;}
+      .custom-btn { font-size: 0.8em; min-width: 48px; min-height: 22px; padding: 4px 7px;}
+      .jump-panel input[type="number"] { height: 18px; width: 27px; font-size: 0.7em; }
+      #congratsMessage { padding: 14px 16px; font-size: 1.1em;}
       .palette-error { font-size: 1.1em; padding: 12px 18px; }
+      .footer { width: 98vw !important; }
     }
   </style>
 </head>
@@ -401,24 +418,26 @@
   </header>
   <main>
     <div id="main-content">
-      <div id="frame-area">
-        <div id="frame" tabindex="0">
-          <canvas id="gridCanvas"></canvas>
-          <div id="coordPopup"></div>
-          <div id="congratsMessage"></div>
-        </div>
-      </div>
-      <div id="colorPickerSidebar">
-        <div id="colorPickerModal" class="color-picker-modal">
-          <canvas id="colorDisc" width="228" height="228"></canvas>
-          <div class="modal-btns">
-            <button id="randomColorBtn" type="button" class="custom-btn">Random Color</button>
-            <button id="confirmColorBtn" type="button" class="custom-btn" disabled style="color:grey;">OK</button>
-            <button id="cancelColorBtn" type="button" class="custom-btn">Cancel</button>
+      <div class="grid-centered-row">
+        <div id="frame-area">
+          <div id="frame" tabindex="0">
+            <canvas id="gridCanvas"></canvas>
+            <div id="coordPopup"></div>
+            <div id="congratsMessage"></div>
           </div>
         </div>
-        <div class="palette-error" id="paletteError"></div>
-        <div class="donate-required-message" id="donateRequiredMsg"></div>
+        <div id="colorPickerSidebar">
+          <div id="colorPickerModal" class="color-picker-modal">
+            <canvas id="colorDisc" width="228" height="228"></canvas>
+            <div class="modal-btns">
+              <button id="randomColorBtn" type="button" class="custom-btn">Random Color</button>
+              <button id="confirmColorBtn" type="button" class="custom-btn" disabled style="color:grey;">OK</button>
+              <button id="cancelColorBtn" type="button" class="custom-btn">Cancel</button>
+            </div>
+          </div>
+          <div class="palette-error" id="paletteError"></div>
+          <div class="donate-required-message" id="donateRequiredMsg"></div>
+        </div>
       </div>
     </div>
     <div class="footer">
@@ -466,7 +485,7 @@
     // --- GRID ---
     const GRID_SIZE = 1100;
     const CELL_SIZE = 24;
-    let zoom = 1;
+    let zoom = 0.5; // default zoom is 50%
     let MIN_ZOOM = 0.1;
     const MAX_ZOOM = 3;
     let offsetX = 0, offsetY = 0;
@@ -510,6 +529,7 @@
     const confirmColorBtn = document.getElementById('confirmColorBtn');
     const cancelColorBtn = document.getElementById('cancelColorBtn');
     const randomColorBtn = document.getElementById('randomColorBtn');
+    const colorPickerSidebar = document.getElementById('colorPickerSidebar');
 
     function setCanvasSize() {
       const rect = frame.getBoundingClientRect();
@@ -743,11 +763,14 @@
           if (!donationUsed) donateBtn.textContent = "Donate / Contribute";
         }, 4000);
         setTimeout(showRandomSquareBtn, 4000);
+        // Show color picker sidebar after donation
+        colorPickerSidebar.classList.add('visible');
+        colorPickerVisible = true;
       }
     };
 
     // --- Color picker ---
-    colorPickerVisible = true; // Always visible per new logic
+    colorPickerVisible = false;
 
     colorDisc.addEventListener('click', function(e){
       const rect = colorDisc.getBoundingClientRect();
@@ -924,8 +947,8 @@
     setTimeout(setCanvasSize, 300);
     setCanvasSize();
 
-    // Initialize color picker preview to current square
-    openColorPickerForCurrentSquare();
+    // Don't show color picker sidebar until donation complete
+    // openColorPickerForCurrentSquare(); // removed from initial placement
 
   </script>
 </body>
