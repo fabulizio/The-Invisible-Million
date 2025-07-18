@@ -133,6 +133,7 @@
       width: 100vw;
       gap: 0;
       min-height: 500px;
+      position: relative;
     }
     #frame-area {
       display: flex;
@@ -143,12 +144,15 @@
       margin-top: 18px;
       min-width: 0;
       flex: 0 0 auto;
+      width: 550px;
+      min-width: 400px;
+      max-width: 700px;
     }
     #frame {
       outline: 3px solid #ccc;
       background: #333;
-      width: min(70vw, 70vh);
-      height: min(70vw, 70vh);
+      width: 500px;
+      height: 500px;
       aspect-ratio: 1;
       position: relative;
       overflow: hidden;
@@ -188,29 +192,49 @@
       text-align: left;
       display: none;
     }
+    #donateFirstMessage {
+      position: absolute;
+      right: -340px;
+      top: 120px;
+      width: 320px;
+      background: #fff;
+      color: #FF0070;
+      border: 3px solid #FF0070;
+      border-radius: 18px;
+      font-size: 1.4em;
+      text-align: center;
+      padding: 40px 24px;
+      z-index: 9000;
+      box-shadow: 0 0 22px #000;
+      display: none;
+      outline: 2px solid #ccc;
+    }
     #congratsMessage {
       position: absolute;
-      left: 50%; top: 50%;
-      transform: translate(-50%, -50%);
+      left: 100%;
+      top: 0;
+      margin-left: 40px;
+      width: 540px;
+      min-height: 400px;
+      max-width: 700px;
       background: #fff;
       color: #222;
-      border-radius: 20px;
-      border: 3px solid #ff0070;
-      padding: 56px 72px;
-      font-size: 2.2em;
+      border-radius: 28px;
+      border: 4px solid #ff0070;
+      padding: 82px 90px;
+      font-size: 2.7em;
       z-index: 10001;
       text-align: center;
       box-shadow: 0 0 44px #000;
       display: none;
-      max-width: 90vw;
       pointer-events: auto;
       outline: 2px solid #ccc;
     }
     .congrats-close {
       position: absolute;
-      top: 14px;
-      right: 24px;
-      font-size: 2em;
+      top: 20px;
+      right: 36px;
+      font-size: 2.7em;
       color: #ff0070;
       background: none;
       border: none;
@@ -220,10 +244,10 @@
       line-height: 1;
     }
     .congrats-save {
-      margin-top: 24px;
-      padding: 12px 32px;
-      font-size: 1.1em;
-      border-radius: 11px;
+      margin-top: 44px;
+      padding: 18px 44px;
+      font-size: 1.3em;
+      border-radius: 15px;
       border: 2px solid #ff0070;
       background: #fff0f8;
       color: #222;
@@ -232,13 +256,13 @@
       transition: background .2s, border-color .2s;
     }
     .congrats-saved {
-      margin-top: 14px;
-      font-size: 1em;
+      margin-top: 20px;
+      font-size: 1.3em;
       color: #ff0070;
       font-weight: bold;
       background: #fff0f8;
-      border-radius: 6px;
-      padding: 6px 12px;
+      border-radius: 12px;
+      padding: 10px 22px;
     }
     .palette-error, .donate-required-message {
       color: #fff;
@@ -263,11 +287,11 @@
       flex-direction: column;
       align-items: flex-start;
       justify-content: flex-start;
-      min-width: 280px;
+      min-width: 300px;
       max-width: 340px;
       padding-left: 30px;
       margin-top: 18px;
-      height: min(70vw, 70vh);
+      height: 500px;
       flex: 0 0 auto;
     }
     #colorPickerSidebar.visible {
@@ -305,7 +329,7 @@
       width: 100%;
     }
     .footer {
-      width: min(70vw, 70vh);
+      width: 500px;
       margin: 0 auto;
       background: transparent;
       color: #fff;
@@ -435,14 +459,17 @@
         width: min(98vw, 70vh); height: min(98vw, 70vh);
       }
       .footer { width: 98vw !important; }
+      #frame-area { width: 98vw !important; }
+      #congratsMessage { width: 95vw; min-height: 200px; padding: 20px; font-size:1.2em;}
     }
     @media (max-width:700px) {
       .big-title { font-size: 1.3em !important; }
       .custom-btn { font-size: 0.8em; min-width: 48px; min-height: 22px; padding: 4px 7px;}
       .jump-panel input[type="number"] { height: 18px; width: 27px; font-size: 0.7em; }
-      #congratsMessage { padding: 14px 16px; font-size: 1.1em;}
+      #congratsMessage { padding: 14px 16px; font-size: 1.1em; min-width:140px;}
       .palette-error { font-size: 1.1em; padding: 12px 18px; }
       .footer { width: 98vw !important; }
+      #frame-area { width: 98vw !important; }
     }
   </style>
 </head>
@@ -467,6 +494,7 @@
           <div id="frame" tabindex="0">
             <canvas id="gridCanvas"></canvas>
             <div id="coordPopup"></div>
+            <div id="donateFirstMessage"></div>
             <div id="congratsMessage"></div>
           </div>
         </div>
@@ -526,7 +554,7 @@
       if (e.target === popupMenu) popupMenu.classList.remove('active');
     });
 
-    // --- GRID ---
+    // --- GRID LOGIC ---
     const GRID_SIZE = 1100;
     const CELL_SIZE = 24;
     let zoom = 0.5; // default zoom is 50%
@@ -576,23 +604,21 @@
     const cancelColorBtn = document.getElementById('cancelColorBtn');
     const randomColorBtn = document.getElementById('randomColorBtn');
     const colorPickerSidebar = document.getElementById('colorPickerSidebar');
+    const donateFirstMessage = document.getElementById('donateFirstMessage');
     const footerBtns = [
       arrowUpBtn, arrowDownBtn, arrowLeftBtn, arrowRightBtn,
       centerBtn, zoomInBtn, zoomOutBtn, jumpBtn
     ];
 
-    // Enable/disable all main buttons
     function setAllButtonsEnabled(enabled) {
       footerBtns.forEach(btn => { btn.disabled = !enabled; });
       if (donateBtn) donateBtn.disabled = !enabled;
       if (randomSquareBtn) randomSquareBtn.disabled = !enabled;
     }
 
-    // --- GRID CENTERING LOGIC ---
     function setCanvasSize() {
-      const rect = frame.getBoundingClientRect();
-      canvas.width = rect.width;
-      canvas.height = rect.height;
+      canvas.width = 500;
+      canvas.height = 500;
       MIN_ZOOM = Math.min(
         canvas.width / (GRID_SIZE * CELL_SIZE),
         canvas.height / (GRID_SIZE * CELL_SIZE)
@@ -698,8 +724,17 @@
 
     // Show donate required popup if user clicks grid before donating
     canvas.addEventListener('click', function(e){
+      const rect = canvas.getBoundingClientRect();
+      const mouseX = e.clientX - rect.left;
+      const mouseY = e.clientY - rect.top;
+      const cell = pixelToCell(mouseX, mouseY);
+      const key = cell.x + "," + cell.y;
       if (!hasDonated) {
-        showDonateRequiredMessage(e.clientX, e.clientY);
+        showDonateFirstBox();
+        return;
+      }
+      if (coloredCells[key] && coloredCells[key].locked) {
+        showLockedSquareError(cell.x, cell.y);
         return;
       }
       if (hasDonated && !donationUsed && colorPickerVisible) {
@@ -707,13 +742,15 @@
       }
     });
 
-    function showDonateRequiredMessage(mouseX, mouseY) {
-      donateRequiredMsg.textContent = "You must donate/contribute before you can select a square to color.";
-      donateRequiredMsg.style.left = "50%";
-      donateRequiredMsg.style.top = "30%";
-      donateRequiredMsg.style.transform = "translate(-50%, 0)";
-      donateRequiredMsg.style.display = "block";
-      setTimeout(() => { donateRequiredMsg.style.display = "none"; }, 2200);
+    function showDonateFirstBox() {
+      donateFirstMessage.innerHTML = "🎁 Please donate or contribute first to color a square!";
+      donateFirstMessage.style.display = "block";
+      setTimeout(() => { donateFirstMessage.style.display = "none"; }, 2500);
+    }
+    function showLockedSquareError(x, y) {
+      paletteError.textContent = `Sorry, square (${x}, ${y}) is already colored and locked!`;
+      paletteError.style.display = "block";
+      setTimeout(() => { paletteError.style.display = "none"; }, 2600);
     }
 
     function pixelToCell(x, y) {
@@ -723,22 +760,12 @@
       return {x: cellX, y: cellY};
     }
     function ensureCellVisible(cellX, cellY) {
-      const scaledCellSize = CELL_SIZE * zoom;
-      offsetX = canvas.width / 2 - (cellX + 0.5) * scaledCellSize;
-      offsetY = canvas.height / 2 - (cellY + 0.5) * scaledCellSize;
-      clampOffset();
+      // Do not move grid or recentre
       requestRedraw();
     }
     function setZoom(newZoom, centerX, centerY) {
       const oldZoom = zoom;
       zoom = Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, newZoom));
-      if (centerX === undefined || centerY === undefined) {
-        centerX = canvas.width / 2;
-        centerY = canvas.height / 2;
-      }
-      offsetX = centerX - ((centerX - offsetX) * (zoom / oldZoom));
-      offsetY = centerY - ((centerY - offsetY) * (zoom / oldZoom));
-      clampOffset();
       zoomDisplay.textContent = Math.round(zoom * 100) + '%';
       requestRedraw();
     }
@@ -776,10 +803,11 @@
       randomSquareBtn.addEventListener('click', function() {
         brightenButton(randomSquareBtn);
         let tries = 2000, found = false;
+        let x, y, key;
         while(tries-- > 0) {
-          const x = Math.floor(Math.random()*GRID_SIZE);
-          const y = Math.floor(Math.random()*GRID_SIZE);
-          const key = x + "," + y;
+          x = Math.floor(Math.random()*GRID_SIZE);
+          y = Math.floor(Math.random()*GRID_SIZE);
+          key = x + "," + y;
           if (!coloredCells[key] || !coloredCells[key].locked) {
             gridCursor.x = x;
             gridCursor.y = y;
@@ -843,6 +871,11 @@
       showCursor = false;
       const color = previewColor;
       const key = gridCursor.x + "," + gridCursor.y;
+      if (coloredCells[key] && coloredCells[key].locked) {
+        showLockedSquareError(gridCursor.x, gridCursor.y);
+        closeColorPicker();
+        return;
+      }
       coloredCells[key] = {color: color, locked: true};
       sendCellColor(gridCursor.x, gridCursor.y, color);
       fetchGridState();
@@ -853,7 +886,7 @@
       confirmColorBtn.style.color = "grey";
       setTimeout(() => {
         closeColorPicker();
-        showCongratsMessage();
+        showCongratsMessage(gridCursor.x, gridCursor.y, color);
         setAllButtonsEnabled(false);
       }, 2000);
     };
@@ -872,8 +905,6 @@
     function sendCellColor(x, y, color) {
       const key = x + "," + y;
       coloredCells[key] = {color: color, locked: true};
-
-      // Replace this endpoint with your actual backend API
       fetch('/api/update_grid', {
         method: 'POST',
         headers: {'Content-Type': 'application/json'},
@@ -882,16 +913,13 @@
       .then(res => res.json())
       .then(data => {
         // Optionally handle backend response
-        // console.log('Grid updated:', data);
       })
       .catch(e => {
         // Optionally handle error
-        // console.error('Grid update error:', e);
       });
       requestRedraw();
     }
     function fetchGridState() {
-      // Replace this endpoint with your actual backend API
       fetch('/api/grid_state')
       .then(res => res.json())
       .then(data => {
@@ -926,8 +954,9 @@
     }
 
     // --- SHOW CONGRATS MESSAGE + SAVE BUTTON ---
-    function showCongratsMessage() {
-      const text = 'Congratulations! Your square is now part of the (In)Visible Million.';
+    function showCongratsMessage(x, y, color) {
+      const text = `<span style="font-size:2em">🎉🥳</span><br/>Congratulations!<br>Your square is now part of the (In)Visible Million.<br>
+        <span style="font-size:0.8em;">Coordinates: <b>(${x}, ${y})</b><br>Color: <span style="color:${color};background:#eee;padding:2px 16px;border-radius:8px">${color}</span></span>`;
       congratsMessage.innerHTML = `
         <button class="congrats-close" style="display:none;">&times;</button>
         <div id="congratsText">${text}</div>
@@ -941,7 +970,7 @@
       const savedDiv = congratsMessage.querySelector('.congrats-saved');
       const closeBtn = congratsMessage.querySelector('.congrats-close');
       saveBtn.onclick = function() {
-        localStorage.setItem('invisibleMillionProof', document.getElementById('congratsText').innerText);
+        localStorage.setItem('invisibleMillionProof', document.getElementById('congratsText').innerHTML);
         saveBtn.style.display = "none";
         savedDiv.style.display = "block";
         closeBtn.style.display = "block";
@@ -993,9 +1022,6 @@
       gridCursor.y = Math.floor(GRID_SIZE / 2);
       jumpX.value = gridCursor.x;
       jumpY.value = gridCursor.y;
-      offsetX = 0;
-      offsetY = 0;
-      setZoom(MIN_ZOOM);
       requestRedraw();
     };
     jumpBtn.addEventListener('click', () => {
@@ -1079,6 +1105,7 @@
     window.addEventListener('resize', setCanvasSize);
     setTimeout(setCanvasSize, 300);
     setCanvasSize();
+
   </script>
 </body>
 </html>
