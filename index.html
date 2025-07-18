@@ -2,1074 +2,177 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>The (In)Visible Million Project</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Griglia Interattiva Virtualizzata</title>
   <style>
-    html, body {
-      margin: 0; padding: 0; height: 100%;
-      font-family: Arial, sans-serif;
-      background: #282828;
-      color: #fff;
-      width: 100vw; height: 100vh;
-      overflow-x: hidden;
-    }
-    header {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: flex-start;
-      height: auto;
-      min-height: 120px;
-      position: relative;
-      padding-top: 28px;
-      padding-bottom: 10px;
-    }
-    .header-content {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      width: 100%;
-      gap: 16px;
-      position: relative;
-      margin-bottom: 10px;
-    }
-    .big-title {
-      font-size: 2.8em;
-      font-weight: bold;
-      letter-spacing: 2px;
-      line-height: 1.2;
-      text-shadow: 0 2px 6px #111a;
-      flex: none;
-      z-index: 2;
-    }
-    .menu-icon {
-      margin-left: 18px;
-      width: 48px; height: 48px;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      gap: 10px;
-      cursor: pointer;
-      z-index: 100;
-      background: none;
-      outline: 2px solid #ccc;
-      border-radius: 8px;
-    }
-    .menu-icon:focus {
-      outline: 3px solid #FF0070;
-    }
-    .menu-icon span {
-      display: block;
-      width: 36px;
-      height: 6px;
-      background: #fff;
-      border-radius: 3px;
-      margin: 0 auto;
-      transition: background 0.2s;
-    }
-    .popup-menu {
-      position: fixed;
-      top: 0; right: 0; left: 0; bottom: 0;
-      width: 100vw; height: 100vh;
-      background: rgba(30,30,30,0.98);
-      z-index: 5000;
-      display: none;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      gap: 32px;
-      font-size: 2em;
-    }
-    .popup-menu.active { display: flex; }
-    .popup-menu a,
-    .popup-menu .close-menu {
-      outline: 2px solid #ccc;
-      border-radius: 12px;
-    }
-    .popup-menu a {
-      color: #fff !important;
-      text-decoration: none;
-      padding: 18px 42px;
-      font-size: 1.1em;
-      background: #444;
-      margin: 10px 0;
-      border: 2px solid #fff;
-      transition: background 0.2s, color 0.2s;
-      display: flex;
-      align-items: center;
-    }
-    .popup-menu a:hover {
-      background: #fff;
-      color: #222 !important;
-      border-color: #fff;
-    }
-    .popup-menu .close-menu {
-      position: absolute;
-      top: 44px;
-      right: 44px;
-      color: #fff;
-      background: none;
-      border: none;
-      font-size: 2.5em;
-      cursor: pointer;
-      z-index: 5100;
-    }
-    #main-content {
-      position: relative;
-      width: 100vw;
-      display: flex;
-      flex-direction: row;
-      justify-content: center;
-      align-items: flex-start;
-      min-height: 50vh;
-      margin-bottom: 80px;
-    }
-    .grid-centered-row {
-      display: flex;
-      flex-direction: row;
-      align-items: center;
-      justify-content: center;
-      width: 100vw;
-      gap: 0;
-    }
-    #frame-area {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: flex-start;
-      position: relative;
-      margin-top: 18px;
-    }
-    #frame {
-      outline: 3px solid #ccc;
-      background: #333;
-      width: min(70vw, 70vh);
-      height: min(70vw, 70vh);
-      aspect-ratio: 1;
-      position: relative;
-      overflow: hidden;
-      margin: auto;
-      box-sizing: border-box;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      touch-action: none;
-    }
-    #gridCanvas {
-      width: 100%; height: 100%;
-      display: block;
-      user-select: none;
-      background: #333;
-      position: absolute;
-      left: 0; top: 0;
-      transition: cursor .15s;
-      cursor: pointer;
-      touch-action: none;
-    }
-    #gridCanvas.grabbing, #frame.grabbing { cursor: grabbing !important; }
-    #coordPopup {
-      pointer-events: none;
-      position: fixed;
-      background: #111;
-      color: #fff;
-      border: 2px solid #fff;
-      border-radius: 0;
-      padding: 8px 14px;
-      font-size: 1em;
-      z-index: 1200;
-      box-shadow: 0 0 11px #000;
-      white-space: nowrap;
-      text-align: left;
-      display: none;
-    }
-    #congratsMessage {
-      position: absolute;
-      left: 50%; top: 50%;
-      transform: translate(-50%, -50%);
-      background: #fff;
-      color: #222;
-      border-radius: 20px;
-      border: 3px solid #ff0070;
-      padding: 56px 72px;
-      font-size: 2.2em;
-      z-index: 10001;
-      text-align: center;
-      box-shadow: 0 0 44px #000;
-      display: none;
-      max-width: 90vw;
-      pointer-events: auto;
-      outline: 2px solid #ccc;
-    }
-    .congrats-close {
-      position: absolute;
-      top: 14px;
-      right: 24px;
-      font-size: 2em;
-      color: #ff0070;
-      background: none;
-      border: none;
-      cursor: pointer;
-      z-index: 10002;
-      font-weight: bold;
-    }
-    .congrats-save {
-      margin-top: 24px;
-      padding: 12px 32px;
-      font-size: 1.1em;
-      border-radius: 11px;
-      border: 2px solid #ff0070;
-      background: #fff0f8;
-      color: #222;
-      font-weight: bold;
-      cursor: pointer;
-      transition: background .2s, border-color .2s;
-    }
-    .congrats-saved {
-      margin-top: 14px;
-      font-size: 1em;
-      color: #ff0070;
-      font-weight: bold;
-      background: #fff0f8;
-      border-radius: 6px;
-      padding: 6px 12px;
-    }
-    .palette-error, .donate-required-message {
-      color: #fff;
-      background: #ff0070;
-      border-radius: 14px;
-      padding: 22px 52px;
-      font-size: 2em;
-      margin-bottom: 20px;
-      margin-top: 24px;
-      text-align: center;
-      z-index: 10001;
-      box-shadow: 0 0 22px #000;
-      display: none;
-      position: fixed;
-      left: 50%;
-      transform: translate(-50%, 0);
-      outline: 2px solid #ccc;
-    }
-    #colorPickerSidebar {
-      position: relative;
-      display: none;
-      flex-direction: column;
-      align-items: flex-start;
-      justify-content: flex-start;
-      min-width: 280px;
-      max-width: 340px;
-      padding-left: 30px;
-      margin-top: 18px;
-      height: min(70vw, 70vh);
-    }
-    #colorPickerSidebar.visible {
-      display: flex;
-    }
-    .color-picker-modal {
-      position: sticky;
-      top: 24px;
-      z-index: 9999;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      border-radius: 18px;
-      box-shadow: 0 0 24px #000;
-      border: 3px solid #ccc;
-      min-width: 260px;
-      min-height: 260px;
-      justify-content: center;
-      padding: 18px 20px 18px 20px;
-      transition: background .2s;
-      background: #222;
-    }
-    .color-picker-modal canvas {
-      width: 228px; height: 228px;
-      border: 2px solid #fff;
-      border-radius: 50%;
-      background: transparent;
-      margin-bottom: 16px;
-      display: block;
-    }
-    .color-picker-modal .modal-btns {
-      display: flex; flex-direction: column; gap: 14px; justify-content: center;
-      align-items: center;
-      margin-top: 10px;
-      width: 100%;
-    }
-    .footer {
-      width: min(70vw, 70vh);
-      margin: 0 auto;
-      background: transparent;
-      color: #fff;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      font-size: 1.33em;
-      position: relative;
-      z-index: 10;
-      margin-top: 22px;
-      gap: 10px;
-    }
-    .footer-row {
-      display: flex;
-      flex-direction: row;
-      align-items: center;
-      justify-content: center;
-      gap: 14px;
-      width: 100%;
-      margin-bottom: 8px;
-      flex-wrap: wrap;
-    }
-    .footer-copyright {
-      width: 100vw;
-      text-align: center;
-      background: #151515;
-      color: #fff;
-      font-size: 1em;
-      padding: 10px 0 8px 0;
-      letter-spacing: 1px;
-      opacity: 0.8;
-      position: fixed;
-      left: 0;
-      bottom: 0;
-      z-index: 10000;
-      border-top: 1px solid #666;
-    }
-    .custom-btn {
-      background: linear-gradient(160deg, #f0f0f0 70%, #bdbdbd 100%);
-      color: #222;
-      border: 2px solid #ccc;
-      border-radius: 9px;
-      padding: 6px 14px;
-      font-size: 0.85em;
-      cursor: pointer;
-      font-weight: bold;
-      box-shadow: 0 1px 4px #8883;
-      transition: border-color 0.2s, background 0.2s, color 0.2s;
-      min-width: 60px;
-      min-height: 28px;
-      outline: none;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      margin: 0 2px;
-      margin-bottom: 0;
-      user-select: none;
-      position: relative;
-    }
-    .custom-btn.bright {
-      border-color: #FF0070 !important;
-      box-shadow: 0 0 0 4px #FF0070;
-      animation: btnFade 3s linear forwards;
-    }
-    @keyframes btnFade {
-      0% { border-color: #FF0070; box-shadow: 0 0 0 4px #FF0070; }
-      70% { border-color: #FF0070; box-shadow: 0 0 0 4px #FF0070; }
-      100% { border-color: #ccc; box-shadow: 0 0 0 0px #FF0070; }
-    }
-    .custom-btn:active, .custom-btn:focus {
-      background: #e0e0e0;
-      color: #111;
-    }
-    .custom-btn:disabled {
-      opacity: 0.6;
-      cursor: not-allowed;
-    }
-    .jump-panel label {
-      font-size: 1em;
-      margin-right: 4px;
-    }
-    .jump-panel input[type="number"] {
-      font-size: 0.85em;
-      width: 43px;
-      height: 24px;
-      border-radius: 6px;
-      border: 1px solid #bbb;
-      padding: 2px 6px;
-      background: #f8f8f8;
-      color: #222;
-      text-align: center;
-      outline: 2px solid #ccc;
-      appearance: none;
-      -webkit-appearance: none;
-      -moz-appearance: textfield;
-      margin-right: 5px;
-    }
-    .jump-panel input[type="number"]::-webkit-inner-spin-button,
-    .jump-panel input[type="number"]::-webkit-outer-spin-button {
-      -webkit-appearance: none;
+    body {
       margin: 0;
+      background: #111;
+      color: white;
+      font-family: sans-serif;
+      overflow: hidden;
     }
-    @media (max-width: 900px) {
-      #main-content {
-        flex-direction: column;
-        align-items: center;
-      }
-      #colorPickerSidebar {
-        position: static;
-        padding-left: 0;
-        margin-top: 12px;
-        width: 100vw;
-        max-width: 100vw;
-        align-items: center;
-        justify-content: center;
-        height: auto;
-      }
-      .color-picker-modal {
-        min-width: 180px;
-        min-height: 180px;
-      }
-      .color-picker-modal canvas {
-        width: 114px; height: 114px;
-      }
-      #frame {
-        width: min(98vw, 70vh); height: min(98vw, 70vh);
-      }
-      .footer { width: 98vw !important; }
+    #info {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      background: rgba(0,0,0,0.7);
+      padding: 10px 15px;
+      border-radius: 8px;
+      font-size: 14px;
+      z-index: 10;
     }
-    @media (max-width:700px) {
-      .big-title { font-size: 1.3em !important; }
-      .custom-btn { font-size: 0.8em; min-width: 48px; min-height: 22px; padding: 4px 7px;}
-      .jump-panel input[type="number"] { height: 18px; width: 27px; font-size: 0.7em; }
-      #congratsMessage { padding: 14px 16px; font-size: 1.1em;}
-      .palette-error { font-size: 1.1em; padding: 12px 18px; }
-      .footer { width: 98vw !important; }
-    }
-    /* Extra: ControlBox styling */
-    #controlBox {
-      width: min(70vw, 70vh);
-      margin: 0 auto 18px auto;
-      padding: 24px 0;
-      background: #f0f0f0;
-      border-radius: 20px;
-      display: flex;
-      flex-direction: row;
-      justify-content: center;
-      align-items: center;
-      gap: 32px;
-    }
-    #controlBox button {
-      min-width: 110px;
-      min-height: 36px;
+    canvas {
+      display: block;
+      background: #222;
     }
   </style>
 </head>
 <body>
-  <header>
-    <div class="header-content">
-      <span class="big-title">The (In)Visible Million Project</span>
-      <div class="menu-icon" id="menuIcon" title="Menu" tabindex="0">
-        <span></span>
-        <span></span>
-        <span></span>
-      </div>
-    </div>
-    <!-- The donateArea is no longer needed here; buttons are always visible below -->
-  </header>
-  <!-- BUTTON BOX: Always visible, below header, above grid -->
-  <div id="controlBox">
-    <button id="donateBtn" class="custom-btn">Donate / Contribute</button>
-    <button id="paletteBtn" class="custom-btn">Palette</button>
-    <button id="randomBtn" class="custom-btn">Random</button>
-  </div>
-  <main>
-    <div id="main-content">
-      <div class="grid-centered-row">
-        <div id="frame-area">
-          <div id="frame" tabindex="0">
-            <canvas id="gridCanvas"></canvas>
-            <div id="coordPopup"></div>
-            <div id="congratsMessage"></div>
-          </div>
-        </div>
-        <div id="colorPickerSidebar">
-          <div id="colorPickerModal" class="color-picker-modal">
-            <canvas id="colorDisc" width="228" height="228"></canvas>
-            <div class="modal-btns">
-              <button id="randomColorBtn" type="button" class="custom-btn">Random Color</button>
-              <button id="confirmColorBtn" type="button" class="custom-btn" disabled style="color:grey;">OK</button>
-              <button id="cancelColorBtn" type="button" class="custom-btn">Cancel</button>
-            </div>
-          </div>
-          <div class="palette-error" id="paletteError"></div>
-          <div class="donate-required-message" id="donateRequiredMsg"></div>
-        </div>
-      </div>
-    </div>
-    <div class="footer">
-      <div class="footer-row">
-        <button class="custom-btn" id="arrowUpBtn">↑</button>
-        <button class="custom-btn" id="arrowLeftBtn">←</button>
-        <button class="custom-btn" id="centerBtn">⦿ Center</button>
-        <button class="custom-btn" id="arrowRightBtn">→</button>
-        <button class="custom-btn" id="arrowDownBtn">↓</button>
-        <button class="custom-btn" id="zoomOutBtn" title="Zoom out">−</button>
-        <span id="zoomDisplay" style="color:#fff;">100%</span>
-        <button class="custom-btn" id="zoomInBtn" title="Zoom in">+</button>
-        <div class="jump-panel" style="display:flex;align-items:center;">
-          <label for="jumpX">X:</label>
-          <input type="number" id="jumpX" min="0" max="1099" value="0" />
-          <label for="jumpY">Y:</label>
-          <input type="number" id="jumpY" min="0" max="1099" value="0" />
-          <button class="custom-btn" id="jumpBtn">Jump</button>
-        </div>
-      </div>
-    </div>
-    <div class="popup-menu" id="popupMenu">
-      <button class="close-menu" id="closeMenuBtn" title="Close Menu">&times;</button>
-      <a href="Manifesto.html">The Manifesto</a>
-      <a href="Project.html">The Project</a>
-      <a href="collective.html">The Collective</a>
-      <a href="next.html">Next Steps</a>
-      <a href="contact.html">Contact</a>
-    </div>
-    <div class="footer-copyright">
-      &copy; 2025 The (In)Visible Million Project. All rights reserved.
-    </div>
-  </main>
+  <div id="info">Celle colorate: <span id="counter">0</span></div>
+  <canvas id="gridCanvas" width="800" height="800"></canvas>
+
   <script>
-    // --- Backend Data Fetch ---
-    let coloredCells = {};
-    async function fetchGridData() {
-      try {
-        const response = await fetch('https://155ca338-0e90-4f5a-88ec-b6163921baae-00-181dgn4pq10j7.janeway.replit.dev');
-        if (!response.ok) throw new Error('Network response was not ok');
-        const data = await response.json();
-        // Expect data to be an array of {x, y, color}
-        if (Array.isArray(data)) {
-          coloredCells = {};
-          data.forEach(cell => {
-            coloredCells[cell.x + ',' + cell.y] = { color: cell.color, locked: true };
-          });
-          requestRedraw();
-        }
-      } catch (error) {
-        console.error('Failed to fetch grid data:', error);
-      }
-    }
-    window.addEventListener('DOMContentLoaded', fetchGridData);
-    
-    // --- MENU ---
-    const menuIcon = document.getElementById('menuIcon');
-    const popupMenu = document.getElementById('popupMenu');
-    const closeMenuBtn = document.getElementById('closeMenuBtn');
-    menuIcon.addEventListener('click', () => popupMenu.classList.add('active'));
-    closeMenuBtn.addEventListener('click', () => popupMenu.classList.remove('active'));
-    popupMenu.addEventListener('click', (e) => {
-      if (e.target === popupMenu) popupMenu.classList.remove('active');
-    });
+    const canvas = document.getElementById("gridCanvas");
+    const ctx = canvas.getContext("2d");
+    const canvasSize = canvas.width;
+    const gridSize = 1000;
 
-    // --- GRID ---
-    const GRID_SIZE = 1100;
-    const CELL_SIZE = 24;
-    let zoom = 0.5; // default zoom is 50%
-    let MIN_ZOOM = 0.1;
-    const MAX_ZOOM = 3;
-    let offsetX = 0, offsetY = 0;
-    let coloredCells = {};
-    let redrawPending = false;
+    let zoom = 1;
+    let offsetX = 0;
+    let offsetY = 0;
     let isDragging = false;
-    let dragStart = {x: 0, y: 0};
-    let offsetStart = {x: 0, y: 0};
-    let palettePreviewCell = null;
-    let showCursor = true;
-    let hasDonated = false;
-    let donationUsed = false;
-    let gridCursor = { x: Math.floor(GRID_SIZE / 2), y: Math.floor(GRID_SIZE / 2) };
-    let previewColor = null;
-    let colorPickerVisible = false;
-    let congratsTimeout = null;
-    let paletteError = document.getElementById('paletteError');
-    let donateRequiredMsg = document.getElementById('donateRequiredMsg');
-    let messageClosed = true;
+    let dragStartX = 0, dragStartY = 0;
+    let hoverX = -1, hoverY = -1;
 
-    // DOM elements
-    const canvas = document.getElementById('gridCanvas');
-    const ctx = canvas.getContext('2d');
-    const frame = document.getElementById('frame');
-    const zoomDisplay = document.getElementById('zoomDisplay');
-    const arrowUpBtn = document.getElementById('arrowUpBtn');
-    const arrowDownBtn = document.getElementById('arrowDownBtn');
-    const arrowLeftBtn = document.getElementById('arrowLeftBtn');
-    const arrowRightBtn = document.getElementById('arrowRightBtn');
-    const centerBtn = document.getElementById('centerBtn');
-    const zoomInBtn = document.getElementById('zoomInBtn');
-    const zoomOutBtn = document.getElementById('zoomOutBtn');
-    const jumpX = document.getElementById('jumpX');
-    const jumpY = document.getElementById('jumpY');
-    const jumpBtn = document.getElementById('jumpBtn');
-    let donateBtn = document.getElementById('donateBtn');
-    const donateArea = document.getElementById('donateArea');
-    const coordPopup = document.getElementById('coordPopup');
-    const congratsMessage = document.getElementById('congratsMessage');
-    const colorPickerModal = document.getElementById('colorPickerModal');
-    const colorDisc = document.getElementById('colorDisc');
-    const confirmColorBtn = document.getElementById('confirmColorBtn');
-    const cancelColorBtn = document.getElementById('cancelColorBtn');
-    const randomColorBtn = document.getElementById('randomColorBtn');
-    const colorPickerSidebar = document.getElementById('colorPickerSidebar');
-    const footerBtns = [
-      arrowUpBtn, arrowDownBtn, arrowLeftBtn, arrowRightBtn,
-      centerBtn, zoomInBtn, zoomOutBtn, jumpBtn
-    ];
+    const coloredCells = new Map();
+    const counter = document.getElementById("counter");
 
-    // Enable/disable all main buttons
-    function setAllButtonsEnabled(enabled) {
-      footerBtns.forEach(btn => { btn.disabled = !enabled; });
-      if (donateBtn) donateBtn.disabled = !enabled;
-      let rsq = document.getElementById('randomSquareBtn');
-      if (rsq) rsq.disabled = !enabled;
+    function getCellId(x, y) {
+      return y * gridSize + x;
     }
 
-    // --- GRID CENTERING LOGIC ---
-    function setCanvasSize() {
-      const rect = frame.getBoundingClientRect();
-      canvas.width = rect.width;
-      canvas.height = rect.height;
-      MIN_ZOOM = Math.min(
-        canvas.width / (GRID_SIZE * CELL_SIZE),
-        canvas.height / (GRID_SIZE * CELL_SIZE)
-      );
-      zoom = Math.max(zoom, MIN_ZOOM);
-      clampOffset();
-      drawGrid();
+    function updateCounter() {
+      counter.textContent = coloredCells.size;
     }
-    function clampOffset() {
-      const scaledCellSize = CELL_SIZE * zoom;
-      const gridWidthPx = GRID_SIZE * scaledCellSize;
-      const gridHeightPx = GRID_SIZE * scaledCellSize;
-      offsetX = Math.min(0, Math.max(canvas.width - gridWidthPx, offsetX));
-      offsetY = Math.min(0, Math.max(canvas.height - gridHeightPx, offsetY));
-    }
+
     function drawGrid() {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      ctx.fillStyle = "#333";
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.clearRect(0, 0, canvasSize, canvasSize);
+      const cellSize = (canvasSize / gridSize) * zoom;
+      const buffer = 2;
 
-      const scaledCellSize = CELL_SIZE * zoom;
-      const startCol = Math.floor(-offsetX / scaledCellSize);
-      const startRow = Math.floor(-offsetY / scaledCellSize);
-      const visibleCols = Math.ceil(canvas.width / scaledCellSize) + 2;
-      const visibleRows = Math.ceil(canvas.height / scaledCellSize) + 2;
+      const startX = Math.max(0, Math.floor(offsetX / cellSize) - buffer);
+      const startY = Math.max(0, Math.floor(offsetY / cellSize) - buffer);
+      const endX = Math.min(gridSize, Math.ceil((offsetX + canvasSize) / cellSize) + buffer);
+      const endY = Math.min(gridSize, Math.ceil((offsetY + canvasSize) / cellSize) + buffer);
 
-      ctx.strokeStyle = "#bbb";
-      ctx.lineWidth = 1;
-      for(let c = startCol; c <= startCol + visibleCols; c++) {
-        if (c < 0 || c >= GRID_SIZE) continue;
-        const x = offsetX + c * scaledCellSize;
-        ctx.beginPath();
-        ctx.moveTo(x + 0.5, 0);
-        ctx.lineTo(x + 0.5, canvas.height);
-        ctx.stroke();
-      }
-      for(let r = startRow; r <= startRow + visibleRows; r++) {
-        if (r < 0 || r >= GRID_SIZE) continue;
-        const y = offsetY + r * scaledCellSize;
-        ctx.beginPath();
-        ctx.moveTo(0, y + 0.5);
-        ctx.lineTo(canvas.width, y + 0.5);
-        ctx.stroke();
-      }
+      for (let x = startX; x < endX; x++) {
+        for (let y = startY; y < endY; y++) {
+          const screenX = x * cellSize - offsetX;
+          const screenY = y * cellSize - offsetY;
+          const cellId = getCellId(x, y);
 
-      for (const key in coloredCells) {
-        const [x, y] = key.split(',').map(Number);
-        if (
-          x >= startCol-1 && x <= startCol + visibleCols+1 &&
-          y >= startRow-1 && y <= startRow + visibleRows+1
-        ) {
-          const cellX = offsetX + x * scaledCellSize;
-          const cellY = offsetY + y * scaledCellSize;
-          ctx.fillStyle = coloredCells[key].color;
-          ctx.fillRect(cellX + 1, cellY + 1, scaledCellSize - 2, scaledCellSize - 2);
-        }
-      }
+          const color = coloredCells.get(cellId);
+          if (color) {
+            ctx.fillStyle = color;
+            ctx.fillRect(screenX, screenY, cellSize, cellSize);
+          }
 
-      if (palettePreviewCell && previewColor) {
-        const cellX = offsetX + palettePreviewCell.x * scaledCellSize;
-        const cellY = offsetY + palettePreviewCell.y * scaledCellSize;
-        ctx.fillStyle = previewColor;
-        ctx.globalAlpha = 1;
-        ctx.fillRect(cellX + 1, cellY + 1, scaledCellSize - 2, scaledCellSize - 2);
-        ctx.globalAlpha = 1;
-      }
+          ctx.strokeStyle = "#333";
+          ctx.strokeRect(screenX, screenY, cellSize, cellSize);
 
-      if (showCursor) {
-        const highlightX = offsetX + gridCursor.x * scaledCellSize;
-        const highlightY = offsetY + gridCursor.y * scaledCellSize;
-        ctx.save();
-        ctx.strokeStyle = "#fff";
-        ctx.lineWidth = Math.max(2, scaledCellSize * 0.08);
-        ctx.beginPath();
-        ctx.moveTo(highlightX + scaledCellSize / 2 - scaledCellSize*0.25, highlightY + scaledCellSize / 2);
-        ctx.lineTo(highlightX + scaledCellSize / 2 + scaledCellSize*0.25, highlightY + scaledCellSize / 2);
-        ctx.moveTo(highlightX + scaledCellSize / 2, highlightY + scaledCellSize / 2 - scaledCellSize*0.25);
-        ctx.lineTo(highlightX + scaledCellSize / 2, highlightY + scaledCellSize / 2 + scaledCellSize*0.25);
-        ctx.stroke();
-        ctx.restore();
-      }
-    }
-    function showCoordPopup(cell, mouseX, mouseY) {
-      if (!colorPickerVisible) {
-        coordPopup.innerHTML = `<span>X: ${cell.x}, Y: ${cell.y}</span>`;
-        coordPopup.style.left = (mouseX + 9) + "px";
-        coordPopup.style.top = (mouseY + 9) + "px";
-        coordPopup.style.display = "block";
-      }
-    }
-    function hideCoordPopup() {
-      coordPopup.style.display = "none";
-    }
-    canvas.addEventListener('mousemove', function(e) {
-      if (colorPickerVisible) return;
-      const rect = canvas.getBoundingClientRect();
-      const mouseX = e.clientX - rect.left;
-      const mouseY = e.clientY - rect.top;
-      const cell = pixelToCell(mouseX, mouseY);
-      showCoordPopup(cell, e.clientX, e.clientY);
-    });
-    canvas.addEventListener('mouseleave', hideCoordPopup);
-
-    // Show donate required popup if user clicks grid before donating
-    canvas.addEventListener('click', function(e){
-      if (!hasDonated) {
-        showDonateRequiredMessage(e.clientX, e.clientY);
-        return;
-      }
-      if (hasDonated && !donationUsed && colorPickerVisible) {
-        openColorPickerForCurrentSquare();
-      }
-    });
-
-    function showDonateRequiredMessage(mouseX, mouseY) {
-      donateRequiredMsg.textContent = "You must donate/contribute before you can select a square to color.";
-      donateRequiredMsg.style.left = "50%";
-      donateRequiredMsg.style.top = "30%";
-      donateRequiredMsg.style.transform = "translate(-50%, 0)";
-      donateRequiredMsg.style.display = "block";
-      setTimeout(() => { donateRequiredMsg.style.display = "none"; }, 2200);
-    }
-
-    function pixelToCell(x, y) {
-      const scaledCellSize = CELL_SIZE * zoom;
-      const cellX = Math.floor((x - offsetX) / scaledCellSize);
-      const cellY = Math.floor((y - offsetY) / scaledCellSize);
-      return {x: cellX, y: cellY};
-    }
-    function ensureCellVisible(cellX, cellY) {
-      const scaledCellSize = CELL_SIZE * zoom;
-      offsetX = canvas.width / 2 - (cellX + 0.5) * scaledCellSize;
-      offsetY = canvas.height / 2 - (cellY + 0.5) * scaledCellSize;
-      clampOffset();
-      requestRedraw();
-    }
-    function setZoom(newZoom, centerX, centerY) {
-      const oldZoom = zoom;
-      zoom = Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, newZoom));
-      if (centerX === undefined || centerY === undefined) {
-        centerX = canvas.width / 2;
-        centerY = canvas.height / 2;
-      }
-      offsetX = centerX - ((centerX - offsetX) * (zoom / oldZoom));
-      offsetY = centerY - ((centerY - offsetY) * (zoom / oldZoom));
-      clampOffset();
-      zoomDisplay.textContent = Math.round(zoom * 100) + '%';
-      requestRedraw();
-    }
-    function requestRedraw() {
-      if (redrawPending) return;
-      redrawPending = true;
-      requestAnimationFrame(() => {
-        drawGrid();
-        redrawPending = false;
-      });
-    }
-    function sendCellColor(x, y, color) {
-      const key = x + "," + y;
-      coloredCells[key] = {color: color, locked: true};
-      requestRedraw();
-    }
-    function fetchGridState() {
-      requestRedraw();
-    }
-
-    function openColorPickerForCurrentSquare() {
-      paletteError.style.display = "none";
-      palettePreviewCell = {x: gridCursor.x, y: gridCursor.y};
-      showCursor = true;
-      previewColor = null;
-      confirmColorBtn.disabled = true;
-      confirmColorBtn.style.color = "grey";
-      requestPalettePreview();
-      colorPickerSidebar.classList.add('visible');
-      colorPickerVisible = true;
-    }
-
-    function closeColorPicker() {
-      colorPickerSidebar.classList.remove('visible');
-      colorPickerVisible = false;
-      palettePreviewCell = null;
-      previewColor = null;
-      confirmColorBtn.disabled = true;
-      confirmColorBtn.style.color = "grey";
-      requestRedraw();
-    }
-
-    // --- BUTTON FADING ---
-    function brightenButton(btn) {
-      btn.classList.add('bright');
-      setTimeout(() => btn.classList.remove('bright'), 3000);
-    }
-    function attachBrightListeners() {
-      document.querySelectorAll('.custom-btn').forEach(btn => {
-        btn.addEventListener('click', function() {
-          brightenButton(btn);
-        });
-      });
-    }
-    attachBrightListeners();
-
-    // --- DONATE LOGIC ---
-    function showRandomSquareBtn() {
-      donateArea.innerHTML = `
-        <button class="custom-btn" id="randomSquareBtn">⟳ Random Square</button>
-      `;
-      donateBtn = document.getElementById('randomSquareBtn');
-      attachBrightListeners();
-      donateBtn.disabled = false;
-      donateBtn.addEventListener('click', function() {
-        brightenButton(this);
-        let tries = 2000, found = false;
-        while(tries-- > 0) {
-          const x = Math.floor(Math.random()*GRID_SIZE);
-          const y = Math.floor(Math.random()*GRID_SIZE);
-          const key = x + "," + y;
-          if (!coloredCells[key] || !coloredCells[key].locked) {
-            gridCursor.x = x;
-            gridCursor.y = y;
-            jumpX.value = x;
-            jumpY.value = y;
-            ensureCellVisible(x, y);
-            requestRedraw();
-            found = true;
-            break;
+          // Hover effect
+          if (x === hoverX && y === hoverY) {
+            ctx.strokeStyle = "cyan";
+            ctx.lineWidth = 2;
+            ctx.strokeRect(screenX, screenY, cellSize, cellSize);
+            ctx.lineWidth = 1;
           }
         }
-        if (!found) { alert("No available squares left!"); return; }
-        openColorPickerForCurrentSquare();
-      }, {once:true});
-    }
-    donateBtn.onclick = function() {
-      brightenButton(donateBtn);
-      if (!hasDonated) {
-        hasDonated = true;
-        donationUsed = false;
-        donateBtn.textContent = "Thanks for your support!";
-        setTimeout(showRandomSquareBtn, 1000);
       }
-    };
-
-    // --- COLOR PICKER LOGIC ---
-    colorDisc.addEventListener('click', function(e){
-      const rect = colorDisc.getBoundingClientRect();
-      const x = e.clientX - rect.left - colorDisc.width/2;
-      const y = e.clientY - rect.top - colorDisc.height/2;
-      const r = Math.sqrt(x*x + y*y);
-      const radius = colorDisc.width / 2 - 6;
-      if (r > radius) return;
-      const hue = (Math.atan2(y,x)*180/Math.PI+360)%360;
-      const sat = r / radius;
-      const rgb = hsvToRgb(hue/360, sat, 1);
-      previewColor = rgbToHex(rgb[0], rgb[1], rgb[2]);
-      colorPickerModal.style.background = previewColor;
-      requestPalettePreview();
-      confirmColorBtn.disabled = false;
-      confirmColorBtn.style.color = "#111";
-    });
-    randomColorBtn.onclick = () => {
-      brightenButton(randomColorBtn);
-      const hue = Math.floor(Math.random() * 360);
-      const sat = 1;
-      const rgb = hsvToRgb(hue/360, sat, 1);
-      previewColor = rgbToHex(rgb[0], rgb[1], rgb[2]);
-      colorPickerModal.style.background = previewColor;
-      requestPalettePreview();
-      confirmColorBtn.disabled = false;
-      confirmColorBtn.style.color = "#111";
-    };
-    function requestPalettePreview() {
-      palettePreviewCell = {x: gridCursor.x, y: gridCursor.y};
-      requestRedraw();
-    }
-    confirmColorBtn.onclick = function() {
-      if (confirmColorBtn.disabled) return;
-      brightenButton(confirmColorBtn);
-      colorPickerModal.style.background = "#222";
-      showCursor = false;
-      const color = previewColor;
-      const key = gridCursor.x + "," + gridCursor.y;
-      coloredCells[key] = {color: color, locked: true};
-      sendCellColor(gridCursor.x, gridCursor.y, color);
-      fetchGridState();
-      palettePreviewCell = null;
-      requestRedraw();
-      donationUsed = true;
-      confirmColorBtn.disabled = true;
-      confirmColorBtn.style.color = "grey";
-      setTimeout(() => {
-        closeColorPicker();
-        showCongratsMessage();
-        setAllButtonsEnabled(false); // disable all buttons
-      }, 2000);
-    };
-    cancelColorBtn.onclick = function() {
-      brightenButton(cancelColorBtn);
-      colorPickerModal.style.background = "#222";
-      previewColor = null;
-      palettePreviewCell = null;
-      confirmColorBtn.disabled = true;
-      confirmColorBtn.style.color = "grey";
-      requestRedraw();
-      closeColorPicker();
-    };
-
-    // --- SHOW CONGRATS MESSAGE + SAVE BUTTON ---
-    function showCongratsMessage() {
-      const text = 'Congratulations! Your square is now part of the (In)Visible Million.';
-      congratsMessage.innerHTML = `
-        <button class="congrats-close" style="display:none;">&times;</button>
-        <div id="congratsText">${text}</div>
-        <button class="congrats-save">Save this message as your proof of participation</button>
-        <div class="congrats-saved" style="display:none;">Saved locally!</div>
-      `;
-      congratsMessage.style.display = 'block';
-      messageClosed = false;
-      // Save button event
-      const saveBtn = congratsMessage.querySelector('.congrats-save');
-      const savedDiv = congratsMessage.querySelector('.congrats-saved');
-      const closeBtn = congratsMessage.querySelector('.congrats-close');
-      saveBtn.onclick = function() {
-        localStorage.setItem('invisibleMillionProof', document.getElementById('congratsText').innerText);
-        saveBtn.style.display = "none";
-        savedDiv.style.display = "block";
-        closeBtn.style.display = "block";
-      };
-      closeBtn.onclick = function() {
-        congratsMessage.style.display = "none";
-        messageClosed = true;
-        setAllButtonsEnabled(true);
-        // Re-enable donation for another participation
-        if (donateBtn) donateBtn.disabled = false;
-      };
     }
 
-    // --- CONTROLS ---
-    zoomInBtn.addEventListener('click', () => { setZoom(zoom * 1.1); });
-    zoomOutBtn.addEventListener('click', () => { setZoom(zoom / 1.1); });
-    function moveBy(deltaX, deltaY) {
-      offsetX += deltaX;
-      offsetY += deltaY;
-      clampOffset();
-      requestRedraw();
-    }
-    function getMoveAmount() { return CELL_SIZE * zoom * 0.8; }
-    arrowUpBtn.onclick = function() { if (!arrowUpBtn.disabled) moveBy(0, getMoveAmount()); };
-    arrowDownBtn.onclick = function() { if (!arrowDownBtn.disabled) moveBy(0, -getMoveAmount()); };
-    arrowLeftBtn.onclick = function() { if (!arrowLeftBtn.disabled) moveBy(getMoveAmount(), 0); };
-    arrowRightBtn.onclick = function() { if (!arrowRightBtn.disabled) moveBy(-getMoveAmount(), 0); };
-    centerBtn.onclick = function() {
-      if (centerBtn.disabled) return;
-      gridCursor.x = Math.floor(GRID_SIZE / 2);
-      gridCursor.y = Math.floor(GRID_SIZE / 2);
-      jumpX.value = gridCursor.x;
-      jumpY.value = gridCursor.y;
-      offsetX = 0;
-      offsetY = 0;
-      setZoom(MIN_ZOOM);
-      requestRedraw();
-    };
-    jumpBtn.addEventListener('click', () => {
-      if (jumpBtn.disabled) return;
-      gridCursor.x = Math.min(GRID_SIZE-1, Math.max(0, Number(jumpX.value)));
-      gridCursor.y = Math.min(GRID_SIZE-1, Math.max(0, Number(jumpY.value)));
-      ensureCellVisible(gridCursor.x, gridCursor.y);
-      requestRedraw();
-    });
-
-    canvas.addEventListener('wheel', function(e) {
-      if (zoomInBtn.disabled || zoomOutBtn.disabled) return;
-      if (e.ctrlKey || e.metaKey) {
-        e.preventDefault();
-        setZoom(zoom * (e.deltaY < 0 ? 1.1 : 0.9), e.offsetX, e.offsetY);
+    let redrawPending = false;
+    function requestRedraw() {
+      if (!redrawPending) {
+        redrawPending = true;
+        requestAnimationFrame(() => {
+          drawGrid();
+          redrawPending = false;
+        });
       }
-    }, {passive:false});
+    }
 
-    canvas.addEventListener('mousedown', (e) => {
-      if (!footerBtns.every(btn => !btn.disabled)) return;
+    canvas.addEventListener("mousedown", (e) => {
       isDragging = true;
-      dragStart.x = e.clientX;
-      dragStart.y = e.clientY;
-      offsetStart.x = offsetX;
-      offsetStart.y = offsetY;
-      canvas.classList.add('grabbing');
-      canvas.setPointerCapture(e.pointerId || 0);
-    });
-    window.addEventListener('mouseup', () => {
-      isDragging = false;
-      canvas.classList.remove('grabbing');
-    });
-    window.addEventListener('mousemove', (e) => {
-      if(!isDragging) return;
-      offsetX = offsetStart.x + (e.clientX - dragStart.x);
-      offsetY = offsetStart.y + (e.clientY - dragStart.y);
-      clampOffset();
-      requestRedraw();
+      dragStartX = e.clientX + offsetX;
+      dragStartY = e.clientY + offsetY;
     });
 
-    // Color disc rendering
-    function drawColorDisc() {
-      const ctxDisc = colorDisc.getContext('2d');
-      const w = colorDisc.width, h = colorDisc.height;
-      const radius = w/2 - 6;
-      for(let y=-radius; y<radius; y++) {
-        for(let x=-radius; x<radius; x++) {
-          let r = Math.sqrt(x*x + y*y);
-          if(r > radius) continue;
-          let hue = (Math.atan2(y,x)*180/Math.PI+360)%360;
-          let sat = r/radius;
-          let rgb = hsvToRgb(hue/360, sat, 1);
-          ctxDisc.fillStyle = rgbToHex(rgb[0], rgb[1], rgb[2]);
-          ctxDisc.fillRect(x+w/2, y+h/2, 1, 1);
+    canvas.addEventListener("mousemove", (e) => {
+      if (isDragging) {
+        offsetX = dragStartX - e.clientX;
+        offsetY = dragStartY - e.clientY;
+        requestRedraw();
+      } else {
+        const cellSize = (canvasSize / gridSize) * zoom;
+        const x = Math.floor((e.offsetX + offsetX) / cellSize);
+        const y = Math.floor((e.offsetY + offsetY) / cellSize);
+        if (x !== hoverX || y !== hoverY) {
+          hoverX = x;
+          hoverY = y;
+          requestRedraw();
         }
       }
-    }
-    drawColorDisc();
+    });
 
-    function hsvToRgb(h, s, v) {
-      let r, g, b;
-      let i = Math.floor(h * 6);
-      let f = h * 6 - i;
-      let p = v * (1 - s);
-      let q = v * (1 - f * s);
-      let t = v * (1 - (1 - f) * s);
-      switch (i % 6) {
-        case 0: r = v; g = t; b = p; break;
-        case 1: r = q; g = v; b = p; break;
-        case 2: r = p; g = v; b = t; break;
-        case 3: r = p; g = q; b = v; break;
-        case 4: r = t; g = p; b = v; break;
-        case 5: r = v; g = p; b = q; break;
+    canvas.addEventListener("mouseup", () => {
+      isDragging = false;
+    });
+
+    canvas.addEventListener("mouseleave", () => {
+      isDragging = false;
+      hoverX = -1;
+      hoverY = -1;
+      requestRedraw();
+    });
+
+    canvas.addEventListener("wheel", (e) => {
+      e.preventDefault();
+      const zoomFactor = 1.1;
+      const mouseX = e.offsetX;
+      const mouseY = e.offsetY;
+
+      const worldX = (mouseX + offsetX) / zoom;
+      const worldY = (mouseY + offsetY) / zoom;
+
+      if (e.deltaY < 0) {
+        zoom *= zoomFactor;
+      } else {
+        zoom /= zoomFactor;
       }
-      return [Math.round(r * 255), Math.round(g * 255), Math.round(b * 255)];
-    }
-    function rgbToHex(r, g, b) {
-      return "#" + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1);
-    }
 
-    window.addEventListener('resize', setCanvasSize);
-    setTimeout(setCanvasSize, 300);
-    setCanvasSize();
+      offsetX = worldX * zoom - mouseX;
+      offsetY = worldY * zoom - mouseY;
+      requestRedraw();
+    });
+
+    canvas.addEventListener("click", (e) => {
+      const cellSize = (canvasSize / gridSize) * zoom;
+      const x = Math.floor((e.offsetX + offsetX) / cellSize);
+      const y = Math.floor((e.offsetY + offsetY) / cellSize);
+      const cellId = getCellId(x, y);
+
+      if (coloredCells.has(cellId)) {
+        coloredCells.delete(cellId);
+      } else {
+        coloredCells.set(cellId, "magenta");
+      }
+      updateCounter();
+      requestRedraw();
+    });
+
+    updateCounter();
+    requestRedraw();
   </script>
 </body>
 </html>
