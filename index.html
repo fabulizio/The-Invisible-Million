@@ -120,6 +120,65 @@
       align-items: center;
       justify-content: center;
     }
+    /* Donate area above grid, below title */
+    .donate-row {
+      width: min(80vw, 80vh);
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      justify-content: flex-start;
+      gap: 22px;
+      margin-bottom: 16px;
+    }
+    .donate-btn {
+      background: linear-gradient(160deg, #f0f0f0 70%, #bdbdbd 100%);
+      color: #222;
+      border: none;
+      border-radius: 9px;
+      padding: 14px 36px;
+      font-size: 2.12em;
+      cursor: pointer;
+      font-weight: bold;
+      box-shadow: 0 1px 4px #8883;
+      transition: background 0.2s, color 0.2s;
+      min-width: 220px;
+      height: 56px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      outline: 2px solid #ccc;
+      margin-bottom: 0;
+    }
+    .donate-btn:active, .donate-btn:focus {
+      background: #e0e0e0;
+      color: #111;
+      outline: 3px solid #FF0070;
+    }
+    .random-btn {
+      background: linear-gradient(160deg, #f0f0f0 70%, #bdbdbd 100%);
+      color: #222;
+      border: none;
+      border-radius: 9px;
+      padding: 14px 36px;
+      font-size: 2.12em;
+      cursor: pointer;
+      font-weight: bold;
+      box-shadow: 0 1px 4px #8883;
+      transition: background 0.2s, color 0.2s;
+      min-width: 220px;
+      height: 56px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      outline: 2px solid #ccc;
+      margin-bottom: 0;
+    }
+    .random-btn:active, .random-btn:focus {
+      background: #e0e0e0;
+      color: #111;
+      outline: 3px solid #FF0070;
+    }
+    /* Place grid frame */
     #frame {
       outline: 3px solid #ccc;
       background: #333;
@@ -226,86 +285,9 @@
       transform: translateX(-50%);
       outline: 2px solid #ccc;
     }
-    /* Donate button outside grid, low-left */
-    .donate-btn-outer {
-      position: absolute;
-      left: 0;
-      bottom: -70px;
-      z-index: 100;
-      display: flex;
-      flex-direction: column;
-      align-items: flex-start;
-      width: 200px;
-      min-width: 120px;
-      padding-left: 16px;
-    }
-    .dummy-btn {
-      background: linear-gradient(160deg, #f0f0f0 70%, #bdbdbd 100%);
-      color: #222;
-      border: none;
-      border-radius: 9px;
-      padding: 7px 18px;
-      font-size: 1.06em;
-      cursor: pointer;
-      margin: 0 4px;
-      font-weight: bold;
-      box-shadow: 0 1px 4px #8883;
-      transition: background 0.2s, color 0.2s;
-      height: 32px;
-      min-width: 120px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      outline: 2px solid #ccc;
-      margin-bottom: 8px;
-    }
-    .dummy-btn:active, .dummy-btn:focus {
-      background: #e0e0e0;
-      color: #111;
-      outline: 3px solid #FF0070;
-    }
-    /* Popup random overlay the donate button */
-    .random-popup {
-      position: absolute;
-      left: 0;
-      bottom: 0;
-      z-index: 999;
-      display: none;
-      flex-direction: column;
-      align-items: flex-start;
-      background: #222;
-      border-radius: 14px;
-      box-shadow: 0 0 22px #000;
-      padding: 18px 24px;
-      border: 2px solid #FF0070;
-      min-width: 170px;
-      width: 200px;
-    }
-    .random-popup.active {
-      display: flex;
-    }
-    .random-btn {
-      background: linear-gradient(160deg, #f0f0f0 70%, #bdbdbd 100%);
-      color: #222;
-      border: none;
-      border-radius: 9px;
-      padding: 10px 30px;
-      font-size: 1.22em;
-      cursor: pointer;
-      font-weight: bold;
-      box-shadow: 0 1px 6px #8883;
-      transition: background 0.2s, color 0.2s;
-      outline: 2px solid #ccc;
-      margin-bottom: 10px;
-    }
-    .random-btn:active, .random-btn:focus {
-      background: #e0e0e0;
-      color: #111;
-      outline: 3px solid #FF0070;
-    }
-    /* Footer below grid, two rows */
+    /* Footer (all controls in one row, placed directly below grid outline) */
     .footer {
-      width: 100vw;
+      width: min(80vw, 80vh);
       background: transparent;
       color: #fff;
       display: flex;
@@ -315,66 +297,19 @@
       font-size: 1.33em;
       position: relative;
       z-index: 10;
-      margin-top: 22px;
-      gap: 6px;
+      margin-top: 0;
+      gap: 0;
     }
     .footer-row {
       display: flex;
       flex-direction: row;
       align-items: center;
       justify-content: center;
-      gap: 40px;
+      gap: 18px;
       width: 100%;
       margin-bottom: 8px;
       flex-wrap: wrap;
-    }
-    .footer-row.footer-row-jump {
-      gap: 20px;
-      margin-bottom: 0;
-    }
-    .nav-btn-group-footer {
-      display: flex;
-      gap: 8px;
-      justify-content: center;
-      align-items: center;
-    }
-    .zoom-controls-footer {
-      display: flex; gap: 8px;
-      align-items: center;
-      height: 38px;
-    }
-    .jump-panel {
-      display: flex;
-      gap: 12px;
-      align-items: center;
-      justify-content: center;
-      flex-wrap: nowrap;
-      height: 40px;
-      white-space: nowrap;
-    }
-    .jump-panel label {
       font-size: 1em;
-      margin-right: 4px;
-    }
-    .jump-panel input[type="number"] {
-      font-size: 1em;
-      width: 65px;
-      height: 32px;
-      border-radius: 6px;
-      border: 1px solid #bbb;
-      padding: 3px 12px;
-      background: #f8f8f8;
-      color: #222;
-      text-align: center;
-      outline: 2px solid #ccc;
-      appearance: none;
-      -webkit-appearance: none;
-      -moz-appearance: textfield;
-    }
-    .jump-panel input[type="number"]::-webkit-inner-spin-button,
-    .jump-panel input[type="number"]::-webkit-outer-spin-button {
-      -webkit-appearance: none;
-      margin: 0;
     }
     .footer-copyright {
       width: 100vw;
@@ -391,20 +326,62 @@
       z-index: 10000;
       border-top: 1px solid #666;
     }
+    .footer button, .footer input[type="number"] {
+      font-size: 1em;
+      height: 38px;
+      min-width: 65px;
+      border-radius: 9px;
+      border: 2px solid #fff;
+      background: #444;
+      color: #fff;
+      margin: 0 2px;
+      outline: 2px solid #ccc;
+      transition: background 0.2s, color 0.2s;
+      padding: 0 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .footer button:active, .footer button:focus {
+      background: #fff;
+      color: #222;
+      outline: 3px solid #FF0070;
+    }
+    .footer input[type="number"] {
+      background: #f8f8f8;
+      color: #222;
+      text-align: center;
+      outline: 2px solid #ccc;
+      appearance: none;
+      -webkit-appearance: none;
+      -moz-appearance: textfield;
+      margin: 0 4px;
+      width: 70px;
+      height: 38px;
+      font-size: 1em;
+      border-radius: 9px;
+      border: 2px solid #fff;
+    }
+    .footer input[type="number"]::-webkit-inner-spin-button,
+    .footer input[type="number"]::-webkit-outer-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
+    }
+
     @media (max-width: 700px) {
-      header, .footer { min-height: 40px; height: 40px; }
+      header { min-height: 40px; height: 40px;}
       #frame { width: min(98vw, 70vh); height: min(98vw, 70vh);}
-      .color-picker-modal canvas { width: 114px; height: 114px; }
-      .color-picker-modal { min-width: 130px; min-height: 130px; }
-      .big-title { font-size: 1.3em !important; }
-      .arrow-btn, .center-btn, .fancy-btn, .jump-panel, .footer-content { font-size: 0.8em; height: 20px; min-width: 20px; }
-      .jump-panel input[type="number"] { height: 15px; width: 28px; font-size: 0.7em; }
+      .color-picker-modal canvas { width: 114px; height: 114px;}
+      .color-picker-modal { min-width: 130px; min-height: 130px;}
+      .big-title { font-size: 1.3em !important;}
+      .donate-row { width: 98vw; gap: 10px;}
+      .donate-btn, .random-btn { font-size: 1.1em; height: 34px; min-width: 110px; padding: 7px 16px;}
+      .footer { width: 98vw; }
+      .footer-row { gap: 6px; }
+      .footer button, .footer input[type="number"] { font-size: 0.8em; height: 22px; min-width: 28px; padding: 0 6px;}
       #congratsMessage { padding: 18px 24px; font-size: 1.3em;}
-      .palette-error { font-size: 1.1em; padding: 12px 18px; }
-      .random-popup, .donate-btn-outer { min-width: 100px; width: 120px; left: 2px; }
-      .random-btn { padding: 7px 14px; font-size: 1em; }
+      .palette-error { font-size: 1.1em; padding: 12px 18px;}
       .footer-copyright { font-size: 0.9em; padding: 7px 0 6px 0;}
-      .footer-row { gap: 8px; }
     }
   </style>
 </head>
@@ -421,6 +398,11 @@
   </header>
   <main>
     <div id="main-content">
+      <!-- Donate and random square row (above grid, below title) -->
+      <div class="donate-row">
+        <button class="donate-btn" id="donateBtn">Donate / Contribute</button>
+        <button class="random-btn" id="randomSquareBtn">⟳ Random Square</button>
+      </div>
       <div style="position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;">
         <div id="frame" tabindex="0">
           <canvas id="gridCanvas"></canvas>
@@ -437,40 +419,27 @@
           <div class="donate-required-message" id="donateRequiredMsg"></div>
           <div id="congratsMessage"></div>
         </div>
-        <!-- Donate button & random popup outside grid, low-left -->
-        <div class="donate-btn-outer" id="donateBtnOuter">
-          <button class="dummy-btn" id="donateBtn">Donate / Contribute</button>
-          <div class="random-popup" id="randomPopup">
-            <button class="random-btn" id="popupRandomBtn">⟳ Random Square</button>
-            <span style="color:#fff; font-size:0.93em;">Click until you find a square you like,<br>then color it!</span>
-          </div>
-        </div>
       </div>
-      <!-- Footer below grid -->
+      <!-- Footer: all controls in one row directly below grid -->
       <div class="footer">
         <div class="footer-row">
-          <div class="nav-btn-group-footer">
-            <button class="arrow-btn" id="arrowUpBtn">↑</button>
-            <button class="arrow-btn" id="arrowLeftBtn">←</button>
-            <button class="center-btn" id="centerBtn">⦿ Center</button>
-            <button class="arrow-btn" id="arrowRightBtn">→</button>
-            <button class="arrow-btn" id="arrowDownBtn">↓</button>
-          </div>
-          <div class="zoom-controls-footer">
-            <button id="zoomOutBtn" class="fancy-btn" title="Zoom out">−</button>
-            <span id="zoomDisplay" style="color:#fff;">100%</span>
-            <button id="zoomInBtn" class="fancy-btn" title="Zoom in">+</button>
-          </div>
+          <button class="arrow-btn" id="arrowUpBtn">↑</button>
+          <button class="arrow-btn" id="arrowLeftBtn">←</button>
+          <button class="center-btn" id="centerBtn">⦿ Center</button>
+          <button class="arrow-btn" id="arrowRightBtn">→</button>
+          <button class="arrow-btn" id="arrowDownBtn">↓</button>
+          <button id="zoomOutBtn" class="fancy-btn" title="Zoom out">−</button>
+          <span id="zoomDisplay" style="color:#fff;">100%</span>
+          <button id="zoomInBtn" class="fancy-btn" title="Zoom in">+</button>
+          <label for="jumpX">X:</label>
+          <input type="number" id="jumpX" min="0" max="1099" value="0" />
+          <label for="jumpY">Y:</label>
+          <input type="number" id="jumpY" min="0" max="1099" value="0" />
+          <button class="fancy-btn" id="jumpBtn">Jump</button>
         </div>
-        <div class="footer-row footer-row-jump">
-          <div class="jump-panel">
-            <label for="jumpX">X:</label>
-            <input type="number" id="jumpX" min="0" max="1099" value="0" />
-            <label for="jumpY">Y:</label>
-            <input type="number" id="jumpY" min="0" max="1099" value="0" />
-            <button class="fancy-btn" id="jumpBtn">Jump</button>
-          </div>
-        </div>
+      </div>
+      <div class="footer-copyright">
+        &copy; 2025 The (In)Visible Million Project. All rights reserved.
       </div>
     </div>
     <div class="popup-menu" id="popupMenu">
@@ -480,9 +449,6 @@
       <a href="collective.html">The Collective</a>
       <a href="next.html">Next Steps</a>
       <a href="contact.html">Contact</a>
-    </div>
-    <div class="footer-copyright">
-      &copy; 2025 The (In)Visible Million Project. All rights reserved.
     </div>
   </main>
   <script>
@@ -530,7 +496,7 @@
     const jumpY = document.getElementById('jumpY');
     const jumpBtn = document.getElementById('jumpBtn');
     const donateBtn = document.getElementById('donateBtn');
-    const donateBtnOuter = document.getElementById('donateBtnOuter');
+    const randomSquareBtn = document.getElementById('randomSquareBtn');
     const coordPopup = document.getElementById('coordPopup');
     const congratsMessage = document.getElementById('congratsMessage');
     const paletteError = document.getElementById('paletteError');
@@ -539,12 +505,10 @@
     const confirmColorBtn = document.getElementById('confirmColorBtn');
     const cancelColorBtn = document.getElementById('cancelColorBtn');
     const randomColorBtn = document.getElementById('randomColorBtn');
-    const randomPopup = document.getElementById('randomPopup');
-    const popupRandomBtn = document.getElementById('popupRandomBtn');
     const donateRequiredMsg = document.getElementById('donateRequiredMsg');
     let gridCursor = { x: Math.floor(GRID_SIZE / 2), y: Math.floor(GRID_SIZE / 2) };
     let previewColor = null; // null means no color selected
-    let randomPopupActive = false;
+    let paletteModalActive = false;
 
     function setCanvasSize() {
       const rect = frame.getBoundingClientRect();
@@ -736,6 +700,7 @@
       confirmColorBtn.disabled = true;
       confirmColorBtn.style.color = "grey";
       hideCoordPopup();
+      paletteModalActive = false;
     }
 
     zoomInBtn.addEventListener('click', () => { setZoom(zoom * 1.1); hidePalette(); });
@@ -852,30 +817,9 @@
       hidePalette();
     });
 
-    // --- RANDOM SQUARE BUTTON POPUP LOGIC ---
-    function showRandomPopup() {
-      randomPopup.classList.add('active');
-      randomPopupActive = true;
-    }
-    function hideRandomPopup() {
-      randomPopup.classList.remove('active');
-      randomPopupActive = false;
-    }
-    hideRandomPopup();
-
-    donateBtn.onclick = function() {
-      if (!hasDonated) {
-        hasDonated = true;
-        donationUsed = false;
-        donateBtn.textContent = "Thanks for your support!";
-        setTimeout(() => { 
-          if (!donationUsed) donateBtn.textContent = "Donate / Contribute";
-        }, 4000);
-        showRandomPopup();
-      }
-    };
-
-    popupRandomBtn.onclick = function() {
+    // --- RANDOM SQUARE BUTTON LOGIC ---
+    randomSquareBtn.onclick = function() {
+      if (!hasDonated) return;
       let tries = 2000;
       let found = false;
       while(tries-- > 0) {
@@ -896,6 +840,17 @@
       hidePalette();
       if (!found) { alert("No available squares left!"); return; }
       setTimeout(openColorPickerForCurrentSquare, 300);
+    };
+
+    donateBtn.onclick = function() {
+      if (!hasDonated) {
+        hasDonated = true;
+        donationUsed = false;
+        donateBtn.textContent = "Thanks for your support!";
+        setTimeout(() => { 
+          if (!donationUsed) donateBtn.textContent = "Donate / Contribute";
+        }, 4000);
+      }
     };
 
     function openColorPickerForCurrentSquare() {
@@ -924,6 +879,7 @@
       colorPickerModal.style.position = "fixed";
       colorPickerModal.style.width = "auto";
       colorPickerModal.style.height = "auto";
+      paletteModalActive = true;
     }
 
     // Color picker logic: enable OK only after color is picked
@@ -973,15 +929,21 @@
       saveParticipation();
       donationUsed = true;
       setTimeout(resetDonateButton, 5000);
-      hideRandomPopup();
       confirmColorBtn.disabled = true;
       confirmColorBtn.style.color = "grey";
+      paletteModalActive = false;
     };
     cancelColorBtn.onclick = function() {
       hidePalette();
     };
+
+    // When palette is open, clicks on buttons/background do NOT close the palette
     document.addEventListener('mousedown', function(e) {
-      if (colorPickerModal.style.display === "flex" && !colorPickerModal.contains(e.target)) {
+      if (paletteModalActive && (colorPickerModal.contains(e.target) || e.target.tagName === 'BUTTON')) {
+        // Do nothing, keep palette open
+        return;
+      }
+      if (!paletteModalActive && colorPickerModal.style.display === "flex" && !colorPickerModal.contains(e.target)) {
         hidePalette();
       }
       if (congratsMessage.style.display === "block" && !congratsMessage.contains(e.target)) {
@@ -990,6 +952,7 @@
         requestRedraw();
       }
     });
+
     function placeCongratsMessageDynamic() {
       const scaledCellSize = CELL_SIZE * zoom;
       const frameRect = frame.getBoundingClientRect();
